@@ -1,0 +1,8 @@
+**/tmp
+**/tags
+**/bin
+*.swp
+*.bak
+*~
+.vscode
+build
