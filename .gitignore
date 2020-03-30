@@ -4,5 +4,7 @@
 *.swp
 *.bak
 *~
+**/go.sum
 .vscode
 build
+vendor
