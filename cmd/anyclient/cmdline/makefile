@@ -1,27 +1,28 @@
 #
 # anyclient makefile
 #
+#
 
-GOCMD       := go
-GOBUILD     := $(GOCMD) build
-GOCLEAN     := $(GOCMD) clean
-GOTEST      := $(GOCMD) test
-GOGET       := $(GOCMD) get
-BINARY_NAME := anyclient
-BUILD_DIR   := ../../../build/bin
+sp :=
+sp +=
+
+_walk = $(if $1,$(wildcard /$(subst $(sp),/,$1)/$2) $(call _walk,$(wordlist 2,$(words $1),x $1),$2))
+_find = $(firstword $(call _walk,$(strip $(subst /, ,$1)),$2))
+_ROOT := $(patsubst %/root.mak,%,$(call _find,$(CURDIR),root.mak))
+
+include $(_ROOT)/root.mak
+include $(_ROOT)/top.mak
+
+
+SERVICE     := anyclient
+SERVICE_EXT := $(_ANYCLIENT_EXT)
+
 GOMAIN      := main.go
+BINARY      := $(SERVICE)
 
-all: build test
-build: 
-				$(GOBUILD) -o $(BUILD_DIR)/$(BINARY_NAME) -v $(GOMAIN)
-test: 
-				$(GOTEST) -v ./...
-clean: 
-				$(GOCLEAN)
-				rm -f $(BUILD_DIR)/$(BINARY_NAME)
-run:
-				$(GOBUILD) -o $(BUILD_DIR)/$(BINARY_NAME) -v $(GOMAIN)
-				$(BUILD_DIR)/$(BINARY_NAME) --version
+#include $(_ROOT)/bottom.mak
+include $(_ROOT)/build.mak
+
 
 #deps:
 #				$(GOGET) github.com/markbates/goth
