@@ -35,5 +35,11 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
+	err := serverService.ApplyTCPService()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Fatal error apply TCP service: %s\n", err.Error())
+		os.Exit(2)
+	}
+
 	return nil
 }
