@@ -2,9 +2,14 @@
 #
 #
 
-#include $(_ROOT)/color.mak
+.SUFFIXES:
+.SUFFIXES: .go
 
-GOCMD       := go
+include $(_ROOT)/color.mak
+
+SHELL := /bin/bash
+
+GOCMD       := /opt/go/bin/go
 GOBUILD     := $(GOCMD) build
 GOCLEAN     := $(GOCMD) clean
 GOTEST      := $(GOCMD) test
@@ -18,11 +23,30 @@ $(_MODULE_NAME)_BINARY := $(_OUTTOP)/$(BINARY)
 ifneq ($($(_MODULE_NAME)_DEFINED),T)
 
 all: build-$(_MODULE_NAME) test-$(_MODULE_NAME)
-build-$(_MODULE_NAME): 
-	$(GOBUILD) -o $($(_MODULE_NAME)_BINARY) -v $(_MODULE_PATH)/$(GOMAIN)
+ 
+# Build services
+_BUILD := build-$(_MODULE_NAME)
 
-test-$(_MODULE_NAME): 
-	$(GOTEST) -v $(_MODULE_PATH)/...
+.PHONY: build-$(_BUILD)
+build: $(_BUILD)
+
+$(_BUILD):
+	@$(GOBUILD) -o $($(_MODULE_NAME)_BINARY) -v $(_MODULE_PATH)/$(GOMAIN)
+
+# Test services
+_TEST := test-$(_MODULE_NAME)
+
+.PHONY: test-$(_TEST)
+test: $(_TEST)
+
+$(_TEST):
+	@$(GOTEST) -v $(_MODULE_PATH)/... $(COLOR_OUTPUT)
+
+#build-$(_MODULE_NAME): 
+#	$(GOBUILD) -o $($(_MODULE_NAME)_BINARY) -v $(_MODULE_PATH)/$(GOMAIN)
+#
+#test-$(_MODULE_NAME): 
+#	$(GOTEST) -v $(_MODULE_PATH)/...
 
 # Smoke test check version
 _CHECK := check-$(_MODULE_NAME)
@@ -31,7 +55,7 @@ _CHECK := check-$(_MODULE_NAME)
 check: $(_CHECK)
 
 $(_CHECK):
-	$($(_MODULE_NAME)_BINARY) --version
+	@$($(_MODULE_NAME)_BINARY) --version
 
 # Clean build binaries
 _CLEAN := clean-$(_MODULE_NAME)
