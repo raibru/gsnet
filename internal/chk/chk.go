@@ -1,1 +1,1 @@
-package internal.chk
+package chk

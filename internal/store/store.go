@@ -1,1 +1,1 @@
-package internal.store
+package store
