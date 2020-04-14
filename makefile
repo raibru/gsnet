@@ -15,6 +15,18 @@ all:
 		$(MAKE) -C $$dir;     \
 	done
 
+.PHONY: build
+build:
+	for dir in $(SUBDIRS); do \
+		$(MAKE) build -C $$dir;     \
+	done
+
+.PHONY: test
+test:
+	for dir in $(SUBDIRS); do \
+		$(MAKE) test -C $$dir;     \
+	done
+
 .PHONY: clean
 clean:
 	for dir in $(SUBDIRS); do \
