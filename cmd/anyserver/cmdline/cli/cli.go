@@ -5,6 +5,9 @@ import (
 	"os"
 
 	"github.com/raibru/gsnet/cmd/anyserver/etc"
+	"github.com/raibru/gsnet/internal/arch"
+	"github.com/raibru/gsnet/internal/pkt"
+	"github.com/raibru/gsnet/internal/service"
 	"github.com/raibru/gsnet/internal/sys"
 	"github.com/spf13/cobra"
 )
@@ -57,6 +60,18 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		}
 		if err := sys.InitSysPackage(); err != nil {
 			fmt.Fprintf(os.Stderr, "Fatal error initialize package sys: %s\n", err.Error())
+			os.Exit(2)
+		}
+		if err := service.InitServicePackage(); err != nil {
+			fmt.Fprintf(os.Stderr, "Fatal error initialize package service: %s\n", err.Error())
+			os.Exit(2)
+		}
+		if err := arch.InitArchPackage(); err != nil {
+			fmt.Fprintf(os.Stderr, "Fatal error initialize package arch: %s\n", err.Error())
+			os.Exit(2)
+		}
+		if err := pkt.InitPktPackage(); err != nil {
+			fmt.Fprintf(os.Stderr, "Fatal error initialize package pkt: %s\n", err.Error())
 			os.Exit(2)
 		}
 	}

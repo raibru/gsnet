@@ -8,33 +8,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// LoggableCategory how to use logger
-type LoggableCategory interface {
-	ApplyLogger(cat string) error
-}
-
-type sysLogger struct{ doLog *log.Entry }
-
-var sysLog = sysLogger{}
-
-func (s sysLogger) ApplyLogger(cn string) error {
-	cat, err := CreateCategoryLogging(cn)
-	if err != nil {
-		return err
-	}
-	s.doLog = cat
-	s.doLog.Infof("::: create and apply logging for category %s", cn)
-	return nil
-}
-
-// InitSysPackage initialize package behavior
-func InitSysPackage() error {
-	err := sysLog.ApplyLogger("sys")
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error apply logger for category sys: %s\n", err.Error())
-		return err
-	}
-	return nil
+// LoggableContent how to use unified context dependence logger
+type LoggableContent interface {
+	ApplyLogger() error
 }
 
 // LoggingParam hold loggin configuration parameter
@@ -80,8 +56,15 @@ func InitLogging(lp *LoggingParam) error {
 	return nil
 }
 
-// CreateCategoryLogging for new Logger with category
-func CreateCategoryLogging(cn string) (*log.Entry, error) {
-	e := log.WithField("category", cn)
+// CreateContextLogging for new Logger with content dependence
+func CreateContextLogging(cn string) (*log.Entry, error) {
+	e := log.WithField("content", "---")
+	if cn != "" {
+		n := cn
+		if len(n) > 3 {
+			n = n[:3]
+		}
+		e = log.WithField("content", n)
+	}
 	return e, nil
 }
