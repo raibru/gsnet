@@ -19,6 +19,8 @@ SERVICE_EXT := $(_ANYCLIENT_EXT)
 
 GOMAIN      := main.go
 BINARY      := $(SERVICE)
+LDBUILD     := -X "github.com/raibru/gsnet/cmd/anyclient/cmdline/cli.Build"
+LDVERSION   := -X "github.com/raibru/gsnet/cmd/anyclient/cmdline/cli.Version"
 
 #include $(_ROOT)/bottom.mak
 include $(_ROOT)/build.mak

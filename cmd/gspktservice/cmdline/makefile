@@ -17,6 +17,9 @@ SERVICE_EXT := $(_GSPKTSERVICE_EXT)
 GOMAIN      := main.go
 BINARY      := $(SERVICE)
 
+LDBUILD     := -X "github.com/raibru/gsnet/cmd/gspkgservice/cmdline/cli.Build"
+LDVERSION   := -X "github.com/raibru/gsnet/cmd/gspkgservice/cmdline/cli.Version"
+
 include $(_ROOT)/build.mak
 
 #deps:
