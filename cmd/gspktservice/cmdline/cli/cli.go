@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/raibru/gsnet/cmd/gspktservice/etc"
+	"github.com/raibru/gsnet/internal/sys"
 	"github.com/spf13/cobra"
 )
 
@@ -33,6 +35,26 @@ func handleParam(cmd *cobra.Command, args []string) error {
 	if prtVersion {
 		PrintVersion(os.Stdout)
 		return nil
+	}
+
+	if configFile != "" {
+		var cf = &etc.GsPktServiceConfig{}
+		err := cf.LoadConfig(configFile)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Fatal error read config file %s: %s\n", configFile, err.Error())
+			os.Exit(2)
+		}
+
+		lp := &sys.LoggingParam{
+			Filename:  cf.Logging.Filename,
+			Timestamp: cf.Logging.Timestamp,
+			Format:    cf.Logging.Format,
+		}
+
+		if err := sys.InitLogging(lp); err != nil {
+			fmt.Fprintf(os.Stderr, "Fatal error initialize logging: %s\n", err.Error())
+			os.Exit(2)
+		}
 	}
 
 	return nil

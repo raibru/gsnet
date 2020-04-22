@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/raibru/gsnet/cmd/anyclient/etc"
+	"github.com/raibru/gsnet/internal/sys"
 	"github.com/spf13/cobra"
 )
 
@@ -35,11 +37,31 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	err := clientService.ApplyTCPService()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Fatal error apply TCP service: %s\n", err.Error())
-		os.Exit(2)
+	if configFile != "" {
+		var cf = &etc.AnyClientConfig{}
+		err := cf.LoadConfig(configFile)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Fatal error read config file %s: %s\n", configFile, err.Error())
+			os.Exit(2)
+		}
+
+		lp := &sys.LoggingParam{
+			Filename:  cf.Logging.Filename,
+			Timestamp: cf.Logging.Timestamp,
+			Format:    cf.Logging.Format,
+		}
+
+		if err := sys.InitLogging(lp); err != nil {
+			fmt.Fprintf(os.Stderr, "Fatal error initialize logging: %s\n", err.Error())
+			os.Exit(2)
+		}
 	}
+
+	//	err := clientService.ApplyTCPService()
+	//	if err != nil {
+	//		fmt.Fprintf(os.Stderr, "Fatal error apply TCP service: %s\n", err.Error())
+	//		os.Exit(2)
+	//	}
 
 	return nil
 }

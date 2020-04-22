@@ -1,20 +1,20 @@
 package cli
 
-import "github.com/raibru/gsnet/internal/service"
+import "github.com/raibru/gsnet/cmd/anyserver/etc"
 
 var (
-	serverService service.ServerServiceData
+	serverParam etc.ServerServiceParam
 
 	prtVersion bool
-	inputfile  string
-	configfile string
+	inputFile  string
+	configFile string
 )
 
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&prtVersion, "version", "v", false, "Display anyserver version")
-	rootCmd.PersistentFlags().StringVarP(&serverService.Addr, "address", "", "", "Listen Tcp/Ip address")
-	rootCmd.PersistentFlags().StringVarP(&serverService.Port, "port", "", "", "Port of address")
-	rootCmd.PersistentFlags().StringVarP(&serverService.Name, "name", "", "", "Name of the server service")
-	rootCmd.PersistentFlags().StringVarP(&inputfile, "input-file", "i", "", "Use input file send multible data packages")
-	rootCmd.PersistentFlags().StringVarP(&configfile, "config-file", "f", "", "Use config file for service behavior")
+	rootCmd.PersistentFlags().StringVarP(&serverParam.Addr, "address", "", "", "Listen Tcp/Ip address")
+	rootCmd.PersistentFlags().StringVarP(&serverParam.Port, "port", "", "", "Port of address")
+	rootCmd.PersistentFlags().StringVarP(&serverParam.Name, "name", "", "", "Name of the server service")
+	rootCmd.PersistentFlags().StringVarP(&inputFile, "input-file", "i", "", "Use input file send multible data packages")
+	rootCmd.PersistentFlags().StringVarP(&configFile, "config-file", "f", "", "Use config file for service behavior")
 }
