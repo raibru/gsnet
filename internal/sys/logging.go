@@ -3,18 +3,22 @@ package sys
 import (
 	"fmt"
 	"os"
+	"time"
 
 	nested "github.com/antonfisher/nested-logrus-formatter"
 	log "github.com/sirupsen/logrus"
 )
 
-// LoggableContent how to use unified context dependence logger
-type LoggableContent interface {
+// LoggableContext how to use unified context dependence logger
+type LoggableContext interface {
 	ApplyLogger() error
+	GetContextName() string
 }
 
-// LoggingParam hold loggin configuration parameter
+// LoggingParam hold logging configuration parameter
 type LoggingParam struct {
+	Service   string `yaml: "service"`
+	Version   string `yaml: "version"`
 	Filename  string `yaml: "filename"`
 	Timestamp string `yaml: "timestamp"`
 	Format    string `yaml: "format"`
@@ -52,6 +56,9 @@ func InitLogging(lp *LoggingParam) error {
 	}
 
 	log.Info("==================== Start Logging =====================================")
+	log.Infof("run service: %s", lp.Service)
+	log.Infof("version    : %s", lp.Version)
+	log.Infof("date       : %s", time.Now().Format("2006-01-02 15:04:05"))
 
 	return nil
 }

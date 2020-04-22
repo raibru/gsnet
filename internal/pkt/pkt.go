@@ -1,9 +1,6 @@
 package pkt
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/raibru/gsnet/internal/sys"
 	log "github.com/sirupsen/logrus"
 )
@@ -13,7 +10,8 @@ type pktLogger struct {
 	contextName string
 }
 
-var pktLog = pktLogger{contextName: "pkt"}
+// LogContext hold logging context
+var LogContext = pktLogger{contextName: "pkt"}
 
 func (l pktLogger) ApplyLogger() error {
 	cl, err := sys.CreateContextLogging(l.contextName)
@@ -25,12 +23,6 @@ func (l pktLogger) ApplyLogger() error {
 	return nil
 }
 
-// InitPktPackage initialize package behavior
-func InitPktPackage() error {
-	err := pktLog.ApplyLogger()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error apply logger for content pkt: %s\n", err.Error())
-		return err
-	}
-	return nil
+func (l pktLogger) GetContextName() string {
+	return l.contextName
 }

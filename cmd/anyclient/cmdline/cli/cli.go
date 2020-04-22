@@ -5,6 +5,9 @@ import (
 	"os"
 
 	"github.com/raibru/gsnet/cmd/anyclient/etc"
+	"github.com/raibru/gsnet/internal/arch"
+	"github.com/raibru/gsnet/internal/pkt"
+	"github.com/raibru/gsnet/internal/service"
 	"github.com/raibru/gsnet/internal/sys"
 	"github.com/spf13/cobra"
 )
@@ -46,6 +49,8 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		}
 
 		lp := &sys.LoggingParam{
+			Service:   cf.Service.Name,
+			Version:   Version,
 			Filename:  cf.Logging.Filename,
 			Timestamp: cf.Logging.Timestamp,
 			Format:    cf.Logging.Format,
@@ -54,6 +59,16 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		if err := sys.InitLogging(lp); err != nil {
 			fmt.Fprintf(os.Stderr, "Fatal error initialize logging: %s\n", err.Error())
 			os.Exit(2)
+		}
+
+		loggables := []sys.LoggableContext{
+			sys.LogContext, service.LogContext, pkt.LogContext, arch.LogContext,
+		}
+
+		for _, c := range loggables {
+			if err := c.ApplyLogger(); err != nil {
+				fmt.Fprintf(os.Stderr, "Error: apply logging for: %s -> %s\n", c.GetContextName(), err.Error())
+			}
 		}
 	}
 

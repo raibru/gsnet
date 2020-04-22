@@ -49,6 +49,8 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		}
 
 		lp := &sys.LoggingParam{
+			Service:   cf.Service.Name,
+			Version:   Version,
 			Filename:  cf.Logging.Filename,
 			Timestamp: cf.Logging.Timestamp,
 			Format:    cf.Logging.Format,
@@ -58,21 +60,15 @@ func handleParam(cmd *cobra.Command, args []string) error {
 			fmt.Fprintf(os.Stderr, "Fatal error initialize logging: %s\n", err.Error())
 			os.Exit(2)
 		}
-		if err := sys.InitSysPackage(); err != nil {
-			fmt.Fprintf(os.Stderr, "Fatal error initialize package sys: %s\n", err.Error())
-			os.Exit(2)
+
+		loggables := []sys.LoggableContext{
+			sys.LogContext, service.LogContext, pkt.LogContext, arch.LogContext,
 		}
-		if err := service.InitServicePackage(); err != nil {
-			fmt.Fprintf(os.Stderr, "Fatal error initialize package service: %s\n", err.Error())
-			os.Exit(2)
-		}
-		if err := arch.InitArchPackage(); err != nil {
-			fmt.Fprintf(os.Stderr, "Fatal error initialize package arch: %s\n", err.Error())
-			os.Exit(2)
-		}
-		if err := pkt.InitPktPackage(); err != nil {
-			fmt.Fprintf(os.Stderr, "Fatal error initialize package pkt: %s\n", err.Error())
-			os.Exit(2)
+
+		for _, c := range loggables {
+			if err := c.ApplyLogger(); err != nil {
+				fmt.Fprintf(os.Stderr, "Error: apply logging for: %s -> %s\n", c.GetContextName(), err.Error())
+			}
 		}
 	}
 

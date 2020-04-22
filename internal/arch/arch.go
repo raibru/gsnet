@@ -1,9 +1,6 @@
 package arch
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/raibru/gsnet/internal/sys"
 	log "github.com/sirupsen/logrus"
 )
@@ -13,7 +10,8 @@ type archLogger struct {
 	contextName string
 }
 
-var archLog = archLogger{contextName: "ach"}
+// LogContext hold logging context
+var LogContext = archLogger{contextName: "ach"}
 
 func (l archLogger) ApplyLogger() error {
 	cl, err := sys.CreateContextLogging(l.contextName)
@@ -25,12 +23,6 @@ func (l archLogger) ApplyLogger() error {
 	return nil
 }
 
-// InitArchPackage initialize package behavior
-func InitArchPackage() error {
-	err := archLog.ApplyLogger()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error apply logger for content arch: %s\n", err.Error())
-		return err
-	}
-	return nil
+func (l archLogger) GetContextName() string {
+	return l.contextName
 }

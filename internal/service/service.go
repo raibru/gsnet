@@ -15,8 +15,10 @@ type srvLogger struct {
 	contextName string
 }
 
-var srvLog = srvLogger{contextName: "srv"}
+// LogContext hold logging context
+var LogContext = srvLogger{contextName: "srv"}
 
+// ApplyLogger initialize context logger
 func (l srvLogger) ApplyLogger() error {
 	cl, err := sys.CreateContextLogging(l.contextName)
 	if err != nil {
@@ -27,14 +29,9 @@ func (l srvLogger) ApplyLogger() error {
 	return nil
 }
 
-// InitServicePackage initialize package behavior
-func InitServicePackage() error {
-	err := srvLog.ApplyLogger()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error apply logger for content service: %s\n", err.Error())
-		return err
-	}
-	return nil
+// GetContextName initialize context logger
+func (l srvLogger) GetContextName() string {
+	return l.contextName
 }
 
 // ServerServiceData holds connection data about server services

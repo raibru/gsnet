@@ -12,7 +12,8 @@ type sysLogger struct {
 	contextName string
 }
 
-var sysLog = sysLogger{contextName: "sys"}
+// LogContext hold logging context
+var LogContext = sysLogger{contextName: "sys"}
 
 func (l sysLogger) ApplyLogger() error {
 	cl, err := CreateContextLogging(l.contextName)
@@ -24,14 +25,8 @@ func (l sysLogger) ApplyLogger() error {
 	return nil
 }
 
-// InitSysPackage initialize package behavior
-func InitSysPackage() error {
-	err := sysLog.ApplyLogger()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error apply logger for content sys: %s\n", err.Error())
-		return err
-	}
-	return nil
+func (l sysLogger) GetContextName() string {
+	return l.contextName
 }
 
 // validateFileExists just makes sure, that the path provided is a file,
