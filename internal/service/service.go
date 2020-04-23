@@ -61,13 +61,13 @@ type GsPktServiceData struct {
 
 // ApplyConnection accept a connection from client and handle incoming data stream
 func (s *ServerServiceData) ApplyConnection() error {
-	ctx.Log().Infof("::: apply connection for service %s", s.Name)
+	ctx.Log().Infof("::: apply server connection for service %s", s.Name)
 	ctx.Log().Tracef("::: ::: create TCP server listener for service %s", s.Name)
 	ctx.Log().Tracef("::: ::: listen at %s:%s", s.Addr, s.Port)
 	lsn, err := CreateTCPServerListener(s)
 	if err != nil {
+		ctx.Log().Errorf("::: ::: can not apply server listener due '%s'", err.Error())
 		fmt.Fprintf(os.Stderr, "Fatal error create listener: %s\n", err.Error())
-		ctx.Log().Errorf("::: ::: can not apply connection for service %s due '%s'", s.Name, err.Error())
 		return err
 	}
 
@@ -83,12 +83,16 @@ func (s *ServerServiceData) ApplyConnection() error {
 	}
 }
 
-// ApplyTCPService create a connection to server and handle outgoing data stream
-func (s *ClientServiceData) ApplyTCPService() error {
+// ApplyConnection create a connection to server and handle outgoing data stream
+func (s *ClientServiceData) ApplyConnection() error {
+	ctx.Log().Infof("::: apply client connection for service %s", s.Name)
+	ctx.Log().Tracef("::: ::: create TCP client dialer for service %s", s.Name)
+	ctx.Log().Tracef("::: ::: dial to %s:%s", s.Addr, s.Port)
 	conn, err := CreateTCPClientConnection(s)
 	defer conn.Close()
 
 	if err != nil {
+		ctx.Log().Errorf("::: ::: can not apply client dialer due '%s'", err.Error())
 		fmt.Fprintf(os.Stderr, "Fatal error create client connection: %s\n", err.Error())
 		return err
 	}
@@ -96,15 +100,16 @@ func (s *ClientServiceData) ApplyTCPService() error {
 	for i := range [10]int{} {
 		_, err = conn.Write([]byte("HALLO WORLD"))
 		if err != nil {
+			ctx.Log().Errorf("::: ::: can not write into connection due '%s'", err.Error())
 			fmt.Fprintf(os.Stderr, "Error write to connection: %s\n", err.Error())
 			return err
 		}
-		fmt.Fprintf(os.Stdout, "::write to connection (%v)\n", i)
+		ctx.Log().Tracef("::: ::: successful wrote data into connection %v time(s)", i)
 		time.Sleep(5 * time.Second)
 
 	}
 
-	fmt.Fprintf(os.Stdout, "Succesdul write data into connection\n")
+	ctx.Log().Infof("::: finish client connection for service %s", s.Name)
 	return nil
 
 }
