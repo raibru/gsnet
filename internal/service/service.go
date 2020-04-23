@@ -9,6 +9,10 @@ import (
 	"github.com/raibru/gsnet/internal/sys"
 )
 
+//
+// Logging
+//
+
 type serviceLogger struct {
 	contextName string
 }
@@ -32,6 +36,10 @@ func (serviceLogger) GetContextName() string {
 	return ctx.ContextName()
 }
 
+//
+// Services
+//
+
 // ServerServiceData holds connection data about server services
 type ServerServiceData struct {
 	Name string
@@ -51,18 +59,23 @@ type GsPktServiceData struct {
 	Name string
 }
 
-// ApplyTCPService accept a connection from client and handle incoming data stream
-func (s *ServerServiceData) ApplyTCPService() error {
+// ApplyConnection accept a connection from client and handle incoming data stream
+func (s *ServerServiceData) ApplyConnection() error {
+	ctx.Log().Infof("::: apply connection for service %s", s.Name)
+	ctx.Log().Tracef("::: ::: create TCP server listener for service %s", s.Name)
+	ctx.Log().Tracef("::: ::: listen at %s:%s", s.Addr, s.Port)
 	lsn, err := CreateTCPServerListener(s)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Fatal error create listener: %s\n", err.Error())
+		ctx.Log().Errorf("::: ::: can not apply connection for service %s due '%s'", s.Name, err.Error())
 		return err
 	}
 
+	ctx.Log().Tracef("::: ::: establish listener for service %s@%s:%s", s.Name, s.Addr, s.Port)
 	for {
-		fmt.Fprintf(os.Stdout, "Server service %s wait for input...\n", s.Name)
+		ctx.Log().Trace("::: ::: wait for input...")
 		conn, err := lsn.Accept()
-		fmt.Fprintf(os.Stdout, "Server service %s accept input...\n", s.Name)
+		ctx.Log().Trace("::: ::: accept input...")
 		if err != nil {
 			continue
 		}
@@ -133,25 +146,28 @@ func CreateTCPClientConnection(s *ClientServiceData) (net.Conn, error) {
 }
 
 func handleServerConnection(conn net.Conn) {
+	ctx.Log().Info("::: ::: handle server connection...")
+
 	defer conn.Close()
 	data := make([]byte, 1024)
 	for {
-		fmt.Fprintf(os.Stdout, "::service read data...\n")
+		ctx.Log().Trace("::: ::: ::: read data from connection...")
 		readLen, err := conn.Read(data)
 		if err != nil {
-			fmt.Fprintf(os.Stdout, "Failure read data from client: %s\n", err.Error())
+			ctx.Log().Warnf("Failure read data from connetion: %s", err.Error())
 			continue
 		}
 
 		if readLen == 0 {
-			fmt.Fprintf(os.Stdout, "Client close connection\n")
+			ctx.Log().Info("::: ::: ::: client close connection")
 			break // connection already closed by client
 		}
 
-		fmt.Fprintf(os.Stdout, "Succesful read data from client: [%s]\n", data)
+		ctx.Log().Tracef("::: ::: ::: successful read data from connection [%s]", data)
 		//break
 
 		//doSomething with []byte data
+		ctx.Log().Info("::: ::: finish handle server connection")
 	}
 }
 

@@ -40,6 +40,8 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
+	srvService := service.ServerServiceData{}
+
 	if configFile != "" {
 		var cf = etc.AnyServerConfig{}
 		err := cf.LoadConfig(configFile)
@@ -70,13 +72,17 @@ func handleParam(cmd *cobra.Command, args []string) error {
 				fmt.Fprintf(os.Stderr, "Error: apply logging for: %s -> %s\n", c.GetContextName(), err.Error())
 			}
 		}
+
+		srvService.Name = cf.Service.Name
+		srvService.Addr = cf.Service.Addr
+		srvService.Port = cf.Service.Port
 	}
 
-	//	err := serverService.ApplyTCPService()
-	//	if err != nil {
-	//		fmt.Fprintf(os.Stderr, "Fatal error apply TCP service: %s\n", err.Error())
-	//		os.Exit(2)
-	//	}
+	err := srvService.ApplyConnection()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Fatal Failure. See log. Exit service: %s\n", err.Error())
+		os.Exit(2)
+	}
 
 	return nil
 }
