@@ -18,9 +18,9 @@ type GsPktServiceParam struct {
 // GsPktServiceConfig hold application config environment
 type GsPktServiceConfig struct {
 	Service struct {
-		Name   string `yaml: "name"`
-		IPAddr string `yaml: "ipAddr"`
-		Port   string `yaml: "port"`
+		Name string `yaml: "name"`
+		Addr string `yaml: "addr"`
+		Port string `yaml: "port"`
 	} `yaml: "Service"`
 	Logging struct {
 		// You can change the Timestamp format. But you have to use the same date and time.
