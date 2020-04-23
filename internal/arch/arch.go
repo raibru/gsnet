@@ -1,28 +1,26 @@
 package arch
 
-import (
-	"github.com/raibru/gsnet/internal/sys"
-	log "github.com/sirupsen/logrus"
-)
+import "github.com/raibru/gsnet/internal/sys"
 
 type archLogger struct {
-	doLog       *log.Entry
 	contextName string
 }
 
 // LogContext hold logging context
 var LogContext = archLogger{contextName: "ach"}
 
+// log hold logging context
+var ctx = sys.ContextLogger{}
+
 func (l archLogger) ApplyLogger() error {
-	cl, err := sys.CreateContextLogging(l.contextName)
+	err := ctx.ApplyLogger(l.contextName)
 	if err != nil {
 		return err
 	}
-	l.doLog = cl
-	l.doLog.Infof("::: create context logging for: %s", l.contextName)
+	ctx.Log().Infof("::: use package 'arch' wide logging with context: %s", l.contextName)
 	return nil
 }
 
-func (l archLogger) GetContextName() string {
-	return l.contextName
+func (archLogger) GetContextName() string {
+	return ctx.ContextName()
 }

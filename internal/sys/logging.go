@@ -9,11 +9,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// LoggableContext how to use unified context dependence logger
-type LoggableContext interface {
-	ApplyLogger() error
-	GetContextName() string
-}
+//
+// Logging configuration
+//
 
 // LoggingParam hold logging configuration parameter
 type LoggingParam struct {
@@ -63,8 +61,47 @@ func InitLogging(lp *LoggingParam) error {
 	return nil
 }
 
-// CreateContextLogging for new Logger with content dependence
-func CreateContextLogging(cn string) (*log.Entry, error) {
+//
+// Logging Context
+//
+
+// LoggableContext how to use unified context dependence logger
+type LoggableContext interface {
+	ApplyLogger() error
+	GetContextName() string
+	//	Log() *log.Entry
+}
+
+// ContextLogger data
+type ContextLogger struct {
+	contextName string
+	logEntry    *log.Entry
+}
+
+// ApplyLogger create new named context logger and set ContextLogger data
+func (c *ContextLogger) ApplyLogger(cn string) error {
+	c.contextName = cn
+	e, err := createContextLogging(cn)
+	if err != nil {
+		return err
+	}
+	c.logEntry = e
+	c.logEntry.Infof("::: create context logging for: %s", cn)
+	return nil
+}
+
+// ContextName answer name from ContextLogger data
+func (c *ContextLogger) ContextName() string {
+	return c.contextName
+}
+
+// Log answer log entry object from ContextLogger data
+func (c *ContextLogger) Log() *log.Entry {
+	return c.logEntry
+}
+
+// createContextLogging for new Logger with content dependence
+func createContextLogging(cn string) (*log.Entry, error) {
 	e := log.WithField("content", "---")
 	if cn != "" {
 		n := cn

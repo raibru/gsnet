@@ -3,30 +3,29 @@ package sys
 import (
 	"fmt"
 	"os"
-
-	log "github.com/sirupsen/logrus"
 )
 
 type sysLogger struct {
-	doLog       *log.Entry
 	contextName string
 }
 
 // LogContext hold logging context
 var LogContext = sysLogger{contextName: "sys"}
 
+// log hold logging context
+var ctx = ContextLogger{}
+
 func (l sysLogger) ApplyLogger() error {
-	cl, err := CreateContextLogging(l.contextName)
+	err := ctx.ApplyLogger(l.contextName)
 	if err != nil {
 		return err
 	}
-	l.doLog = cl
-	l.doLog.Infof("::: create context logging for: %s", l.contextName)
+	ctx.Log().Infof("::: use package 'sys' wide logging with context: %s", l.contextName)
 	return nil
 }
 
-func (l sysLogger) GetContextName() string {
-	return l.contextName
+func (sysLogger) GetContextName() string {
+	return ctx.ContextName()
 }
 
 // validateFileExists just makes sure, that the path provided is a file,

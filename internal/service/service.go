@@ -7,31 +7,29 @@ import (
 	"time"
 
 	"github.com/raibru/gsnet/internal/sys"
-	log "github.com/sirupsen/logrus"
 )
 
-type srvLogger struct {
-	doLog       *log.Entry
+type serviceLogger struct {
 	contextName string
 }
 
 // LogContext hold logging context
-var LogContext = srvLogger{contextName: "srv"}
+var LogContext = serviceLogger{contextName: "srv"}
 
-// ApplyLogger initialize context logger
-func (l srvLogger) ApplyLogger() error {
-	cl, err := sys.CreateContextLogging(l.contextName)
+// log hold logging context
+var ctx = sys.ContextLogger{}
+
+func (l serviceLogger) ApplyLogger() error {
+	err := ctx.ApplyLogger(l.contextName)
 	if err != nil {
 		return err
 	}
-	l.doLog = cl
-	l.doLog.Infof("::: create context logging for: %s", l.contextName)
+	ctx.Log().Infof("::: use package 'service' wide logging with context: %s", l.contextName)
 	return nil
 }
 
-// GetContextName initialize context logger
-func (l srvLogger) GetContextName() string {
-	return l.contextName
+func (serviceLogger) GetContextName() string {
+	return ctx.ContextName()
 }
 
 // ServerServiceData holds connection data about server services
