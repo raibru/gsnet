@@ -22,6 +22,13 @@ type AnyClientConfig struct {
 		Addr string `yaml: "addr"`
 		Port string `yaml: "port"`
 	} `yaml: "Service"`
+	Packet struct {
+		Filename string `yaml: "filename"`
+		Wait     uint   `yaml:"wait"`
+	} `yaml: "packet"`
+	Archive struct {
+		Filename string `yaml: "filename"`
+	} `yaml: "archive"`
 	Logging struct {
 		// You can change the Timestamp format. But you have to use the same date and time.
 		// "2006-02-02 15:04:06" Works. If you change any digit, it won't work
