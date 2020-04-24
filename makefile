@@ -39,6 +39,10 @@ check:
 		$(MAKE) check -C $$dir;     \
 	done
 
+.PHONY: deploy-dev
+deploy-dev:
+	$(MAKE) -f deploy.mak
+
 #.PHONY: $(SUBDIRS)
 #$(SUBDIRS):
 #	$(MAKE) -C $@
