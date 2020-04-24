@@ -17,7 +17,8 @@ func (l archLogger) ApplyLogger() error {
 	if err != nil {
 		return err
 	}
-	ctx.Log().Infof("::: use package 'arch' wide logging with context: %s", l.contextName)
+	ctx.Log().Infof("apply archive logger behavior: %s", l.contextName)
+	ctx.Log().Info("::: finish apply archive logger")
 	return nil
 }
 

@@ -20,7 +20,8 @@ func (l sysLogger) ApplyLogger() error {
 	if err != nil {
 		return err
 	}
-	ctx.Log().Infof("::: use package 'sys' wide logging with context: %s", l.contextName)
+	ctx.Log().Infof("apply system logger behavior: %s", l.contextName)
+	ctx.Log().Info("::: finish apply system logger")
 	return nil
 }
 
@@ -35,6 +36,7 @@ func validateFileExists(fn string) error {
 		return err
 	}
 	if s.IsDir() {
+		ctx.Log().Errorf("failure access logging file. '%s' is a directory, not a file", fn)
 		return fmt.Errorf("'%s' is a directory, not a file", fn)
 	}
 	return nil

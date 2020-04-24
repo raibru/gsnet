@@ -17,7 +17,8 @@ func (l pktLogger) ApplyLogger() error {
 	if err != nil {
 		return err
 	}
-	ctx.Log().Infof("::: use package 'pkt' wide logging with context: %s", l.contextName)
+	ctx.Log().Infof("apply package logger behavior: %s", l.contextName)
+	ctx.Log().Info("::: finish apply package logger")
 	return nil
 }
 

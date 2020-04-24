@@ -28,7 +28,8 @@ func (l serviceLogger) ApplyLogger() error {
 	if err != nil {
 		return err
 	}
-	ctx.Log().Infof("::: use package 'service' wide logging with context: %s", l.contextName)
+	ctx.Log().Infof("apply service logger behavior: %s", l.contextName)
+	ctx.Log().Info("::: finish apply service logger")
 	return nil
 }
 
@@ -61,118 +62,131 @@ type GsPktServiceData struct {
 
 // ApplyConnection accept a connection from client and handle incoming data stream
 func (s *ServerServiceData) ApplyConnection() error {
-	ctx.Log().Infof("::: apply server connection for service %s", s.Name)
-	ctx.Log().Tracef("::: ::: create TCP server listener for service %s", s.Name)
-	ctx.Log().Tracef("::: ::: listen at %s:%s", s.Addr, s.Port)
+	ctx.Log().Infof("apply server connection for service %s", s.Name)
+	ctx.Log().Tracef("::: create TCP server listener for service %s", s.Name)
 	lsn, err := CreateTCPServerListener(s)
 	if err != nil {
-		ctx.Log().Errorf("::: ::: can not apply server listener due '%s'", err.Error())
-		fmt.Fprintf(os.Stderr, "Fatal error create listener: %s\n", err.Error())
+		ctx.Log().Errorf("::: failure create TCP server listener due '%s'", err.Error())
+		fmt.Fprintf(os.Stderr, "Fatal error create TCP listener: %s\n", err.Error())
 		return err
 	}
 
-	ctx.Log().Tracef("::: ::: establish listener for service %s@%s:%s", s.Name, s.Addr, s.Port)
+	ctx.Log().Tracef("::: establish listener for service %s@%s:%s", s.Name, s.Addr, s.Port)
 	for {
-		ctx.Log().Trace("::: ::: wait for input...")
+		ctx.Log().Trace("::: wait for input...")
 		conn, err := lsn.Accept()
-		ctx.Log().Trace("::: ::: accept input...")
+		ctx.Log().Trace("::: accept input...")
 		if err != nil {
 			continue
 		}
 		go handleServerConnection(conn)
+		ctx.Log().Info("::: finish apply server listener")
 	}
 }
 
 // ApplyConnection create a connection to server and handle outgoing data stream
 func (s *ClientServiceData) ApplyConnection() error {
-	ctx.Log().Infof("::: apply client connection for service %s", s.Name)
-	ctx.Log().Tracef("::: ::: create TCP client dialer for service %s", s.Name)
-	ctx.Log().Tracef("::: ::: dial to %s:%s", s.Addr, s.Port)
+	ctx.Log().Infof("apply client connection for service %s", s.Name)
+	ctx.Log().Tracef("::: create TCP client dialer for service %s", s.Name)
 	conn, err := CreateTCPClientConnection(s)
 	defer conn.Close()
 
 	if err != nil {
-		ctx.Log().Errorf("::: ::: can not apply client dialer due '%s'", err.Error())
-		fmt.Fprintf(os.Stderr, "Fatal error create client connection: %s\n", err.Error())
+		ctx.Log().Errorf("::: failure create client TCP connection due '%s'", err.Error())
+		fmt.Fprintf(os.Stderr, "Fatal error create client TCP connection: %s\n", err.Error())
 		return err
 	}
 
 	for i := range [10]int{} {
 		_, err = conn.Write([]byte("HALLO WORLD"))
 		if err != nil {
-			ctx.Log().Errorf("::: ::: can not write into connection due '%s'", err.Error())
-			fmt.Fprintf(os.Stderr, "Error write to connection: %s\n", err.Error())
+			ctx.Log().Errorf("::: failure send data due '%s'", err.Error())
+			fmt.Fprintf(os.Stderr, "Error send data: %s\n", err.Error())
 			return err
 		}
-		ctx.Log().Tracef("::: ::: successful wrote data into connection %v time(s)", i)
+		ctx.Log().Tracef("::: successful send data %v time(s)", i)
 		time.Sleep(5 * time.Second)
 
 	}
 
-	ctx.Log().Infof("::: finish client connection for service %s", s.Name)
+	ctx.Log().Info("::: finish apply client connection")
 	return nil
 
 }
 
 // CreateTCPServerListener create new TCP listener with parameter in ServerService
 func CreateTCPServerListener(s *ServerServiceData) (net.Listener, error) {
+	ctx.Log().Infof("create server listener service %s@%s:%s", s.Name, s.Addr, s.Port)
+	ctx.Log().Tracef("::: resolve tcpTCPAddr %s:%s", s.Addr, s.Port)
+
 	serv := s.Addr + ":" + s.Port
 	addr, err := net.ResolveTCPAddr("tcp4", serv)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Fatal error resolve TCP address %s: %s\n", serv, err.Error())
+		ctx.Log().Errorf("::: failure resolve TCP address due '%s'", err.Error())
+		fmt.Fprintf(os.Stderr, "Fatal error resolve TCP address %s: %s\n", s.Name, err.Error())
 		return nil, err
 	}
 
+	ctx.Log().Tracef("::: start listen TCP %s@%s:%s", s.Name, s.Addr, s.Port)
 	lsn, err := net.ListenTCP("tcp", addr)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Fatal error listen TCP address %s: %s\n", serv, err.Error())
+		ctx.Log().Errorf("::: failure listen TCP due '%s'", err.Error())
+		fmt.Fprintf(os.Stderr, "Fatal error listen TCP %s: %s\n", s.Name, err.Error())
 		return nil, err
 	}
 
+	ctx.Log().Info("::: finish create server listener")
 	return lsn, nil
 }
 
 // CreateTCPClientConnection create new TCP connection with parameter in ClientService
 func CreateTCPClientConnection(s *ClientServiceData) (net.Conn, error) {
+	ctx.Log().Infof("create client dialer service %s with connecting to %s:%s", s.Name, s.Addr, s.Port)
+	ctx.Log().Tracef("::: resolve tcpTCPAddr %s:%s", s.Addr, s.Port)
+
 	serv := s.Addr + ":" + s.Port
 	addr, err := net.ResolveTCPAddr("tcp4", serv)
 	if err != nil {
+		ctx.Log().Errorf("::: failure resolve TCPAddr due '%s'", err.Error())
 		fmt.Fprintf(os.Stderr, "Fatal error resolve dailer TCP address %s: %s\n", serv, err.Error())
 		return nil, err
 	}
 
+	ctx.Log().Tracef("::: start dial tcp %s@%s:%s", s.Name, s.Addr, s.Port)
 	conn, err := net.DialTCP("tcp", nil, addr)
 	if err != nil {
+		ctx.Log().Errorf("::: failure connect TCPAddr due '%s'", err.Error())
 		fmt.Fprintf(os.Stderr, "Fatal error connect TCP address %s: %s\n", serv, err.Error())
 		return nil, err
 	}
 
+	ctx.Log().Info("::: finish create client connection")
 	return conn, nil
 }
 
 func handleServerConnection(conn net.Conn) {
-	ctx.Log().Info("::: ::: handle server connection...")
+	ctx.Log().Info("handle server connection...")
 
 	defer conn.Close()
 	data := make([]byte, 1024)
 	for {
-		ctx.Log().Trace("::: ::: ::: read data from connection...")
+		ctx.Log().Trace("::: read data from connection...")
 		readLen, err := conn.Read(data)
 		if err != nil {
-			ctx.Log().Warnf("Failure read data from connetion: %s", err.Error())
+			ctx.Log().Errorf("::: failure read data from connetion: %s", err.Error())
 			continue
 		}
 
 		if readLen == 0 {
-			ctx.Log().Info("::: ::: ::: client close connection")
+			ctx.Log().Info("::: client close connection")
 			break // connection already closed by client
 		}
 
-		ctx.Log().Tracef("::: ::: ::: successful read data from connection [%s]", data)
+		ctx.Log().Tracef("::: successful read data from connection [%s]", data)
 		//break
 
 		//doSomething with []byte data
-		ctx.Log().Info("::: ::: finish handle server connection")
+		ctx.Log().Info("::: finish handle server connection")
 	}
 }
 

@@ -2,6 +2,7 @@ package sys
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"time"
 
@@ -49,8 +50,8 @@ func InitLogging(lp *LoggingParam) error {
 		fmt.Println(err)
 		log.SetOutput(os.Stdout)
 	} else {
-		//log.SetOutput(io.MultiWriter(os.Stdout, f))
-		log.SetOutput(f)
+		log.SetOutput(io.MultiWriter(os.Stdout, f))
+		//log.SetOutput(f)
 	}
 
 	log.Info("==================== Start Logging =====================================")
@@ -86,7 +87,10 @@ func (c *ContextLogger) ApplyLogger(cn string) error {
 		return err
 	}
 	c.logEntry = e
-	c.logEntry.Infof("::: create context logging for: %s", cn)
+	c.logEntry.Infof("apply context logger for: %s", cn)
+	c.logEntry.Tracef("::: create context logging for: %s", cn)
+	c.logEntry.Info("::: finish apply context logger")
+
 	return nil
 }
 
