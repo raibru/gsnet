@@ -30,7 +30,7 @@ func InitLogging(lp *LoggingParam) error {
 		tsf = "2006-01-02 15:04:05.000"
 	}
 	// Create the log file if doesn't exist. And append to it if it already exists.
-	f, err := os.OpenFile(lp.Filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+	f, err := os.OpenFile(lp.Filename, os.O_WRONLY|os.O_SYNC|os.O_APPEND|os.O_CREATE, 0644)
 	//defer f.Close()
 
 	log.SetFormatter(&nested.Formatter{
