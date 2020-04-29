@@ -270,7 +270,7 @@ func (manager *ClientManager) receive(client *Client) {
 }
 
 func (client *Client) receive() {
-	ctx.Log().Info("receive data from client")
+	ctx.Log().Info("receive data")
 	for {
 		msg := make([]byte, 4096)
 		length, err := client.socket.Read(msg)
@@ -279,7 +279,7 @@ func (client *Client) receive() {
 			break
 		}
 		if length > 0 {
-			ctx.Log().Infof("received data [%s]", string(msg))
+			ctx.Log().Infof("::: received data [%s]", string(msg))
 		}
 	}
 	ctx.Log().Info("::: finish receive data")
