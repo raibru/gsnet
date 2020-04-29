@@ -1,6 +1,7 @@
 package sys
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"os"
@@ -13,6 +14,9 @@ import (
 //
 // Logging configuration
 //
+
+var logFile *os.File
+var logWriter *bufio.Writer
 
 // LoggingParam hold logging configuration parameter
 type LoggingParam struct {
@@ -30,8 +34,6 @@ func InitLogging(lp *LoggingParam) error {
 		tsf = "2006-01-02 15:04:05.000"
 	}
 	// Create the log file if doesn't exist. And append to it if it already exists.
-	f, err := os.OpenFile(lp.Filename, os.O_WRONLY|os.O_SYNC|os.O_APPEND|os.O_CREATE, 0644)
-	//defer f.Close()
 
 	log.SetFormatter(&nested.Formatter{
 
@@ -45,13 +47,27 @@ func InitLogging(lp *LoggingParam) error {
 	log.SetLevel(log.TraceLevel)
 	log.SetReportCaller(false)
 
+	logFile, err := os.OpenFile(lp.Filename, os.O_WRONLY|os.O_SYNC|os.O_APPEND|os.O_CREATE, 0644)
 	if err != nil {
 		// Cannot open log file. Logging to stderr
 		fmt.Println(err)
 		log.SetOutput(os.Stdout)
 	} else {
-		log.SetOutput(io.MultiWriter(os.Stdout, f))
+		//logWriter := bufio.NewWriter(logFile)
+		log.SetOutput(io.MultiWriter(os.Stdout, logFile))
+		log.RegisterExitHandler(func() {
+			fmt.Fprintf(os.Stderr, "... close log file\n")
+			log.Info("close log file")
+			if logWriter != nil {
+				logWriter.Flush()
+			}
+			if logFile != nil {
+				logFile.Close()
+			}
+		})
 		//log.SetOutput(f)
+		//defer f.Close()
+		//defer w.Flush()
 	}
 
 	log.Info("==================== Start Logging =====================================")
