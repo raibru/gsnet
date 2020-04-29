@@ -28,6 +28,7 @@ type AnyClientConfig struct {
 	} `yaml: "packet"`
 	Archive struct {
 		Filename string `yaml: "filename"`
+		Type     string `yaml: "type"` // yaml, csv, ??? json, xml
 	} `yaml: "archive"`
 	Logging struct {
 		// You can change the Timestamp format. But you have to use the same date and time.

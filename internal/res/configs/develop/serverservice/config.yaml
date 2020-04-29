@@ -1,8 +1,15 @@
 service:
-  name: anyserver_1
+  name: anyserver-dev
   addr: 127.0.0.1
   port: 32100
+packet:
+  filename: ./sendlist.txt
+  wait: 5000
+archive:
+  filename: ./archive.csv
+  type: cvs
 logging:
-  filename: ./anyserver_1.log
+  filename: ./anyserver.log
   timestamp: 2006-01-02 15:04:05.000
+
 
