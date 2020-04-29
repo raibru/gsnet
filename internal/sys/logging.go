@@ -20,16 +20,15 @@ var logWriter *bufio.Writer
 
 // LoggingParam hold logging configuration parameter
 type LoggingParam struct {
-	Service   string `yaml: "service"`
-	Version   string `yaml: "version"`
-	Filename  string `yaml: "filename"`
-	Timestamp string `yaml: "timestamp"`
-	Format    string `yaml: "format"`
+	Service    string
+	Version    string
+	Filename   string
+	TimeFormat string
 }
 
 // InitLogging initialize application logging behavior
 func InitLogging(lp *LoggingParam) error {
-	tsf := lp.Timestamp
+	tsf := lp.TimeFormat
 	if tsf == "" {
 		tsf = "2006-01-02 15:04:05.000"
 	}

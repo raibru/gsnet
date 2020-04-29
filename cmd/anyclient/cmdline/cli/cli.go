@@ -51,11 +51,10 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		}
 
 		lp := &sys.LoggingParam{
-			Service:   cf.Service.Name,
-			Version:   Version,
-			Filename:  cf.Logging.Filename,
-			Timestamp: cf.Logging.Timestamp,
-			Format:    cf.Logging.Format,
+			Service:    cf.Service.Name,
+			Version:    Version,
+			Filename:   cf.Logging.Filename,
+			TimeFormat: cf.Logging.TimeFormat,
 		}
 
 		if err := sys.InitLogging(lp); err != nil {

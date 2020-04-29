@@ -33,9 +33,8 @@ type AnyClientConfig struct {
 	Logging struct {
 		// You can change the Timestamp format. But you have to use the same date and time.
 		// "2006-02-02 15:04:06" Works. If you change any digit, it won't work
-		Filename  string `yaml: "filename"`
-		Timestamp string `yaml: "timestamp"`
-		Format    string `yaml: "format"`
+		Filename   string `yaml: "filename"`
+		TimeFormat string `yaml: "timeformat"`
 	} `ỳaml: "logging"`
 }
 
