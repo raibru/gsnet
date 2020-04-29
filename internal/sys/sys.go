@@ -3,6 +3,8 @@ package sys
 import (
 	"fmt"
 	"os"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type sysLogger struct {
@@ -27,6 +29,13 @@ func (l sysLogger) ApplyLogger() error {
 
 func (sysLogger) GetContextName() string {
 	return ctx.ContextName()
+}
+
+// Exit stop the logging and exit
+func Exit(l int) {
+	fmt.Fprintf(os.Stderr, "... stop logging\n")
+	// execute registerd logging exit handler
+	log.Exit(l)
 }
 
 // validateFileExists just makes sure, that the path provided is a file,

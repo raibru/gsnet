@@ -20,7 +20,7 @@ var rootCmd = &cobra.Command{
 		if err := handleParam(cmd, args); err != nil {
 			cmd.Help()
 			fmt.Println("\nRoot command has parsing error: ", err)
-			os.Exit(1)
+			sys.Exit(1)
 		}
 	},
 }
@@ -29,7 +29,7 @@ var rootCmd = &cobra.Command{
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println("Execute root cmd has error", err)
-		os.Exit(1)
+		sys.Exit(1)
 	}
 }
 
@@ -45,7 +45,7 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		err := cf.LoadConfig(configFile)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Fatal error read config file %s: %s\n", configFile, err.Error())
-			os.Exit(2)
+			sys.Exit(2)
 		}
 
 		lp := &sys.LoggingParam{
@@ -58,7 +58,7 @@ func handleParam(cmd *cobra.Command, args []string) error {
 
 		if err := sys.InitLogging(lp); err != nil {
 			fmt.Fprintf(os.Stderr, "Fatal error initialize logging: %s\n", err.Error())
-			os.Exit(2)
+			sys.Exit(2)
 		}
 
 		loggables := []sys.LoggableContext{

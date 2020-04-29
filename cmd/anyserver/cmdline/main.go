@@ -1,12 +1,11 @@
 package main
 
 import (
-	"os"
-
 	anyserver "github.com/raibru/gsnet/cmd/anyserver/cmdline/cli"
+	"github.com/raibru/gsnet/internal/sys"
 )
 
 func main() {
-	defer os.Exit(0)
+	defer sys.Exit(0)
 	anyserver.Execute()
 }
