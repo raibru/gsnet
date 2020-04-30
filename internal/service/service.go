@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/hex"
 	"fmt"
 	"net"
 	"os"
@@ -123,7 +124,7 @@ func (s *ClientServiceData) ApplyConnection() error {
 			fmt.Fprintf(os.Stderr, "Error send data: %s\n", err.Error())
 			return err
 		}
-		ctx.Log().Tracef("::: successful send data %v time(s)", i+1)
+		ctx.Log().Tracef("::: successful send data %v time(s): [0x %s]", i+1, hex.EncodeToString([]byte(msg)))
 		time.Sleep(5 * time.Second)
 	}
 
@@ -186,7 +187,7 @@ func handleServerConnection(conn net.Conn) {
 	ctx.Log().Info("handle server connection...")
 
 	defer conn.Close()
-	data := make([]byte, 1024)
+	data := make([]byte, 4096)
 	for {
 		ctx.Log().Trace("::: read data from connection...")
 		readLen, err := conn.Read(data)
@@ -200,7 +201,7 @@ func handleServerConnection(conn net.Conn) {
 			break // connection already closed by client
 		}
 
-		ctx.Log().Tracef("::: successful read data from connection [%s]", data)
+		ctx.Log().Tracef("::: successful read data from connection [%s]", hex.EncodeToString(data[:readLen]))
 		//break
 
 		//doSomething with []byte data
@@ -262,7 +263,7 @@ func (manager *ClientManager) receive(client *Client) {
 			break
 		}
 		if length > 0 {
-			ctx.Log().Infof("received data [%s]", string(msg))
+			ctx.Log().Infof("received data [0x %s]", hex.EncodeToString(msg[:length]))
 			manager.broadcast <- msg
 		}
 	}
@@ -279,7 +280,7 @@ func (client *Client) receive() {
 			break
 		}
 		if length > 0 {
-			ctx.Log().Infof("::: received data [%s]", string(msg))
+			ctx.Log().Infof("::: received data [0x %s]", hex.EncodeToString(msg[:length]))
 		}
 	}
 	ctx.Log().Info("::: finish receive data")
