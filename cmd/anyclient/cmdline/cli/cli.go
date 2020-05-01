@@ -75,7 +75,10 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		clientService.Name = cf.Service.Name
 		clientService.Addr = cf.Service.Addr
 		clientService.Port = cf.Service.Port
+		clientService.PktCtx = pkt.NewInputPacketContext(cf.Packet.Filename, cf.Packet.Wait)
 	}
+
+	clientService.PktCtx.ReadPackets()
 
 	err := clientService.ApplyConnection()
 	if err != nil {

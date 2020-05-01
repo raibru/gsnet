@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/raibru/gsnet/internal/pkt"
 	"github.com/raibru/gsnet/internal/sys"
 )
 
@@ -51,9 +52,10 @@ type ServerServiceData struct {
 
 // ClientServiceData holds connection data about client services
 type ClientServiceData struct {
-	Name string
-	Addr string
-	Port string
+	Name   string
+	Addr   string
+	Port   string
+	PktCtx *pkt.InputPacketContext
 }
 
 // GsPktServiceData holds data about groundstation package services
@@ -115,18 +117,35 @@ func (s *ClientServiceData) ApplyConnection() error {
 
 	client := &Client{socket: conn}
 	go client.receive()
-	msg := "HALLO WORLD"
 
-	for i := range [10]int{} {
-		_, err = conn.Write([]byte(msg))
+	for line := range s.PktCtx.DataChan {
+		if line == "EOF" {
+			ctx.Log().Trace("::: receive EOF flag")
+			break
+		}
+
+		_, err = conn.Write([]byte(line))
 		if err != nil {
 			ctx.Log().Errorf("::: failure send data due '%s'", err.Error())
 			fmt.Fprintf(os.Stderr, "Error send data: %s\n", err.Error())
 			return err
 		}
-		ctx.Log().Tracef("::: successful send data %v time(s): [0x %s]", i+1, hex.EncodeToString([]byte(msg)))
-		time.Sleep(5 * time.Second)
+		ctx.Log().Tracef("::: successful send data: [0x %s]", hex.EncodeToString([]byte(line)))
+		time.Sleep(s.PktCtx.WaitSec)
 	}
+
+	//	msg := "HALLO WORLD"
+	//
+	//	for i := range [10]int{} {
+	//		_, err = conn.Write([]byte(msg))
+	//		if err != nil {
+	//			ctx.Log().Errorf("::: failure send data due '%s'", err.Error())
+	//			fmt.Fprintf(os.Stderr, "Error send data: %s\n", err.Error())
+	//			return err
+	//		}
+	//		ctx.Log().Tracef("::: successful send data %v time(s): [0x %s]", i+1, hex.EncodeToString([]byte(msg)))
+	//		time.Sleep(5 * time.Second)
+	//	}
 
 	ctx.Log().Info("::: finish apply client connection")
 	return nil

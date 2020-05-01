@@ -24,7 +24,7 @@ type AnyClientConfig struct {
 	} `yaml: "Service"`
 	Packet struct {
 		Filename string `yaml: "filename"`
-		Wait     uint   `yaml:"wait"`
+		Wait     uint8  `yaml:"wait"`
 	} `yaml: "packet"`
 	Archive struct {
 		Filename string `yaml: "filename"`
