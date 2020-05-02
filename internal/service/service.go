@@ -52,10 +52,10 @@ type ServerServiceData struct {
 
 // ClientServiceData holds connection data about client services
 type ClientServiceData struct {
-	Name   string
-	Addr   string
-	Port   string
-	PktCtx *pkt.InputPacketContext
+	Name         string
+	Addr         string
+	Port         string
+	PacketReader *pkt.InputPacketReader
 }
 
 // GsPktServiceData holds data about groundstation package services
@@ -118,7 +118,7 @@ func (s *ClientServiceData) ApplyConnection() error {
 	client := &Client{socket: conn}
 	go client.receive()
 
-	for line := range s.PktCtx.DataChan {
+	for line := range s.PacketReader.DataChan {
 		if line == "EOF" {
 			ctx.Log().Trace("::: receive EOF flag")
 			break
@@ -131,7 +131,7 @@ func (s *ClientServiceData) ApplyConnection() error {
 			return err
 		}
 		ctx.Log().Tracef("::: successful send data: [0x %s]", hex.EncodeToString([]byte(line)))
-		time.Sleep(s.PktCtx.WaitSec)
+		time.Sleep(s.PacketReader.WaitSec)
 	}
 
 	//	msg := "HALLO WORLD"

@@ -41,17 +41,17 @@ func (pktLogger) GetContextName() string {
 // Input Packets to send
 //
 
-// InputPacketContext hold data about packets read from input file
-type InputPacketContext struct {
+// InputPacketReader hold data about packets read from input file
+type InputPacketReader struct {
 	Filename string
 	WaitSec  time.Duration
 	DataChan chan string
 }
 
-// NewInputPacketContext create a new meta object to read packet data
-func NewInputPacketContext(fn string, v uint8) *InputPacketContext {
-	m := &InputPacketContext{
-		Filename: fn,
+// NewInputPacketReader create a new input packet reader to read packet data
+func NewInputPacketReader(name string, waitSec uint8) *InputPacketReader {
+	m := &InputPacketReader{
+		Filename: name,
 		WaitSec:  5 * time.Second,
 		DataChan: make(chan string),
 	}
@@ -59,16 +59,16 @@ func NewInputPacketContext(fn string, v uint8) *InputPacketContext {
 	return m
 }
 
-// ReadPackets read packet data
-func (ctx *InputPacketContext) ReadPackets() {
-	go ReadPacketRawData(ctx)
+// Run read packet data
+func (ctx *InputPacketReader) Run() {
+	go readPacketRawData(ctx)
 }
 
-// ReadPacketRawData read packet data from file which hold raw packet data in each line
-func ReadPacketRawData(pktCtx *InputPacketContext) {
-	fn := pktCtx.Filename
+// readPacketRawData read packet data from file which hold raw packet data in each line
+func readPacketRawData(pktRead *InputPacketReader) {
+	fn := pktRead.Filename
 
-	if pktCtx.DataChan == nil {
+	if pktRead.DataChan == nil {
 		ctx.Log().Errorf("fatal misbehavior data channel is not initialized. Can not provide data from '%s'", fn)
 		return //fmt.Errorf("Packet meta data DataChan shall be initialized")
 	}
@@ -95,17 +95,17 @@ func ReadPacketRawData(pktCtx *InputPacketContext) {
 	for {
 		data, err := r.ReadString('\n')
 		if err == io.EOF {
-			pktCtx.DataChan <- "EOF"
+			pktRead.DataChan <- "EOF"
 			break
 		} else if err != nil {
 			ctx.Log().Errorf("failure read line from input packet file. '%s'", fn)
-			pktCtx.DataChan <- "EOF"
+			pktRead.DataChan <- "EOF"
 			return //err
 		}
-		pktCtx.DataChan <- data
+		pktRead.DataChan <- data
 	}
 
-	close(pktCtx.DataChan)
+	close(pktRead.DataChan)
 
 	return //nil
 }
