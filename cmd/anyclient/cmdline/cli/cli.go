@@ -76,8 +76,10 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		clientService.Addr = cf.Service.Addr
 		clientService.Port = cf.Service.Port
 		clientService.PacketReader = pkt.NewInputPacketReader(cf.Packet.Filename, cf.Packet.Wait)
+		clientService.Arch = arch.NewArchive(cf.Archive.Filename, cf.Archive.Type)
 	}
 
+	clientService.Arch.Run()
 	clientService.PacketReader.Run()
 
 	err := clientService.ApplyConnection()
@@ -85,6 +87,8 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		fmt.Fprintf(os.Stderr, "Fatal Failure. See log. Exit service: %s\n", err.Error())
 		sys.Exit(2)
 	}
+
+	close(clientService.Arch.DataChan)
 
 	return nil
 }

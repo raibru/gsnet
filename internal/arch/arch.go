@@ -2,6 +2,7 @@ package arch
 
 import (
 	"encoding/csv"
+	"fmt"
 	"os"
 
 	"github.com/raibru/gsnet/internal/sys"
@@ -41,7 +42,7 @@ func (archLogger) GetContextName() string {
 
 // ArchiveRecord holds send/receive data with meta info per record
 type ArchiveRecord struct {
-	MsgID        string
+	MsgID        uint32
 	MsgDirection string // RX, TX
 	Protocol     string
 	Data         string
@@ -59,7 +60,7 @@ func NewArchive(name string, archType string) *Archive {
 	a := &Archive{
 		Filename:    name,
 		ArchiveType: archType,
-		DataChan:    make(chan ArchiveRecord),
+		DataChan:    make(chan ArchiveRecord, 10),
 	}
 
 	return a
@@ -72,6 +73,7 @@ func (a *Archive) Run() {
 
 // handleArchive archive data into configured archive destination
 func handleArchive(a *Archive) {
+	ctx.Log().Info("handle archive data")
 	f, err := os.OpenFile(a.Filename, os.O_WRONLY|os.O_SYNC|os.O_APPEND|os.O_CREATE, 0644)
 	if err != nil {
 		ctx.Log().Errorf("Failure open/create archive file: %s", err.Error())
@@ -82,8 +84,18 @@ func handleArchive(a *Archive) {
 	w := csv.NewWriter(f)
 	defer w.Flush()
 
+	ctx.Log().Info("ready write data into archive")
+
 	for rec := range a.DataChan {
-		data := []string{rec.MsgID, rec.MsgDirection, rec.Protocol, rec.Data}
+
+		ctx.Log().Tracef("::: write data into archive: %d", rec.MsgID)
+
+		data := []string{
+			fmt.Sprint(rec.MsgID),
+			rec.MsgDirection,
+			rec.Protocol,
+			rec.Data}
+
 		if err := w.Write(data); err != nil {
 			ctx.Log().Errorf("Failure write data into archive: %s", err.Error())
 		}

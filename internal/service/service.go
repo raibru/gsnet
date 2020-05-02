@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/raibru/gsnet/internal/arch"
 	"github.com/raibru/gsnet/internal/pkt"
 	"github.com/raibru/gsnet/internal/sys"
 )
@@ -45,9 +46,10 @@ func (serviceLogger) GetContextName() string {
 
 // ServerServiceData holds connection data about server services
 type ServerServiceData struct {
-	Name string
-	Addr string
-	Port string
+	Name    string
+	Addr    string
+	Port    string
+	Archive *arch.Archive
 }
 
 // ClientServiceData holds connection data about client services
@@ -55,6 +57,7 @@ type ClientServiceData struct {
 	Name         string
 	Addr         string
 	Port         string
+	Arch         *arch.Archive
 	PacketReader *pkt.InputPacketReader
 }
 
@@ -124,28 +127,19 @@ func (s *ClientServiceData) ApplyConnection() error {
 			break
 		}
 
+		hexData := hex.EncodeToString([]byte(line))
+
+		s.Arch.DataChan <- arch.ArchiveRecord{1, "TX", "TCP", hexData}
+
 		_, err = conn.Write([]byte(line))
 		if err != nil {
 			ctx.Log().Errorf("::: failure send data due '%s'", err.Error())
 			fmt.Fprintf(os.Stderr, "Error send data: %s\n", err.Error())
 			return err
 		}
-		ctx.Log().Tracef("::: successful send data: [0x %s]", hex.EncodeToString([]byte(line)))
+		ctx.Log().Tracef("::: successful send data: [0x %s]", hexData)
 		time.Sleep(s.PacketReader.WaitSec)
 	}
-
-	//	msg := "HALLO WORLD"
-	//
-	//	for i := range [10]int{} {
-	//		_, err = conn.Write([]byte(msg))
-	//		if err != nil {
-	//			ctx.Log().Errorf("::: failure send data due '%s'", err.Error())
-	//			fmt.Fprintf(os.Stderr, "Error send data: %s\n", err.Error())
-	//			return err
-	//		}
-	//		ctx.Log().Tracef("::: successful send data %v time(s): [0x %s]", i+1, hex.EncodeToString([]byte(msg)))
-	//		time.Sleep(5 * time.Second)
-	//	}
 
 	ctx.Log().Info("::: finish apply client connection")
 	return nil
