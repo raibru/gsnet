@@ -129,7 +129,9 @@ func (s *ClientServiceData) ApplyConnection() error {
 
 		hexData := hex.EncodeToString([]byte(line))
 
-		s.Arch.DataChan <- arch.ArchiveRecord{1, "TX", "TCP", hexData}
+		s.Arch.TxCount++
+		r := arch.ArchiveRecord{s.Arch.TxCount, "TX", "TCP", hexData}
+		s.Arch.DataChan <- r
 
 		_, err = conn.Write([]byte(line))
 		if err != nil {

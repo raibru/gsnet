@@ -53,6 +53,8 @@ type Archive struct {
 	Filename    string
 	ArchiveType string
 	DataChan    chan ArchiveRecord
+	TxCount     uint32
+	RxCount     uint32
 }
 
 // NewArchive create a new archive object to write archive records
@@ -60,6 +62,8 @@ func NewArchive(name string, archType string) *Archive {
 	a := &Archive{
 		Filename:    name,
 		ArchiveType: archType,
+		TxCount:     0,
+		RxCount:     0,
 		DataChan:    make(chan ArchiveRecord, 10),
 	}
 
@@ -99,6 +103,7 @@ func handleArchive(a *Archive) {
 		if err := w.Write(data); err != nil {
 			ctx.Log().Errorf("Failure write data into archive: %s", err.Error())
 		}
+		w.Flush()
 	}
 	return
 }
