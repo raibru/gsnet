@@ -43,6 +43,7 @@ func (archLogger) GetContextName() string {
 // ArchiveRecord holds send/receive data with meta info per record
 type ArchiveRecord struct {
 	MsgID        uint32
+	MsgTime      string
 	MsgDirection string // RX, TX
 	Protocol     string
 	Data         string
@@ -96,6 +97,7 @@ func handleArchive(a *Archive) {
 
 		data := []string{
 			fmt.Sprint(rec.MsgID),
+			rec.MsgTime,
 			rec.MsgDirection,
 			rec.Protocol,
 			rec.Data}
