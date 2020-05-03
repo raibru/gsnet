@@ -44,15 +44,15 @@ func (pktLogger) GetContextName() string {
 // InputPacketReader hold data about packets read from input file
 type InputPacketReader struct {
 	Filename string
-	WaitSec  time.Duration
+	Wait     time.Duration
 	DataChan chan string
 }
 
 // NewInputPacketReader create a new input packet reader to read packet data
-func NewInputPacketReader(name string, waitSec uint8) *InputPacketReader {
+func NewInputPacketReader(name string, wait uint32) *InputPacketReader {
 	m := &InputPacketReader{
 		Filename: name,
-		WaitSec:  5 * time.Second,
+		Wait:     time.Duration(wait) * time.Millisecond,
 		DataChan: make(chan string),
 	}
 

@@ -140,7 +140,7 @@ func (s *ClientServiceData) ApplyConnection() error {
 			return err
 		}
 		ctx.Log().Tracef("::: successful send data: [0x %s]", hexData)
-		time.Sleep(s.PacketReader.WaitSec)
+		time.Sleep(s.PacketReader.Wait)
 	}
 
 	ctx.Log().Info("::: finish apply client connection")
