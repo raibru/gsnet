@@ -79,8 +79,8 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		clientService.Arch = arch.NewArchive(cf.Archive.Filename, cf.Archive.Type)
 	}
 
-	clientService.Arch.Run()
-	clientService.PacketReader.Run()
+	clientService.Arch.Start()
+	clientService.PacketReader.Start()
 
 	err := clientService.ApplyConnection()
 	if err != nil {

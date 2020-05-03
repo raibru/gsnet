@@ -59,8 +59,8 @@ func NewInputPacketReader(name string, waitSec uint8) *InputPacketReader {
 	return m
 }
 
-// Run read packet data
-func (ctx *InputPacketReader) Run() {
+// Start read packet data
+func (ctx *InputPacketReader) Start() {
 	go readPacketRawData(ctx)
 }
 

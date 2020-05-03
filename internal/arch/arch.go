@@ -66,8 +66,8 @@ func NewArchive(name string, archType string) *Archive {
 	return a
 }
 
-// Run run archiving in goroutine
-func (a *Archive) Run() {
+// Start run archiving in goroutine
+func (a *Archive) Start() {
 	go handleArchive(a)
 }
 
