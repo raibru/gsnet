@@ -54,15 +54,17 @@ type Archive struct {
 	Filename    string
 	ArchiveType string
 	DataChan    chan ArchiveRecord
+	ServName    string
 	TxCount     uint32
 	RxCount     uint32
 }
 
 // NewArchive create a new archive object to write archive records
-func NewArchive(name string, archType string) *Archive {
+func NewArchive(name string, archType string, servName string) *Archive {
 	a := &Archive{
 		Filename:    name,
 		ArchiveType: archType,
+		ServName:    servName,
 		TxCount:     0,
 		RxCount:     0,
 		DataChan:    make(chan ArchiveRecord, 10),
@@ -98,6 +100,7 @@ func handleArchive(a *Archive) {
 		data := []string{
 			fmt.Sprint(rec.MsgID),
 			rec.MsgTime,
+			a.ServName,
 			rec.MsgDirection,
 			rec.Protocol,
 			rec.Data}

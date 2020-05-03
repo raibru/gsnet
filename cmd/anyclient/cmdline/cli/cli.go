@@ -76,7 +76,7 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		clientService.Addr = cf.Service.Addr
 		clientService.Port = cf.Service.Port
 		clientService.PacketReader = pkt.NewInputPacketReader(cf.Packet.Filename, cf.Packet.Wait)
-		clientService.Arch = arch.NewArchive(cf.Archive.Filename, cf.Archive.Type)
+		clientService.Arch = arch.NewArchive(cf.Archive.Filename, cf.Archive.Type, cf.Service.Name)
 	}
 
 	clientService.Arch.Start()
