@@ -55,8 +55,8 @@ func InitLogging(lp *LoggingParam) error {
 		//logWriter := bufio.NewWriter(logFile)
 		log.SetOutput(io.MultiWriter(os.Stdout, logFile))
 		log.RegisterExitHandler(func() {
-			fmt.Fprintf(os.Stderr, "... close log file\n")
 			log.Info("close log file")
+			log.Info("==================== Finish Session ====================================")
 			if logWriter != nil {
 				logWriter.Flush()
 			}
@@ -69,7 +69,7 @@ func InitLogging(lp *LoggingParam) error {
 		//defer w.Flush()
 	}
 
-	log.Info("==================== Start Logging =====================================")
+	log.Info("==================== Start Session =====================================")
 	log.Infof("run service: %s", lp.Service)
 	log.Infof("version    : %s", lp.Version)
 	log.Infof("date       : %s", time.Now().Format("2006-01-02 15:04:05"))
