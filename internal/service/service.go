@@ -46,10 +46,10 @@ func (serviceLogger) GetContextName() string {
 
 // ServerServiceData holds connection data about server services
 type ServerServiceData struct {
-	Name    string
-	Addr    string
-	Port    string
-	Archive *arch.Archive
+	Name string
+	Addr string
+	Port string
+	Arch *arch.Archive
 }
 
 // ClientServiceData holds connection data about client services
@@ -84,6 +84,7 @@ func (s *ServerServiceData) ApplyConnection() error {
 		broadcast:  make(chan []byte),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
+		service:    s,
 	}
 
 	go manager.start()
@@ -217,7 +218,13 @@ func handleServerConnection(conn net.Conn) {
 			break // connection already closed by client
 		}
 
-		ctx.Log().Tracef("::: successful read data from connection [%s]", hex.EncodeToString(data[:readLen]))
+		hexData := hex.EncodeToString([]byte(data[:readLen]))
+		ctx.Log().Tracef("::: successful read data from connection [%s]", hexData)
+
+		//s.Arch.TxCount++
+		//t := time.Now().Format("2006-01-02 15:04:05.000")
+		//r := arch.ArchiveRecord{s.Arch.TxCount, t, "TX", "TCP", hexData}
+		//s.Arch.DataChan <- r
 		//break
 
 		//doSomething with []byte data
@@ -231,6 +238,7 @@ type ClientManager struct {
 	broadcast  chan []byte
 	register   chan *Client
 	unregister chan *Client
+	service    *ServerServiceData
 }
 
 // Client hold client communication behavior
@@ -271,16 +279,22 @@ func (manager *ClientManager) start() {
 func (manager *ClientManager) receive(client *Client) {
 	ctx.Log().Info("receive data from managed client connections")
 	for {
-		msg := make([]byte, 4096)
-		length, err := client.socket.Read(msg)
+		data := make([]byte, 4096)
+		length, err := client.socket.Read(data)
 		if err != nil {
 			manager.unregister <- client
 			client.socket.Close()
 			break
 		}
 		if length > 0 {
-			ctx.Log().Infof("received data [0x %s]", hex.EncodeToString(msg[:length]))
-			manager.broadcast <- msg
+			hexData := hex.EncodeToString(data[:length])
+			ctx.Log().Infof("received data [0x %s]", hexData)
+
+			manager.service.Arch.RxCount++
+			t := time.Now().Format("2006-01-02 15:04:05.000")
+			r := arch.ArchiveRecord{manager.service.Arch.RxCount, t, "RX", "TCP", hexData}
+			manager.service.Arch.DataChan <- r
+			//manager.broadcast <- data
 		}
 	}
 	ctx.Log().Info("::: finish receive data")
