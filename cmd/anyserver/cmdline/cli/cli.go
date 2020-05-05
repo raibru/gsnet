@@ -75,7 +75,11 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		srvService.Name = cf.Service.Name
 		srvService.Addr = cf.Service.Addr
 		srvService.Port = cf.Service.Port
+		srvService.Arch = arch.NewArchive(cf.Archive.Filename, cf.Archive.Type, cf.Service.Name)
 	}
+
+	sys.StartSignalHandler()
+	srvService.Arch.Start()
 
 	err := srvService.ApplyConnection()
 	if err != nil {
