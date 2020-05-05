@@ -4,7 +4,7 @@ service:
   port: 32100
 packet:
   filename: ./sendlist.txt
-  wait: 5
+  wait: 5000
 archive:
   filename: ./archive.csv
   type: cvs
