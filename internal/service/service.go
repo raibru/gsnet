@@ -61,9 +61,13 @@ type ClientServiceData struct {
 	PacketReader *pkt.InputPacketReader
 }
 
-// GsPktServiceData holds data about groundstation package services
-type GsPktServiceData struct {
-	Name string
+// PacketServiceData holds connection data about client/server services
+type PacketServiceData struct {
+	Name      string
+	Dailers   []ClientServiceData
+	Listeners []ServerServiceData
+	Arch      *arch.Archive
+	Mode      chan string
 }
 
 // ApplyConnection accept a connection from client and handle incoming data stream
@@ -101,7 +105,6 @@ func (s *ServerServiceData) ApplyConnection() error {
 		manager.register <- client
 		go manager.receive(client)
 		//go manager.send(client)
-		//go handleServerConnection(conn)
 		ctx.Log().Info("::: finish apply server listener")
 	}
 }
@@ -148,6 +151,15 @@ func (s *ClientServiceData) ApplyConnection() error {
 	ctx.Log().Info("::: finish apply client connection")
 	return nil
 
+}
+
+// ApplyConnection build all dialer/listener connection for current packet service
+func (s *PacketServiceData) ApplyConnection() error {
+	ctx.Log().Infof("apply all connections for packet service %s", s.Name)
+	ctx.Log().Info("::: finish setup all connections")
+	ctx.Log().Info("::: wait until services ends")
+	<-s.Mode
+	return nil
 }
 
 // CreateTCPServerListener create new TCP listener with parameter in ServerService
@@ -198,38 +210,6 @@ func CreateTCPClientConnection(s *ClientServiceData) (net.Conn, error) {
 
 	ctx.Log().Info("::: finish create client connection")
 	return conn, nil
-}
-
-func handleServerConnection(conn net.Conn) {
-	ctx.Log().Info("handle server connection...")
-
-	defer conn.Close()
-	data := make([]byte, 4096)
-	for {
-		ctx.Log().Trace("::: read data from connection...")
-		readLen, err := conn.Read(data)
-		if err != nil {
-			ctx.Log().Errorf("::: failure read data from connetion: %s", err.Error())
-			continue
-		}
-
-		if readLen == 0 {
-			ctx.Log().Info("::: client close connection")
-			break // connection already closed by client
-		}
-
-		hexData := hex.EncodeToString([]byte(data[:readLen]))
-		ctx.Log().Tracef("::: successful read data from connection [%s]", hexData)
-
-		//s.Arch.TxCount++
-		//t := time.Now().Format("2006-01-02 15:04:05.000")
-		//r := arch.ArchiveRecord{s.Arch.TxCount, t, "TX", "TCP", hexData}
-		//s.Arch.DataChan <- r
-		//break
-
-		//doSomething with []byte data
-		ctx.Log().Info("::: finish handle server connection")
-	}
 }
 
 // ClientManager hold communication behavior
