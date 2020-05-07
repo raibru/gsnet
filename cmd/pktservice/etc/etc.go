@@ -7,20 +7,30 @@ import (
 	"github.com/raibru/gsnet/internal/sys"
 )
 
-// GsPktServiceParam holds data about server services
-type GsPktServiceParam struct {
+// PktServiceParam holds data about server services
+type PktServiceParam struct {
 	Name       string
 	Addr       string
 	Port       string
 	ConfigFile string
 }
 
-// GsPktServiceConfig hold application config environment
-type GsPktServiceConfig struct {
+// PktServiceConfig hold application config environment
+type PktServiceConfig struct {
 	Service struct {
-		Name string `yaml: "name"`
-		Addr string `yaml: "addr"`
-		Port string `yaml: "port"`
+		Name        string `yaml: "name"`
+		Connections struct {
+			Listener []struct {
+				Name string `yaml: "name"`
+				Addr string `yaml: "addr"`
+				Port string `yaml: "port"`
+			} `yaml: "listener"`
+			Dialer []struct {
+				Name string `yaml: "name"`
+				Addr string `yaml: "addr"`
+				Port string `yaml: "port"`
+			} `yaml: "dialer"`
+		} `yaml: "connections"`
 	} `yaml: "Service"`
 	Packet struct {
 		Filename string `yaml: "filename"`
@@ -39,7 +49,7 @@ type GsPktServiceConfig struct {
 }
 
 // LoadConfig to access given servcie configurations
-func (c *GsPktServiceConfig) LoadConfig(fn string) error {
+func (c *PktServiceConfig) LoadConfig(fn string) error {
 	if err := sys.LoadConfig(fn, c); err != nil {
 		fmt.Fprintf(os.Stderr, "Fatal error read config file %s: %s\n", fn, err.Error())
 		return err
@@ -48,6 +58,6 @@ func (c *GsPktServiceConfig) LoadConfig(fn string) error {
 }
 
 // LogFilename answer the filename from config struct where log output will be stored
-func LogFilename(c *GsPktServiceConfig) string {
+func LogFilename(c *PktServiceConfig) string {
 	return c.Logging.Filename
 }

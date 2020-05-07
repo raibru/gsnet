@@ -1,9 +1,9 @@
 package cli
 
-import "github.com/raibru/gsnet/cmd/gspktservice/etc"
+import "github.com/raibru/gsnet/cmd/pktservice/etc"
 
 var (
-	gspktParam etc.GsPktServiceParam
+	pktParam etc.PktServiceParam
 
 	prtVersion bool
 	inputFile  string
@@ -12,7 +12,7 @@ var (
 
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&prtVersion, "version", "v", false, "Display anyserver version")
-	rootCmd.PersistentFlags().StringVarP(&gspktParam.Name, "name", "", "", "Name of the server service")
+	rootCmd.PersistentFlags().StringVarP(&pktParam.Name, "name", "", "", "Name of the server service")
 	rootCmd.PersistentFlags().StringVarP(&inputFile, "input-file", "i", "", "Use input file send multible data packages")
 	rootCmd.PersistentFlags().StringVarP(&configFile, "config-file", "f", "", "Use config file for service behavior")
 }

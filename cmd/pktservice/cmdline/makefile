@@ -1,5 +1,5 @@
 #
-# gspktservice makefile
+# pktservice makefile
 #
 sp :=
 sp +=
@@ -11,15 +11,16 @@ _ROOT := $(patsubst %/root.mak,%,$(call _find,$(CURDIR),root.mak))
 include $(_ROOT)/root.mak
 include $(_ROOT)/top.mak
 
-SERVICE := gspktservice
-SERVICE_EXT := $(_GSPKTSERVICE_EXT)
+SERVICE := pktservice
+SERVICE_EXT := $(_PKTSERVICE_EXT)
 
 GOMAIN      := main.go
 BINARY      := $(SERVICE)
 
-LDBUILD     := -X "github.com/raibru/gsnet/cmd/gspkgservice/cmdline/cli.Build"
-LDVERSION   := -X "github.com/raibru/gsnet/cmd/gspkgservice/cmdline/cli.Version"
+LDBUILD     := -X "github.com/raibru/gsnet/cmd/pktservice/cmdline/cli.Build"
+LDVERSION   := -X "github.com/raibru/gsnet/cmd/pktservice/cmdline/cli.Version"
 
+#include $(_ROOT)/bottom.mak
 include $(_ROOT)/build.mak
 
 #deps:

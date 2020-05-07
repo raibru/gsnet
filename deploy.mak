@@ -11,11 +11,11 @@ BUILD_DIR   := build
 BUILD_BIN_DIR := $(BUILD_DIR)/bin
 DEPLOY_DEV_DIR := $(BUILD_DIR)/develop
 
-BUILD_BINS :=  $(BUILD_BIN_DIR)/anyclient  $(BUILD_BIN_DIR)/anyserver  $(BUILD_BIN_DIR)/gspktservice
+BUILD_BINS :=  $(BUILD_BIN_DIR)/anyclient  $(BUILD_BIN_DIR)/anyserver  $(BUILD_BIN_DIR)/pktservice
 
 RT_DEV_BIN_CLIENTSERVICE := $(DEPLOY_DEV_DIR)/clientservice/anyclient
 RT_DEV_BIN_SERVERSERVICE := $(DEPLOY_DEV_DIR)/serverservice/anyserver
-RT_DEV_BIN_GSPKTSERVICE  := $(DEPLOY_DEV_DIR)/gspktservice/gspktservice
+RT_DEV_BIN_GSPKTSERVICE  := $(DEPLOY_DEV_DIR)/pktservice/pktservice
 
 .PHONY: all
 all: deploy-dev
@@ -27,7 +27,7 @@ $(RT_DEV_BIN_CLIENTSERVICE): $(BUILD_BIN_DIR)/anyclient
 $(RT_DEV_BIN_SERVERSERVICE): $(BUILD_BIN_DIR)/anyserver
 	$(COPY) $^ $@
 
-$(RT_DEV_BIN_GSPKTSERVICE): $(BUILD_BIN_DIR)/gspktservice
+$(RT_DEV_BIN_GSPKTSERVICE): $(BUILD_BIN_DIR)/pktservice
 	$(COPY) $^ $@
 
 $(BUILD_BINS):

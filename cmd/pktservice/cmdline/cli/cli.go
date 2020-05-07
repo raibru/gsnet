@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/raibru/gsnet/cmd/gspktservice/etc"
+	"github.com/raibru/gsnet/cmd/pktservice/etc"
 	"github.com/raibru/gsnet/internal/arch"
 	"github.com/raibru/gsnet/internal/pkt"
 	"github.com/raibru/gsnet/internal/service"
@@ -13,9 +13,9 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "gspktservice",
-	Short: "Ground Station Packet Service",
-	Long:  `Provide ground station packet service behavior via tcp/ip comminication`,
+	Use:   "pktservice",
+	Short: "Packet Service",
+	Long:  `Provide packet transform and transfer service behavior via tcp/ip communication`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := handleParam(cmd, args); err != nil {
 			cmd.Help()
@@ -41,7 +41,7 @@ func handleParam(cmd *cobra.Command, args []string) error {
 	}
 
 	if configFile != "" {
-		var cf = &etc.GsPktServiceConfig{}
+		var cf = &etc.PktServiceConfig{}
 		err := cf.LoadConfig(configFile)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Fatal error read config file %s: %s\n", configFile, err.Error())

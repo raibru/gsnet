@@ -5,7 +5,7 @@
 SUBDIRS := \
 						$(CURDIR)/cmd/anyclient/cmdline \
 					  $(CURDIR)/cmd/anyserver/cmdline \
-						$(CURDIR)/cmd/gspktservice/cmdline 
+						$(CURDIR)/cmd/pktservice/cmdline 
 
 #include $(addsuffix /makefile, $(SUBDIRS))
 
