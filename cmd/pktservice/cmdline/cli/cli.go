@@ -40,6 +40,8 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
+	pktService := service.PacketServiceData{}
+
 	if configFile != "" {
 		var cf = &etc.PktServiceConfig{}
 		err := cf.LoadConfig(configFile)
@@ -69,6 +71,19 @@ func handleParam(cmd *cobra.Command, args []string) error {
 				fmt.Fprintf(os.Stderr, "Error: apply logging for: %s -> %s\n", c.GetContextName(), err.Error())
 			}
 		}
+
+		pktService.Mode = make(chan string)
+		pktService.Name = cf.Service.Name
+		pktService.Arch = arch.NewArchive(cf.Archive.Filename, cf.Archive.Type, cf.Service.Name)
+	}
+
+	sys.StartSignalHandler()
+	pktService.Arch.Start()
+
+	err := pktService.ApplyConnection()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Fatal Failure. See log. Exit service: %s\n", err.Error())
+		sys.Exit(2)
 	}
 
 	return nil
