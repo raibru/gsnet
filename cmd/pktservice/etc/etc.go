@@ -20,16 +20,16 @@ type PktServiceConfig struct {
 	Service struct {
 		Name        string `yaml: "name"`
 		Connections struct {
-			Listener []struct {
+			Listeners []struct {
 				Name string `yaml: "name"`
 				Addr string `yaml: "addr"`
 				Port string `yaml: "port"`
-			} `yaml: "listener"`
-			Dialer []struct {
+			} `yaml: "listeners"`
+			Dialers []struct {
 				Name string `yaml: "name"`
 				Addr string `yaml: "addr"`
 				Port string `yaml: "port"`
-			} `yaml: "dialer"`
+			} `yaml: "dialers"`
 		} `yaml: "connections"`
 	} `yaml: "Service"`
 	Packet struct {
