@@ -40,8 +40,8 @@ func (archLogger) GetContextName() string {
 // Archive handling
 //
 
-// ArchiveRecord holds send/receive data with meta info per record
-type ArchiveRecord struct {
+// Record holds send/receive data with meta info per record
+type Record struct {
 	MsgID        uint32
 	MsgTime      string
 	MsgDirection string // RX, TX
@@ -53,7 +53,7 @@ type ArchiveRecord struct {
 type Archive struct {
 	Filename    string
 	ArchiveType string
-	DataChan    chan ArchiveRecord
+	DataChan    chan Record
 	ServName    string
 	TxCount     uint32
 	RxCount     uint32
@@ -67,7 +67,7 @@ func NewArchive(name string, archType string, servName string) *Archive {
 		ServName:    servName,
 		TxCount:     0,
 		RxCount:     0,
-		DataChan:    make(chan ArchiveRecord, 10),
+		DataChan:    make(chan Record, 10),
 	}
 
 	return a

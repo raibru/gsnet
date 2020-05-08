@@ -135,7 +135,7 @@ func (s *ClientServiceData) ApplyConnection() error {
 
 		s.Arch.TxCount++
 		t := time.Now().Format("2006-01-02 15:04:05.000")
-		r := arch.ArchiveRecord{s.Arch.TxCount, t, "TX", "TCP", hexData}
+		r := arch.Record{MsgID: s.Arch.TxCount, MsgTime: t, MsgDirection: "TX", Protocol: "TCP", Data: hexData}
 		s.Arch.DataChan <- r
 
 		_, err = conn.Write([]byte(line))
@@ -272,7 +272,7 @@ func (manager *ClientManager) receive(client *Client) {
 
 			manager.service.Arch.RxCount++
 			t := time.Now().Format("2006-01-02 15:04:05.000")
-			r := arch.ArchiveRecord{manager.service.Arch.RxCount, t, "RX", "TCP", hexData}
+			r := arch.Record{MsgID: manager.service.Arch.RxCount, MsgTime: t, MsgDirection: "RX", Protocol: "TCP", Data: hexData}
 			manager.service.Arch.DataChan <- r
 			//manager.broadcast <- data
 		}
@@ -303,12 +303,12 @@ func (manager *ClientManager) send(client *Client) {
 		select {
 		case msg, ok := <-client.data:
 			if !ok {
+				ctx.Log().Info("::: finish send data")
 				return
 			}
 			client.socket.Write(msg)
 		}
 	}
-	ctx.Log().Info("::: finish send data")
 }
 
 // // https://www.thepolyglotdeveloper.com/2017/05/network-sockets-with-the-go-programming-language/
