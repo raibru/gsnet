@@ -22,7 +22,7 @@ tmux new-session -d -s $session -n shell \; \
     send-keys 'cd build/develop/serverservice && clear && tail -f anyserver.log' C-m \; \
     select-pane -t 2 \; \
     split-window -h \; \
-    send-keys 'cd build/develop/pktservice && clear' C-m \; \
+    send-keys 'cd build/develop/pktservice && clear && tail -f pktservice.log' C-m \; \
     select-pane -t 4 \; \
     split-window -h \; \
     send-keys 'cd build/develop/clientservice && clear && tail -f anyclient.log' C-m \; \
