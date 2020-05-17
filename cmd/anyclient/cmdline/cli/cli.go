@@ -88,6 +88,7 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		fmt.Fprintf(os.Stderr, "Fatal Failure. See log. Exit service: %s\n", err.Error())
 		sys.Exit(2)
 	}
+	clientService.SendPackets()
 
 	close(clientService.Arch.DataChan)
 

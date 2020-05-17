@@ -2,13 +2,10 @@ package service
 
 import (
 	"encoding/hex"
-	"fmt"
 	"net"
-	"os"
 	"time"
 
 	"github.com/raibru/gsnet/internal/arch"
-	"github.com/raibru/gsnet/internal/pkt"
 	"github.com/raibru/gsnet/internal/sys"
 )
 
@@ -43,174 +40,6 @@ func (serviceLogger) GetContextName() string {
 //
 // Services
 //
-
-// ServerServiceData holds connection data about server services
-type ServerServiceData struct {
-	Name string
-	Addr string
-	Port string
-	Arch *arch.Archive
-}
-
-// ClientServiceData holds connection data about client services
-type ClientServiceData struct {
-	Name         string
-	Addr         string
-	Port         string
-	Arch         *arch.Archive
-	PacketReader *pkt.InputPacketReader
-}
-
-// PacketServiceData holds connection data about client/server services
-type PacketServiceData struct {
-	Name      string
-	Dailers   []ClientServiceData
-	Listeners []ServerServiceData
-	Arch      *arch.Archive
-	Mode      chan string
-}
-
-// ApplyConnection accept a connection from client and handle incoming data stream
-func (s *ServerServiceData) ApplyConnection() error {
-	ctx.Log().Infof("apply server connection for service %s", s.Name)
-	ctx.Log().Tracef("::: create TCP server listener for service %s", s.Name)
-	lsn, err := CreateTCPServerListener(s)
-	if err != nil {
-		ctx.Log().Errorf("::: failure create TCP server listener due '%s'", err.Error())
-		fmt.Fprintf(os.Stderr, "Fatal error create TCP listener: %s\n", err.Error())
-		return err
-	}
-
-	ctx.Log().Tracef("::: establish listener for service %s@%s:%s", s.Name, s.Addr, s.Port)
-
-	manager := ClientManager{
-		clients:    make(map[*Client]bool),
-		broadcast:  make(chan []byte),
-		register:   make(chan *Client),
-		unregister: make(chan *Client),
-		service:    s,
-	}
-
-	go manager.start()
-
-	for {
-		ctx.Log().Trace("::: wait for input...")
-		conn, err := lsn.Accept()
-		ctx.Log().Trace("::: accept input...")
-		if err != nil {
-			ctx.Log().Errorf("::: failure accept connection due '%s'", err.Error())
-			continue
-		}
-		client := &Client{socket: conn, data: make(chan []byte)}
-		manager.register <- client
-		go manager.receive(client)
-		//go manager.send(client)
-		ctx.Log().Info("::: finish apply server listener")
-	}
-}
-
-// ApplyConnection create a connection to server and handle outgoing data stream
-func (s *ClientServiceData) ApplyConnection() error {
-	ctx.Log().Infof("apply client connection for service %s", s.Name)
-	ctx.Log().Tracef("::: create TCP client dialer for service %s", s.Name)
-	conn, err := CreateTCPClientConnection(s)
-	defer conn.Close()
-
-	if err != nil {
-		ctx.Log().Errorf("::: failure create client TCP connection due '%s'", err.Error())
-		fmt.Fprintf(os.Stderr, "Fatal error create client TCP connection: %s\n", err.Error())
-		return err
-	}
-
-	client := &Client{socket: conn}
-	go client.receive()
-
-	for line := range s.PacketReader.DataChan {
-		if line == "EOF" {
-			ctx.Log().Trace("::: receive EOF flag")
-			break
-		}
-
-		hexData := hex.EncodeToString([]byte(line))
-
-		s.Arch.TxCount++
-		t := time.Now().Format("2006-01-02 15:04:05.000")
-		r := arch.Record{MsgID: s.Arch.TxCount, MsgTime: t, MsgDirection: "TX", Protocol: "TCP", Data: hexData}
-		s.Arch.DataChan <- r
-
-		_, err = conn.Write([]byte(line))
-		if err != nil {
-			ctx.Log().Errorf("::: failure send data due '%s'", err.Error())
-			fmt.Fprintf(os.Stderr, "Error send data: %s\n", err.Error())
-			return err
-		}
-		ctx.Log().Tracef("::: successful send data: [0x %s]", hexData)
-		time.Sleep(s.PacketReader.Wait)
-	}
-
-	ctx.Log().Info("::: finish apply client connection")
-	return nil
-
-}
-
-// ApplyConnection build all dialer/listener connection for current packet service
-func (s *PacketServiceData) ApplyConnection() error {
-	ctx.Log().Infof("apply all connections for packet service %s", s.Name)
-	ctx.Log().Info("::: finish setup all connections")
-	ctx.Log().Info("::: wait until services ends")
-	<-s.Mode
-	return nil
-}
-
-// CreateTCPServerListener create new TCP listener with parameter in ServerService
-func CreateTCPServerListener(s *ServerServiceData) (net.Listener, error) {
-	ctx.Log().Infof("create server listener service %s@%s:%s", s.Name, s.Addr, s.Port)
-	ctx.Log().Tracef("::: resolve tcpTCPAddr %s:%s", s.Addr, s.Port)
-
-	serv := s.Addr + ":" + s.Port
-	addr, err := net.ResolveTCPAddr("tcp4", serv)
-	if err != nil {
-		ctx.Log().Errorf("::: failure resolve TCP address due '%s'", err.Error())
-		fmt.Fprintf(os.Stderr, "Fatal error resolve TCP address %s: %s\n", s.Name, err.Error())
-		return nil, err
-	}
-
-	ctx.Log().Tracef("::: start listen TCP %s@%s:%s", s.Name, s.Addr, s.Port)
-	lsn, err := net.ListenTCP("tcp", addr)
-	if err != nil {
-		ctx.Log().Errorf("::: failure listen TCP due '%s'", err.Error())
-		fmt.Fprintf(os.Stderr, "Fatal error listen TCP %s: %s\n", s.Name, err.Error())
-		return nil, err
-	}
-
-	ctx.Log().Info("::: finish create server listener")
-	return lsn, nil
-}
-
-// CreateTCPClientConnection create new TCP connection with parameter in ClientService
-func CreateTCPClientConnection(s *ClientServiceData) (net.Conn, error) {
-	ctx.Log().Infof("create client dialer service %s with connecting to %s:%s", s.Name, s.Addr, s.Port)
-	ctx.Log().Tracef("::: resolve tcpTCPAddr %s:%s", s.Addr, s.Port)
-
-	serv := s.Addr + ":" + s.Port
-	addr, err := net.ResolveTCPAddr("tcp4", serv)
-	if err != nil {
-		ctx.Log().Errorf("::: failure resolve TCPAddr due '%s'", err.Error())
-		fmt.Fprintf(os.Stderr, "Fatal error resolve dailer TCP address %s: %s\n", serv, err.Error())
-		return nil, err
-	}
-
-	ctx.Log().Tracef("::: start dial tcp %s@%s:%s", s.Name, s.Addr, s.Port)
-	conn, err := net.DialTCP("tcp", nil, addr)
-	if err != nil {
-		ctx.Log().Errorf("::: failure connect TCPAddr due '%s'", err.Error())
-		fmt.Fprintf(os.Stderr, "Fatal error connect TCP address %s: %s\n", serv, err.Error())
-		return nil, err
-	}
-
-	ctx.Log().Info("::: finish create client connection")
-	return conn, nil
-}
 
 // ClientManager hold communication behavior
 type ClientManager struct {
@@ -274,23 +103,8 @@ func (manager *ClientManager) receive(client *Client) {
 			t := time.Now().Format("2006-01-02 15:04:05.000")
 			r := arch.Record{MsgID: manager.service.Arch.RxCount, MsgTime: t, MsgDirection: "RX", Protocol: "TCP", Data: hexData}
 			manager.service.Arch.DataChan <- r
+			//manager.service.Linkage.data <-hexData
 			//manager.broadcast <- data
-		}
-	}
-	ctx.Log().Info("::: finish receive data")
-}
-
-func (client *Client) receive() {
-	ctx.Log().Info("receive data")
-	for {
-		msg := make([]byte, 4096)
-		length, err := client.socket.Read(msg)
-		if err != nil {
-			client.socket.Close()
-			break
-		}
-		if length > 0 {
-			ctx.Log().Infof("::: received data [0x %s]", hex.EncodeToString(msg[:length]))
 		}
 	}
 	ctx.Log().Info("::: finish receive data")
@@ -309,6 +123,43 @@ func (manager *ClientManager) send(client *Client) {
 			client.socket.Write(msg)
 		}
 	}
+}
+
+func (client *Client) receive() {
+	ctx.Log().Info("receive data")
+	for {
+		data := make([]byte, 4096)
+		length, err := client.socket.Read(data)
+		if err != nil {
+			client.socket.Close()
+			break
+		}
+		if length > 0 {
+			ctx.Log().Infof("::: received data [0x %s]", hex.EncodeToString(data[:length]))
+		}
+	}
+	ctx.Log().Info("::: finish receive data")
+}
+
+func (client *Client) send() {
+	ctx.Log().Info("send data")
+	for {
+		ctx.Log().Trace("::: wait for send data")
+		data := <-client.data
+
+		if string(data) == "EOF" {
+			ctx.Log().Trace("::: receive EOF flag")
+			break
+		}
+
+		length, err := client.socket.Write(data)
+		if err != nil {
+			ctx.Log().Errorf("::: failure send data due '%s'", err.Error())
+			break
+		}
+		ctx.Log().Tracef("::: successful send data: [0x %s]", hex.EncodeToString(data[:length]))
+	}
+	ctx.Log().Info("::: finish send data")
 }
 
 // // https://www.thepolyglotdeveloper.com/2017/05/network-sockets-with-the-go-programming-language/

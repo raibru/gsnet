@@ -18,20 +18,25 @@ type PktServiceParam struct {
 // PktServiceConfig hold application config environment
 type PktServiceConfig struct {
 	Service struct {
-		Name        string `yaml: "name"`
-		Connections struct {
-			Listeners []struct {
-				Name string `yaml: "name"`
-				Addr string `yaml: "addr"`
-				Port string `yaml: "port"`
-			} `yaml: "listeners"`
-			Dialers []struct {
-				Name string `yaml: "name"`
-				Addr string `yaml: "addr"`
-				Port string `yaml: "port"`
-			} `yaml: "dialers"`
-		} `yaml: "connections"`
-	} `yaml: "Service"`
+		Name    string `yaml: "name"`
+		Network []struct {
+			Channel struct {
+				Name          string `yaml: "name"`
+				Type          string `yaml: "type"`
+				ReconInterval uint32 `yaml: "recon_interval"`
+				Listener      struct {
+					Name string `yaml: "name"`
+					Host string `yaml: "host"`
+					Port string `yaml: "port"`
+				} `yaml: "listener"`
+				Dialer struct {
+					Name string `yaml: "name"`
+					Host string `yaml: "host"`
+					Port string `yaml: "port"`
+				} `yaml: "dialer"`
+			} `yaml: "channel,flow"`
+		} `yaml: "network"`
+	} `yaml: "service"`
 	Packet struct {
 		Filename string `yaml: "filename"`
 		Wait     uint32 `yaml:"wait"`

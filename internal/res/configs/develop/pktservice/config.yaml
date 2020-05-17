@@ -1,14 +1,30 @@
 service:
   name: pktservice
-  connections:
-    listeners: 
-      - name: ServerSrv1
-        addr: 127.0.0.1
-        port: 32100
-    dialers:
-      - name: ClientSrv1
-        addr: 127.0.0.1
-        port: 33100    
+  network:
+    - channel:
+        name: Service1
+        tyüe: TC
+        recon_interval: 1000
+        listener: 
+          name: ServerSrv1
+          host: 127.0.0.1
+          port: 32100
+        dialer:
+          name: ClientSrv1
+          host: 127.0.0.1
+          port: 33100    
+    - channel:
+        name: Service2
+        type: TM
+        recon_interval: 1000
+        listener: 
+          name: ServerSrv2
+          host: 127.0.0.1
+          port: 32200
+        dialer:
+          name: ClientSrv2
+          host: 127.0.0.1
+          port: 33200    
 packet:
   filename: ./sendlist.txt
   wait: 5000

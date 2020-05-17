@@ -1,7 +1,7 @@
 package sys
 
 import (
-	"os"
+	"io/ioutil"
 
 	"gopkg.in/yaml.v2"
 )
@@ -18,20 +18,30 @@ func LoadConfig(fn string, conf ServiceConfig) error {
 		return verr
 	}
 
-	// Open config file
-	f, err := os.Open(fn)
-	if err != nil {
-		return err
+	bytes, rerr := ioutil.ReadFile(fn)
+	if rerr != nil {
+		return rerr
 	}
-	defer f.Close()
 
-	// Init new YAML decode
-	d := yaml.NewDecoder(f)
-
-	// Start YAML decoding from file
-	if err := d.Decode(conf); err != nil {
-		return err
+	uerr := yaml.Unmarshal(bytes, conf)
+	if uerr != nil {
+		return uerr
 	}
+
+	//	// Open config file
+	//	f, err := os.Open(fn)
+	//	if err != nil {
+	//		return err
+	//	}
+	//	defer f.Close()
+	//
+	//	// Init new YAML decode
+	//	d := yaml.NewDecoder(f)
+	//
+	//	// Start YAML decoding from file
+	//	if err := d.Decode(conf); err != nil {
+	//		return err
+	//	}
 
 	return nil
 }

@@ -40,7 +40,7 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	pktService := service.PacketServiceData{}
+	sys.StartSignalHandler()
 
 	if configFile != "" {
 		var cf = &etc.PktServiceConfig{}
@@ -72,18 +72,43 @@ func handleParam(cmd *cobra.Command, args []string) error {
 			}
 		}
 
-		pktService.Mode = make(chan string)
-		pktService.Name = cf.Service.Name
-		pktService.Arch = arch.NewArchive(cf.Archive.Filename, cf.Archive.Type, cf.Service.Name)
-	}
+		archive := arch.NewArchive(cf.Archive.Filename, cf.Archive.Type, cf.Service.Name)
+		archive.Start()
 
-	sys.StartSignalHandler()
-	pktService.Arch.Start()
+		for _, elem := range cf.Service.Network {
 
-	err := pktService.ApplyConnection()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Fatal Failure. See log. Exit service: %s\n", err.Error())
-		sys.Exit(2)
+			fmt.Fprintf(os.Stdout, "###==> Info: iterate elem: %s\n", elem.Channel.Name)
+			var pktService = new(service.PacketServiceData)
+			pktService.Name = elem.Channel.Name
+			pktService.Type = elem.Channel.Type
+			pktService.Archive = archive
+			pktService.Mode = make(chan string)
+
+			var srvService service.ServerServiceData
+			srvService.Name = elem.Channel.Listener.Name
+			srvService.Addr = elem.Channel.Listener.Host
+			srvService.Port = elem.Channel.Listener.Port
+			srvService.Arch = archive
+			pktService.Listener = srvService
+
+			var cliService service.ClientServiceData
+			cliService.Name = elem.Channel.Dialer.Name
+			cliService.Addr = elem.Channel.Dialer.Host
+			cliService.Port = elem.Channel.Dialer.Port
+			cliService.Arch = archive
+			pktService.Dialer = cliService
+
+			go func() {
+				err := pktService.ApplyConnection()
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "Fatal Failure. See log. Exit service: %s\n", err.Error())
+					sys.Exit(2)
+				}
+				<-pktService.Mode
+			}()
+		}
+		wait := make(chan string)
+		<-wait
 	}
 
 	return nil
