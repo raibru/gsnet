@@ -84,19 +84,21 @@ func handleParam(cmd *cobra.Command, args []string) error {
 			pktService.Archive = archive
 			pktService.Mode = make(chan string)
 
-			var srvService service.ServerServiceData
-			srvService.Name = elem.Channel.Listener.Name
-			srvService.Addr = elem.Channel.Listener.Host
-			srvService.Port = elem.Channel.Listener.Port
-			srvService.Arch = archive
-			pktService.Listener = srvService
-
 			var cliService service.ClientServiceData
 			cliService.Name = elem.Channel.Dialer.Name
 			cliService.Addr = elem.Channel.Dialer.Host
 			cliService.Port = elem.Channel.Dialer.Port
+			cliService.Transfer = make(chan []byte)
 			cliService.Arch = archive
 			pktService.Dialer = cliService
+
+			var srvService service.ServerServiceData
+			srvService.Name = elem.Channel.Listener.Name
+			srvService.Addr = elem.Channel.Listener.Host
+			srvService.Port = elem.Channel.Listener.Port
+			srvService.Transfer = cliService.Transfer
+			srvService.Arch = archive
+			pktService.Listener = srvService
 
 			go func() {
 				err := pktService.ApplyConnection()

@@ -10,11 +10,11 @@ import (
 
 // ServerServiceData holds connection data about server services
 type ServerServiceData struct {
-	Name    string
-	Addr    string
-	Port    string
-	Linkage *ClientServiceData
-	Arch    *arch.Archive
+	Name     string
+	Addr     string
+	Port     string
+	Transfer chan []byte
+	Arch     *arch.Archive
 }
 
 // ApplyConnection accept a connection from client and handle incoming data stream

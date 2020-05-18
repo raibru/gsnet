@@ -16,6 +16,7 @@ type ClientServiceData struct {
 	Name         string
 	Addr         string
 	Port         string
+	Transfer     chan []byte
 	Conn         *Client
 	Arch         *arch.Archive
 	PacketReader *pkt.InputPacketReader
@@ -35,7 +36,7 @@ func (s *ClientServiceData) ApplyConnection() error {
 
 	//defer conn.Close()
 
-	s.Conn = &Client{socket: conn, data: make(chan []byte)}
+	s.Conn = &Client{socket: conn, data: s.Transfer}
 	//go client.receive()
 	go s.Conn.send()
 	//defer func() {
@@ -50,6 +51,7 @@ func (s *ClientServiceData) Finalize() {
 	ctx.Log().Infof("finalize service %s", s.Name)
 	s.Conn.socket.Close()
 	close(s.Arch.DataChan)
+	close(s.Transfer)
 	ctx.Log().Info("::: finish finalize service")
 }
 
