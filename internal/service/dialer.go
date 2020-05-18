@@ -32,7 +32,8 @@ func (s *ClientServiceData) ApplyConnection() error {
 		fmt.Fprintf(os.Stderr, "Fatal error create client TCP connection: %s\n", err.Error())
 		return err
 	}
-	defer conn.Close()
+
+	//defer conn.Close()
 
 	s.Conn = &Client{socket: conn, data: make(chan []byte)}
 	//go client.receive()
@@ -42,6 +43,14 @@ func (s *ClientServiceData) ApplyConnection() error {
 	//}()
 
 	return nil
+}
+
+// Finalize cleanup data used by ClientServiceData
+func (s *ClientServiceData) Finalize() {
+	ctx.Log().Infof("finalize service %s", s.Name)
+	s.Conn.socket.Close()
+	close(s.Arch.DataChan)
+	ctx.Log().Info("::: finish finalize service")
 }
 
 // SendPackets sends from file readed lines of packets and send them

@@ -40,6 +40,7 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
+	sys.StartSignalHandler()
 	clientService := service.ClientServiceData{}
 
 	if configFile != "" {
@@ -79,18 +80,17 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		clientService.Arch = arch.NewArchive(cf.Archive.Filename, cf.Archive.Type, cf.Service.Name)
 	}
 
-	sys.StartSignalHandler()
-	clientService.Arch.Start()
-	clientService.PacketReader.Start()
-
 	err := clientService.ApplyConnection()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Fatal Failure. See log. Exit service: %s\n", err.Error())
 		sys.Exit(2)
 	}
-	clientService.SendPackets()
 
-	close(clientService.Arch.DataChan)
+	defer clientService.Finalize()
+
+	clientService.Arch.Start()
+	clientService.PacketReader.Start()
+	clientService.SendPackets()
 
 	return nil
 }
