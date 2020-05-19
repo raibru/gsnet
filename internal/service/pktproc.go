@@ -6,10 +6,28 @@ import "github.com/raibru/gsnet/internal/arch"
 type PacketServiceData struct {
 	Name     string
 	Type     string
-	Dialer   ClientServiceData
-	Listener ServerServiceData
+	Dialer   *ClientServiceData
+	Listener *ServerServiceData
 	Archive  *arch.Archive
 	Mode     chan string
+}
+
+// NewPacketService build new object for listener and dialer service context.
+func NewPacketService(
+	name string,
+	typ string,
+	dialer *ClientServiceData,
+	listener *ServerServiceData,
+	archive *arch.Archive) *PacketServiceData {
+	s := &PacketServiceData{
+		Name:     name,
+		Type:     typ,
+		Dialer:   dialer,
+		Listener: listener,
+		Archive:  archive,
+		Mode:     make(chan string),
+	}
+	return s
 }
 
 // ApplyConnection build all dialer/listener connection for current packet service

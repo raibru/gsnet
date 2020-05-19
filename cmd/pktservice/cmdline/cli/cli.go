@@ -77,28 +77,26 @@ func handleParam(cmd *cobra.Command, args []string) error {
 
 		for _, elem := range cf.Service.Network {
 
-			fmt.Fprintf(os.Stdout, "###==> Info: iterate elem: %s\n", elem.Channel.Name)
-			var pktService = new(service.PacketServiceData)
-			pktService.Name = elem.Channel.Name
-			pktService.Type = elem.Channel.Type
-			pktService.Archive = archive
-			pktService.Mode = make(chan string)
+			cliService := service.NewClientService(
+				elem.Channel.Dialer.Name,
+				elem.Channel.Dialer.Host,
+				elem.Channel.Dialer.Port,
+				nil,
+				archive)
 
-			var cliService service.ClientServiceData
-			cliService.Name = elem.Channel.Dialer.Name
-			cliService.Addr = elem.Channel.Dialer.Host
-			cliService.Port = elem.Channel.Dialer.Port
-			cliService.Transfer = make(chan []byte)
-			cliService.Arch = archive
-			pktService.Dialer = cliService
+			srvService := service.NewServerService(
+				elem.Channel.Listener.Name,
+				elem.Channel.Listener.Host,
+				elem.Channel.Listener.Port,
+				cliService.Transfer,
+				archive)
 
-			var srvService service.ServerServiceData
-			srvService.Name = elem.Channel.Listener.Name
-			srvService.Addr = elem.Channel.Listener.Host
-			srvService.Port = elem.Channel.Listener.Port
-			srvService.Transfer = cliService.Transfer
-			srvService.Arch = archive
-			pktService.Listener = srvService
+			pktService := service.NewPacketService(
+				elem.Channel.Name,
+				elem.Channel.Type,
+				cliService,
+				srvService,
+				archive)
 
 			go func() {
 				err := pktService.ApplyConnection()
@@ -109,8 +107,6 @@ func handleParam(cmd *cobra.Command, args []string) error {
 				<-pktService.Mode
 			}()
 		}
-		wait := make(chan string)
-		<-wait
 	}
 
 	return nil
