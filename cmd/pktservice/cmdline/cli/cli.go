@@ -109,5 +109,8 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	w := make(chan string)
+	<-w
+
 	return nil
 }

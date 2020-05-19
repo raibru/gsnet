@@ -14,7 +14,7 @@ type ServerServiceData struct {
 	Addr     string
 	Port     string
 	Transfer chan []byte
-	Arch     *arch.Archive
+	Archive  *arch.Archive
 }
 
 // NewServerService build new object for listener service context.
@@ -25,7 +25,7 @@ func NewServerService(name string, host string, port string, transfer chan []byt
 		Addr:     host,
 		Port:     port,
 		Transfer: transfer,
-		Arch:     archive,
+		Archive:  archive,
 	}
 	return s
 }

@@ -18,7 +18,7 @@ type ClientServiceData struct {
 	Port         string
 	Transfer     chan []byte
 	Conn         *Client
-	Arch         *arch.Archive
+	Archive      *arch.Archive
 	PacketReader *pkt.InputPacketReader
 }
 
@@ -30,7 +30,7 @@ func NewClientService(name string, host string, port string, reader *pkt.InputPa
 		Port:         port,
 		Transfer:     make(chan []byte),
 		PacketReader: reader,
-		Arch:         archive,
+		Archive:      archive,
 	}
 	return s
 }
@@ -63,7 +63,7 @@ func (s *ClientServiceData) ApplyConnection() error {
 func (s *ClientServiceData) Finalize() {
 	ctx.Log().Infof("finalize service %s", s.Name)
 	s.Conn.socket.Close()
-	close(s.Arch.DataChan)
+	close(s.Archive.DataChan)
 	close(s.Transfer)
 	ctx.Log().Info("::: finish finalize service")
 }
@@ -82,10 +82,10 @@ func (s *ClientServiceData) SendPackets() error {
 
 		hexData := hex.EncodeToString([]byte(line))
 
-		s.Arch.TxCount++
+		s.Archive.TxCount++
 		t := time.Now().Format("2006-01-02 15:04:05.000")
-		r := arch.Record{MsgID: s.Arch.TxCount, MsgTime: t, MsgDirection: "TX", Protocol: "TCP", Data: hexData}
-		s.Arch.DataChan <- r
+		r := arch.Record{MsgID: s.Archive.TxCount, MsgTime: t, MsgDirection: "TX", Protocol: "TCP", Data: hexData}
+		s.Archive.DataChan <- r
 
 		time.Sleep(s.PacketReader.Wait)
 	}

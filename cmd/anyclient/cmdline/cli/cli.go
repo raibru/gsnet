@@ -96,7 +96,7 @@ func handleParam(cmd *cobra.Command, args []string) error {
 
 	defer clientService.Finalize()
 
-	clientService.Arch.Start()
+	clientService.Archive.Start()
 	clientService.PacketReader.Start()
 	clientService.SendPackets()
 

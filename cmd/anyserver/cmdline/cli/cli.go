@@ -88,7 +88,7 @@ func handleParam(cmd *cobra.Command, args []string) error {
 	}
 
 	sys.StartSignalHandler()
-	srvService.Arch.Start()
+	srvService.Archive.Start()
 
 	err := srvService.ApplyConnection()
 	if err != nil {

@@ -99,10 +99,10 @@ func (manager *ClientManager) receive(client *Client) {
 			hexData := hex.EncodeToString(data[:length])
 			ctx.Log().Infof("received data [0x %s]", hexData)
 
-			manager.service.Arch.RxCount++
+			manager.service.Archive.RxCount++
 			t := time.Now().Format("2006-01-02 15:04:05.000")
-			r := arch.Record{MsgID: manager.service.Arch.RxCount, MsgTime: t, MsgDirection: "RX", Protocol: "TCP", Data: hexData}
-			manager.service.Arch.DataChan <- r
+			r := arch.Record{MsgID: manager.service.Archive.RxCount, MsgTime: t, MsgDirection: "RX", Protocol: "TCP", Data: hexData}
+			manager.service.Archive.DataChan <- r
 			if manager.service.Transfer != nil {
 				manager.service.Transfer <- data[:length]
 			}
