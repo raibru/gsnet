@@ -22,6 +22,19 @@ type ClientServiceData struct {
 	PacketReader *pkt.InputPacketReader
 }
 
+// NewClientService deploy a client service with needed data
+func NewClientService(name string, host string, port string, reader *pkt.InputPacketReader, archive *arch.Archive) *ClientServiceData {
+	s := &ClientServiceData{
+		Name:         name,
+		Addr:         host,
+		Port:         port,
+		Transfer:     make(chan []byte),
+		PacketReader: reader,
+		Arch:         archive,
+	}
+	return s
+}
+
 // ApplyConnection create a connection to server and handle outgoing data stream
 func (s *ClientServiceData) ApplyConnection() error {
 	ctx.Log().Infof("apply client connection for service %s", s.Name)

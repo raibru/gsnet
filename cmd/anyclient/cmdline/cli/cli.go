@@ -41,7 +41,7 @@ func handleParam(cmd *cobra.Command, args []string) error {
 	}
 
 	sys.StartSignalHandler()
-	clientService := service.ClientServiceData{}
+	var clientService *service.ClientServiceData
 
 	if configFile != "" {
 		var cf = &etc.AnyClientConfig{}
@@ -73,12 +73,19 @@ func handleParam(cmd *cobra.Command, args []string) error {
 			}
 		}
 
-		clientService.Name = cf.Service.Name
-		clientService.Addr = cf.Service.Addr
-		clientService.Port = cf.Service.Port
-		clientService.Transfer = make(chan []byte)
-		clientService.PacketReader = pkt.NewInputPacketReader(cf.Packet.Filename, cf.Packet.Wait)
-		clientService.Arch = arch.NewArchive(cf.Archive.Filename, cf.Archive.Type, cf.Service.Name)
+		clientService = service.NewClientService(
+			cf.Service.Name,
+			cf.Service.Addr,
+			cf.Service.Port,
+			pkt.NewInputPacketReader(cf.Packet.Filename, cf.Packet.Wait),
+			arch.NewArchive(cf.Archive.Filename, cf.Archive.Type, cf.Service.Name))
+	} else {
+		clientService = service.NewClientService(
+			"anyclient",
+			"127.0.0.1",
+			"30100",
+			nil,
+			nil)
 	}
 
 	err := clientService.ApplyConnection()
