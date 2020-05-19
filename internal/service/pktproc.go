@@ -8,7 +8,7 @@ type PacketServiceData struct {
 	Type     string
 	Dialer   *ClientServiceData
 	Listener *ServerServiceData
-	Archive  *arch.Archive
+	Archive  chan *arch.Record
 	Mode     chan string
 }
 
@@ -18,13 +18,13 @@ func NewPacketService(
 	typ string,
 	dialer *ClientServiceData,
 	listener *ServerServiceData,
-	archive *arch.Archive) *PacketServiceData {
+	archSlot chan *arch.Record) *PacketServiceData {
 	s := &PacketServiceData{
 		Name:     name,
 		Type:     typ,
 		Dialer:   dialer,
 		Listener: listener,
-		Archive:  archive,
+		Archive:  archSlot,
 		Mode:     make(chan string),
 	}
 	return s

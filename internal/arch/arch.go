@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/raibru/gsnet/internal/sys"
 )
@@ -40,6 +41,11 @@ func (archLogger) GetContextName() string {
 // Archive handling
 //
 
+var (
+	txCount uint32
+	rxCount uint32
+)
+
 // Record holds send/receive data with meta info per record
 type Record struct {
 	MsgID        uint32
@@ -53,10 +59,33 @@ type Record struct {
 type Archive struct {
 	Filename    string
 	ArchiveType string
-	DataChan    chan Record
+	DataChan    chan *Record
 	ServName    string
 	TxCount     uint32
 	RxCount     uint32
+}
+
+// NewRecord create an archive record with time and message id
+func NewRecord(hexData string, rxtx string, protocol string) *Record {
+	var count uint32
+	switch rxtx {
+	case "TX":
+		txCount++
+		count = txCount
+	case "RX":
+		rxCount++
+		count = rxCount
+	default:
+		count = 0
+	}
+	t := time.Now().Format("2006-01-02 15:04:05.000")
+	r := &Record{
+		MsgID:        count,
+		MsgTime:      t,
+		MsgDirection: rxtx,
+		Protocol:     protocol,
+		Data:         hexData}
+	return r
 }
 
 // NewArchive create a new archive object to write archive records
@@ -67,7 +96,7 @@ func NewArchive(name string, archType string, servName string) *Archive {
 		ServName:    servName,
 		TxCount:     0,
 		RxCount:     0,
-		DataChan:    make(chan Record, 10),
+		DataChan:    make(chan *Record, 10),
 	}
 
 	return a

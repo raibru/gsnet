@@ -14,18 +14,18 @@ type ServerServiceData struct {
 	Addr     string
 	Port     string
 	Transfer chan []byte
-	Archive  *arch.Archive
+	Archive  chan *arch.Record
 }
 
 // NewServerService build new object for listener service context.
 // If transfer channel is nil this object is a data sink
-func NewServerService(name string, host string, port string, transfer chan []byte, archive *arch.Archive) *ServerServiceData {
+func NewServerService(name string, host string, port string, transfer chan []byte, archSlot chan *arch.Record) *ServerServiceData {
 	s := &ServerServiceData{
 		Name:     name,
 		Addr:     host,
 		Port:     port,
 		Transfer: transfer,
-		Archive:  archive,
+		Archive:  archSlot,
 	}
 	return s
 }

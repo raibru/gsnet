@@ -18,19 +18,19 @@ type ClientServiceData struct {
 	Port         string
 	Transfer     chan []byte
 	Conn         *Client
-	Archive      *arch.Archive
+	Archive      chan *arch.Record
 	PacketReader *pkt.InputPacketReader
 }
 
 // NewClientService deploy a client service with needed data
-func NewClientService(name string, host string, port string, reader *pkt.InputPacketReader, archive *arch.Archive) *ClientServiceData {
+func NewClientService(name string, host string, port string, reader *pkt.InputPacketReader, archSlot chan *arch.Record) *ClientServiceData {
 	s := &ClientServiceData{
 		Name:         name,
 		Addr:         host,
 		Port:         port,
 		Transfer:     make(chan []byte),
 		PacketReader: reader,
-		Archive:      archive,
+		Archive:      archSlot,
 	}
 	return s
 }
@@ -63,7 +63,7 @@ func (s *ClientServiceData) ApplyConnection() error {
 func (s *ClientServiceData) Finalize() {
 	ctx.Log().Infof("finalize service %s", s.Name)
 	s.Conn.socket.Close()
-	close(s.Archive.DataChan)
+	close(s.Archive)
 	close(s.Transfer)
 	ctx.Log().Info("::: finish finalize service")
 }
@@ -82,10 +82,10 @@ func (s *ClientServiceData) SendPackets() error {
 
 		hexData := hex.EncodeToString([]byte(line))
 
-		s.Archive.TxCount++
-		t := time.Now().Format("2006-01-02 15:04:05.000")
-		r := arch.Record{MsgID: s.Archive.TxCount, MsgTime: t, MsgDirection: "TX", Protocol: "TCP", Data: hexData}
-		s.Archive.DataChan <- r
+		if s.Archive != nil {
+			r := arch.NewRecord(hexData, "TX", "TCP")
+			s.Archive <- r
+		}
 
 		time.Sleep(s.PacketReader.Wait)
 	}

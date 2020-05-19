@@ -3,7 +3,6 @@ package service
 import (
 	"encoding/hex"
 	"net"
-	"time"
 
 	"github.com/raibru/gsnet/internal/arch"
 	"github.com/raibru/gsnet/internal/sys"
@@ -99,10 +98,10 @@ func (manager *ClientManager) receive(client *Client) {
 			hexData := hex.EncodeToString(data[:length])
 			ctx.Log().Infof("received data [0x %s]", hexData)
 
-			manager.service.Archive.RxCount++
-			t := time.Now().Format("2006-01-02 15:04:05.000")
-			r := arch.Record{MsgID: manager.service.Archive.RxCount, MsgTime: t, MsgDirection: "RX", Protocol: "TCP", Data: hexData}
-			manager.service.Archive.DataChan <- r
+			if manager.service.Archive != nil {
+				r := arch.NewRecord(hexData, "RX", "TCP")
+				manager.service.Archive <- r
+			}
 			if manager.service.Transfer != nil {
 				manager.service.Transfer <- data[:length]
 			}
