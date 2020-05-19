@@ -17,6 +17,19 @@ type ServerServiceData struct {
 	Arch     *arch.Archive
 }
 
+// NewServerService build new object for listener service context.
+// If transfer channel is nil this object is a data sink
+func NewServerService(name string, host string, port string, transfer chan []byte, archive *arch.Archive) *ServerServiceData {
+	s := &ServerServiceData{
+		Name:     name,
+		Addr:     host,
+		Port:     port,
+		Transfer: transfer,
+		Arch:     archive,
+	}
+	return s
+}
+
 // ApplyConnection accept a connection from client and handle incoming data stream
 func (s *ServerServiceData) ApplyConnection() error {
 	ctx.Log().Infof("apply server connection for service %s", s.Name)

@@ -40,7 +40,7 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	srvService := service.ServerServiceData{}
+	var srvService *service.ServerServiceData
 
 	if configFile != "" {
 		var cf = etc.AnyServerConfig{}
@@ -72,10 +72,19 @@ func handleParam(cmd *cobra.Command, args []string) error {
 			}
 		}
 
-		srvService.Name = cf.Service.Name
-		srvService.Addr = cf.Service.Addr
-		srvService.Port = cf.Service.Port
-		srvService.Arch = arch.NewArchive(cf.Archive.Filename, cf.Archive.Type, cf.Service.Name)
+		srvService = service.NewServerService(
+			cf.Service.Name,
+			cf.Service.Addr,
+			cf.Service.Port,
+			nil,
+			arch.NewArchive(cf.Archive.Filename, cf.Archive.Type, cf.Service.Name))
+	} else {
+		srvService = service.NewServerService(
+			"anyserver",
+			"127.0.0.1",
+			"30100",
+			nil,
+			nil)
 	}
 
 	sys.StartSignalHandler()
