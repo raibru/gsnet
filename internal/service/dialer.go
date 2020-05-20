@@ -19,11 +19,11 @@ type ClientServiceData struct {
 	Transfer     chan []byte
 	Conn         *Client
 	Archive      chan *arch.Record
-	PacketReader *pkt.InputPacketReader
+	PacketReader *pkt.PacketReader
 }
 
 // NewClientService deploy a client service with needed data
-func NewClientService(name string, host string, port string, reader *pkt.InputPacketReader, archSlot chan *arch.Record) *ClientServiceData {
+func NewClientService(name string, host string, port string, reader *pkt.PacketReader, archSlot chan *arch.Record) *ClientServiceData {
 	s := &ClientServiceData{
 		Name:         name,
 		Addr:         host,
@@ -71,7 +71,7 @@ func (s *ClientServiceData) Finalize() {
 // SendPackets sends from file readed lines of packets and send them
 func (s *ClientServiceData) SendPackets() error {
 	ctx.Log().Infof("send packets from  %s to connected service", s.Name)
-	for line := range s.PacketReader.DataChan {
+	for line := range s.PacketReader.Supply {
 		ctx.Log().Tracef("::: Send packet: [0x %s]", hex.EncodeToString([]byte(line)))
 		if line == "EOF" {
 			ctx.Log().Trace("::: read EOF flag from packet reader")

@@ -41,53 +41,54 @@ func (pktLogger) GetContextName() string {
 // Input Packets to send
 //
 
-// InputPacketReader hold data about packets read from input file
-type InputPacketReader struct {
+// PacketReader read packet data from input file and distribute it via
+// channel which can be used by consumer
+type PacketReader struct {
 	Filename string
 	Wait     time.Duration
-	DataChan chan string
+	Supply   chan string
 }
 
-// NewInputPacketReader create a new input packet reader to read packet data
-func NewInputPacketReader(name string, wait uint32) *InputPacketReader {
-	m := &InputPacketReader{
+// NewPacketReader create a new packet reader
+func NewPacketReader(name string, wait uint32) *PacketReader {
+	m := &PacketReader{
 		Filename: name,
 		Wait:     time.Duration(wait) * time.Millisecond,
-		DataChan: make(chan string),
+		Supply:   make(chan string),
 	}
 
 	return m
 }
 
 // Start read packet data
-func (ctx *InputPacketReader) Start() {
+func (ctx *PacketReader) Start() {
 	go readPacketRawData(ctx)
 }
 
 // readPacketRawData read packet data from file which hold raw packet data in each line
-func readPacketRawData(pktRead *InputPacketReader) {
+func readPacketRawData(pktRead *PacketReader) {
 	fn := pktRead.Filename
 
-	if pktRead.DataChan == nil {
+	if pktRead.Supply == nil {
 		ctx.Log().Errorf("fatal misbehavior data channel is not initialized. Can not provide data from '%s'", fn)
-		return //fmt.Errorf("Packet meta data DataChan shall be initialized")
+		return
 	}
 
 	s, err := os.Stat(fn)
 	if err != nil {
 		ctx.Log().Errorf("failure get os status from. '%s'", fn)
-		return //err
+		return
 	}
 
 	if s.IsDir() {
 		ctx.Log().Errorf("failure access input packet file. '%s' is a directory, not a file", fn)
-		return //fmt.Errorf("'%s' is a directory, not a file", fn)
+		return
 	}
 
 	f, err := os.Open(fn)
 	if err != nil {
 		ctx.Log().Errorf("failure open input packet file '%s'", fn)
-		return //err
+		return
 	}
 	defer f.Close()
 
@@ -95,17 +96,17 @@ func readPacketRawData(pktRead *InputPacketReader) {
 	for {
 		data, err := r.ReadString('\n')
 		if err == io.EOF {
-			pktRead.DataChan <- "EOF"
+			pktRead.Supply <- "EOF"
 			break
 		} else if err != nil {
 			ctx.Log().Errorf("failure read line from input packet file. '%s'", fn)
-			pktRead.DataChan <- "EOF"
+			pktRead.Supply <- "EOF"
 			return //err
 		}
-		pktRead.DataChan <- data
+		pktRead.Supply <- data
 	}
 
-	close(pktRead.DataChan)
+	close(pktRead.Supply)
 
 	return //nil
 }
