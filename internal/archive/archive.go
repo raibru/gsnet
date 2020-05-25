@@ -1,4 +1,4 @@
-package arch
+package archive
 
 import (
 	"encoding/csv"
@@ -48,21 +48,21 @@ var (
 
 // Record holds send/receive data with meta info per record
 type Record struct {
-	MsgID        uint32
-	MsgTime      string
-	MsgDirection string // RX, TX
-	Protocol     string
-	Data         string
+	ID        uint32
+	Time      string
+	Direction string // RX, TX
+	Protocol  string
+	Data      string
 }
 
 // Archive hold archive runable parameter
 type Archive struct {
-	Filename    string
-	ArchiveType string
-	DataChan    chan *Record
-	ServName    string
-	TxCount     uint32
-	RxCount     uint32
+	Filename          string
+	ArchiveType       string
+	Archivate         chan *Record
+	ContextDesciption string
+	TxCount           uint32
+	RxCount           uint32
 }
 
 // NewRecord create an archive record with time and message id
@@ -80,23 +80,23 @@ func NewRecord(hexData string, rxtx string, protocol string) *Record {
 	}
 	t := time.Now().Format("2006-01-02 15:04:05.000")
 	r := &Record{
-		MsgID:        count,
-		MsgTime:      t,
-		MsgDirection: rxtx,
-		Protocol:     protocol,
-		Data:         hexData}
+		ID:        count,
+		Time:      t,
+		Direction: rxtx,
+		Protocol:  protocol,
+		Data:      hexData}
 	return r
 }
 
 // NewArchive create a new archive object to write archive records
-func NewArchive(name string, archType string, servName string) *Archive {
+func NewArchive(name string, archType string, ctxDesc string) *Archive {
 	a := &Archive{
-		Filename:    name,
-		ArchiveType: archType,
-		ServName:    servName,
-		TxCount:     0,
-		RxCount:     0,
-		DataChan:    make(chan *Record, 10),
+		Filename:          name,
+		ArchiveType:       archType,
+		ContextDesciption: ctxDesc,
+		TxCount:           0,
+		RxCount:           0,
+		Archivate:         make(chan *Record, 10),
 	}
 
 	return a
@@ -122,15 +122,15 @@ func handleArchive(a *Archive) {
 
 	ctx.Log().Info("ready write data into archive")
 
-	for rec := range a.DataChan {
+	for rec := range a.Archivate {
 
-		ctx.Log().Tracef("::: write data into archive: %d", rec.MsgID)
+		ctx.Log().Tracef("::: write data into archive: %d", rec.ID)
 
 		data := []string{
-			fmt.Sprint(rec.MsgID),
-			rec.MsgTime,
-			a.ServName,
-			rec.MsgDirection,
+			fmt.Sprint(rec.ID),
+			rec.Time,
+			a.ContextDesciption,
+			rec.Direction,
 			rec.Protocol,
 			rec.Data}
 

@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 	"net"
 
-	"github.com/raibru/gsnet/internal/arch"
+	"github.com/raibru/gsnet/internal/archive"
 	"github.com/raibru/gsnet/internal/sys"
 )
 
@@ -99,7 +99,7 @@ func (manager *ClientManager) receive(client *Client) {
 			ctx.Log().Infof("received data [0x %s]", hexData)
 
 			if manager.service.Archive != nil {
-				r := arch.NewRecord(hexData, "RX", "TCP")
+				r := archive.NewRecord(hexData, "RX", "TCP")
 				manager.service.Archive <- r
 			}
 			if manager.service.Transfer != nil {

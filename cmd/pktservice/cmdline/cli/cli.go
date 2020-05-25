@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/raibru/gsnet/cmd/pktservice/etc"
-	"github.com/raibru/gsnet/internal/arch"
+	"github.com/raibru/gsnet/internal/archive"
 	"github.com/raibru/gsnet/internal/pkt"
 	"github.com/raibru/gsnet/internal/service"
 	"github.com/raibru/gsnet/internal/sys"
@@ -63,7 +63,7 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		}
 
 		loggables := []sys.LoggableContext{
-			sys.LogContext, service.LogContext, pkt.LogContext, arch.LogContext,
+			sys.LogContext, service.LogContext, pkt.LogContext, archive.LogContext,
 		}
 
 		for _, c := range loggables {
@@ -72,7 +72,7 @@ func handleParam(cmd *cobra.Command, args []string) error {
 			}
 		}
 
-		archive := arch.NewArchive(cf.Archive.Filename, cf.Archive.Type, cf.Service.Name)
+		archive := archive.NewArchive(cf.Archive.Filename, cf.Archive.Type, cf.Service.Name)
 		archive.Start()
 
 		for _, elem := range cf.Service.Network {
@@ -82,21 +82,21 @@ func handleParam(cmd *cobra.Command, args []string) error {
 				elem.Channel.Dialer.Host,
 				elem.Channel.Dialer.Port,
 				nil,
-				archive.DataChan)
+				archive.Archivate)
 
 			srvService := service.NewServerService(
 				elem.Channel.Listener.Name,
 				elem.Channel.Listener.Host,
 				elem.Channel.Listener.Port,
 				cliService.Transfer,
-				archive.DataChan)
+				archive.Archivate)
 
 			pktService := service.NewPacketService(
 				elem.Channel.Name,
 				elem.Channel.Type,
 				cliService,
 				srvService,
-				archive.DataChan)
+				archive.Archivate)
 
 			go func() {
 				err := pktService.ApplyConnection()

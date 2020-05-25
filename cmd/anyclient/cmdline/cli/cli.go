@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/raibru/gsnet/cmd/anyclient/etc"
-	"github.com/raibru/gsnet/internal/arch"
+	"github.com/raibru/gsnet/internal/archive"
 	"github.com/raibru/gsnet/internal/pkt"
 	"github.com/raibru/gsnet/internal/service"
 	"github.com/raibru/gsnet/internal/sys"
@@ -42,7 +42,7 @@ func handleParam(cmd *cobra.Command, args []string) error {
 
 	sys.StartSignalHandler()
 	var clientService *service.ClientServiceData
-	var archiveService *arch.Archive
+	var archiveService *archive.Archive
 
 	if configFile != "" {
 		var cf = &etc.AnyClientConfig{}
@@ -65,7 +65,7 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		}
 
 		loggables := []sys.LoggableContext{
-			sys.LogContext, service.LogContext, pkt.LogContext, arch.LogContext,
+			sys.LogContext, service.LogContext, pkt.LogContext, archive.LogContext,
 		}
 
 		for _, c := range loggables {
@@ -74,13 +74,13 @@ func handleParam(cmd *cobra.Command, args []string) error {
 			}
 		}
 
-		archiveService = arch.NewArchive(cf.Archive.Filename, cf.Archive.Type, cf.Service.Name)
+		archiveService = archive.NewArchive(cf.Archive.Filename, cf.Archive.Type, cf.Service.Name)
 		clientService = service.NewClientService(
 			cf.Service.Name,
 			cf.Service.Addr,
 			cf.Service.Port,
 			pkt.NewPacketReader(cf.Packet.Filename, cf.Packet.Wait),
-			archiveService.DataChan)
+			archiveService.Archivate)
 	} else {
 		clientService = service.NewClientService(
 			"anyclient",

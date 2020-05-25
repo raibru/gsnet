@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/raibru/gsnet/internal/arch"
+	"github.com/raibru/gsnet/internal/archive"
 	"github.com/raibru/gsnet/internal/pkt"
 )
 
@@ -18,12 +18,12 @@ type ClientServiceData struct {
 	Port         string
 	Transfer     chan []byte
 	Conn         *Client
-	Archive      chan *arch.Record
+	Archive      chan *archive.Record
 	PacketReader *pkt.PacketReader
 }
 
 // NewClientService deploy a client service with needed data
-func NewClientService(name string, host string, port string, reader *pkt.PacketReader, archSlot chan *arch.Record) *ClientServiceData {
+func NewClientService(name string, host string, port string, reader *pkt.PacketReader, archSlot chan *archive.Record) *ClientServiceData {
 	s := &ClientServiceData{
 		Name:         name,
 		Addr:         host,
@@ -83,7 +83,7 @@ func (s *ClientServiceData) SendPackets() error {
 		hexData := hex.EncodeToString([]byte(line))
 
 		if s.Archive != nil {
-			r := arch.NewRecord(hexData, "TX", "TCP")
+			r := archive.NewRecord(hexData, "TX", "TCP")
 			s.Archive <- r
 		}
 

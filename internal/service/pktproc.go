@@ -1,6 +1,6 @@
 package service
 
-import "github.com/raibru/gsnet/internal/arch"
+import "github.com/raibru/gsnet/internal/archive"
 
 // PacketServiceData holds connection data about client/server services
 type PacketServiceData struct {
@@ -8,7 +8,7 @@ type PacketServiceData struct {
 	Type     string
 	Dialer   *ClientServiceData
 	Listener *ServerServiceData
-	Archive  chan *arch.Record
+	Archive  chan *archive.Record
 	Mode     chan string
 }
 
@@ -18,7 +18,7 @@ func NewPacketService(
 	typ string,
 	dialer *ClientServiceData,
 	listener *ServerServiceData,
-	archSlot chan *arch.Record) *PacketServiceData {
+	archSlot chan *archive.Record) *PacketServiceData {
 	s := &PacketServiceData{
 		Name:     name,
 		Type:     typ,

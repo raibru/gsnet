@@ -5,7 +5,7 @@ import (
 	"net"
 	"os"
 
-	"github.com/raibru/gsnet/internal/arch"
+	"github.com/raibru/gsnet/internal/archive"
 )
 
 // ServerServiceData holds connection data about server services
@@ -14,12 +14,12 @@ type ServerServiceData struct {
 	Addr     string
 	Port     string
 	Transfer chan []byte
-	Archive  chan *arch.Record
+	Archive  chan *archive.Record
 }
 
 // NewServerService build new object for listener service context.
 // If transfer channel is nil this object is a data sink
-func NewServerService(name string, host string, port string, transfer chan []byte, archSlot chan *arch.Record) *ServerServiceData {
+func NewServerService(name string, host string, port string, transfer chan []byte, archSlot chan *archive.Record) *ServerServiceData {
 	s := &ServerServiceData{
 		Name:     name,
 		Addr:     host,
