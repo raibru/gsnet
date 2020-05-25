@@ -55,16 +55,6 @@ type Record struct {
 	Data      string
 }
 
-// Archive hold archive runable parameter
-type Archive struct {
-	Filename          string
-	ArchiveType       string
-	Archivate         chan *Record
-	ContextDesciption string
-	TxCount           uint32
-	RxCount           uint32
-}
-
 // NewRecord create an archive record with time and message id
 func NewRecord(hexData string, rxtx string, protocol string) *Record {
 	var count uint32
@@ -88,6 +78,16 @@ func NewRecord(hexData string, rxtx string, protocol string) *Record {
 	return r
 }
 
+// Archive hold archive runable parameter
+type Archive struct {
+	Filename          string
+	ArchiveType       string
+	Archivate         chan *Record
+	ContextDesciption string
+	TxCount           uint32
+	RxCount           uint32
+}
+
 // NewArchive create a new archive object to write archive records
 func NewArchive(name string, archType string, ctxDesc string) *Archive {
 	a := &Archive{
@@ -102,42 +102,49 @@ func NewArchive(name string, archType string, ctxDesc string) *Archive {
 	return a
 }
 
-// Start run archiving in goroutine
+// Start starts archiving inside goroutine
 func (a *Archive) Start() {
-	go handleArchive(a)
+	go func() {
+		ctx.Log().Info("handle archive data")
+		f, err := os.OpenFile(a.Filename, os.O_WRONLY|os.O_SYNC|os.O_APPEND|os.O_CREATE, 0644)
+		if err != nil {
+			ctx.Log().Errorf("Failure open/create archive file: %s", err.Error())
+			return
+		}
+		defer f.Close()
+
+		w := csv.NewWriter(f)
+		defer w.Flush()
+
+		ctx.Log().Info("ready write data into archive")
+
+		for rec := range a.Archivate {
+
+			if rec == nil {
+				ctx.Log().Trace("::: receive archive stop event")
+				w.Flush()
+				return
+			}
+
+			ctx.Log().Tracef("::: write data into archive: %d", rec.ID)
+
+			data := []string{
+				fmt.Sprint(rec.ID),
+				rec.Time,
+				a.ContextDesciption,
+				rec.Direction,
+				rec.Protocol,
+				rec.Data}
+
+			if err := w.Write(data); err != nil {
+				ctx.Log().Errorf("Failure write data into archive: %s", err.Error())
+			}
+			w.Flush()
+		}
+	}()
 }
 
-// handleArchive archive data into configured archive destination
-func handleArchive(a *Archive) {
-	ctx.Log().Info("handle archive data")
-	f, err := os.OpenFile(a.Filename, os.O_WRONLY|os.O_SYNC|os.O_APPEND|os.O_CREATE, 0644)
-	if err != nil {
-		ctx.Log().Errorf("Failure open/create archive file: %s", err.Error())
-		return
-	}
-	defer f.Close()
-
-	w := csv.NewWriter(f)
-	defer w.Flush()
-
-	ctx.Log().Info("ready write data into archive")
-
-	for rec := range a.Archivate {
-
-		ctx.Log().Tracef("::: write data into archive: %d", rec.ID)
-
-		data := []string{
-			fmt.Sprint(rec.ID),
-			rec.Time,
-			a.ContextDesciption,
-			rec.Direction,
-			rec.Protocol,
-			rec.Data}
-
-		if err := w.Write(data); err != nil {
-			ctx.Log().Errorf("Failure write data into archive: %s", err.Error())
-		}
-		w.Flush()
-	}
-	return
+// Stop stops archiving incoming data
+func (a *Archive) Stop() {
+	a.Archivate <- &Record{}
 }
