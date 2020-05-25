@@ -80,23 +80,23 @@ func NewRecord(hexData string, rxtx string, protocol string) *Record {
 
 // Archive hold archive runable parameter
 type Archive struct {
-	Filename          string
-	ArchiveType       string
 	Archivate         chan *Record
-	ContextDesciption string
-	TxCount           uint32
-	RxCount           uint32
+	filename          string
+	archiveType       string
+	contextDesciption string
+	txCount           uint32
+	rxCount           uint32
 }
 
 // NewArchive create a new archive object to write archive records
 func NewArchive(name string, archType string, ctxDesc string) *Archive {
 	a := &Archive{
-		Filename:          name,
-		ArchiveType:       archType,
-		ContextDesciption: ctxDesc,
-		TxCount:           0,
-		RxCount:           0,
 		Archivate:         make(chan *Record, 10),
+		filename:          name,
+		archiveType:       archType,
+		contextDesciption: ctxDesc,
+		txCount:           0,
+		rxCount:           0,
 	}
 
 	return a
@@ -105,8 +105,8 @@ func NewArchive(name string, archType string, ctxDesc string) *Archive {
 // Start starts archiving inside goroutine
 func (a *Archive) Start() {
 	go func() {
-		ctx.Log().Info("handle archive data")
-		f, err := os.OpenFile(a.Filename, os.O_WRONLY|os.O_SYNC|os.O_APPEND|os.O_CREATE, 0644)
+		ctx.Log().Info("start service to write data into archive")
+		f, err := os.OpenFile(a.filename, os.O_WRONLY|os.O_SYNC|os.O_APPEND|os.O_CREATE, 0644)
 		if err != nil {
 			ctx.Log().Errorf("Failure open/create archive file: %s", err.Error())
 			return
@@ -131,7 +131,7 @@ func (a *Archive) Start() {
 			data := []string{
 				fmt.Sprintf("%s-%d", rec.direction, rec.id),
 				rec.time,
-				a.ContextDesciption,
+				a.contextDesciption,
 				rec.direction,
 				rec.protocol,
 				rec.data}
@@ -147,4 +147,5 @@ func (a *Archive) Start() {
 // Stop stops archiving incoming data
 func (a *Archive) Stop() {
 	a.Archivate <- &Record{}
+	ctx.Log().Info("stop service to write data into archive")
 }
