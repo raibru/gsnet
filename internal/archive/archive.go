@@ -48,11 +48,11 @@ var (
 
 // Record holds send/receive data with meta info per record
 type Record struct {
-	ID        uint32
-	Time      string
-	Direction string // RX, TX
-	Protocol  string
-	Data      string
+	id        uint32
+	time      string
+	direction string // RX, TX
+	protocol  string
+	data      string
 }
 
 // NewRecord create an archive record with time and message id
@@ -70,11 +70,11 @@ func NewRecord(hexData string, rxtx string, protocol string) *Record {
 	}
 	t := time.Now().Format("2006-01-02 15:04:05.000")
 	r := &Record{
-		ID:        count,
-		Time:      t,
-		Direction: rxtx,
-		Protocol:  protocol,
-		Data:      hexData}
+		id:        count,
+		time:      t,
+		direction: rxtx,
+		protocol:  protocol,
+		data:      hexData}
 	return r
 }
 
@@ -126,15 +126,15 @@ func (a *Archive) Start() {
 				return
 			}
 
-			ctx.Log().Tracef("::: write data into archive: %d", rec.ID)
+			ctx.Log().Tracef("::: write data into archive: %s-%d", rec.direction, rec.id)
 
 			data := []string{
-				fmt.Sprint(rec.ID),
-				rec.Time,
+				fmt.Sprintf("%s-%d", rec.direction, rec.id),
+				rec.time,
 				a.ContextDesciption,
-				rec.Direction,
-				rec.Protocol,
-				rec.Data}
+				rec.direction,
+				rec.protocol,
+				rec.data}
 
 			if err := w.Write(data); err != nil {
 				ctx.Log().Errorf("Failure write data into archive: %s", err.Error())
