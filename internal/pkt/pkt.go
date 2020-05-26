@@ -44,16 +44,16 @@ func (pktLogger) GetContextName() string {
 // PacketReader read packet data from input file and distribute it via
 // channel which can be used by consumer
 type PacketReader struct {
-	Filename string
-	Wait     time.Duration
+	filename string
+	waitMsec time.Duration // wait duration time in milliseconds
 	Supply   chan string
 }
 
 // NewPacketReader create a new packet reader
 func NewPacketReader(name string, wait uint32) *PacketReader {
 	m := &PacketReader{
-		Filename: name,
-		Wait:     time.Duration(wait) * time.Millisecond,
+		filename: name,
+		waitMsec: time.Duration(wait) * time.Millisecond,
 		Supply:   make(chan string),
 	}
 
@@ -67,7 +67,7 @@ func (ctx *PacketReader) Start() {
 
 // readPacketRawData read packet data from file which hold raw packet data in each line
 func readPacketRawData(pktRead *PacketReader) {
-	fn := pktRead.Filename
+	fn := pktRead.filename
 
 	if pktRead.Supply == nil {
 		logger.Log().Errorf("fatal misbehavior data channel is not initialized. Can not provide data from '%s'", fn)
@@ -101,12 +101,13 @@ func readPacketRawData(pktRead *PacketReader) {
 		} else if err != nil {
 			logger.Log().Errorf("failure read line from input packet file. '%s'", fn)
 			pktRead.Supply <- "EOF"
-			return //err
+			return
 		}
 		pktRead.Supply <- data
+		time.Sleep(pktRead.waitMsec)
 	}
 
 	close(pktRead.Supply)
 
-	return //nil
+	return
 }

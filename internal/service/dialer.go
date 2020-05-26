@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"time"
 
 	"github.com/raibru/gsnet/internal/archive"
 	"github.com/raibru/gsnet/internal/pkt"
@@ -86,8 +85,6 @@ func (s *ClientServiceData) SendPackets() error {
 			r := archive.NewRecord(hexData, "TX", "TCP")
 			s.Archive <- r
 		}
-
-		time.Sleep(s.PacketReader.Wait)
 	}
 
 	logger.Log().Info("::: finish apply client connection")
