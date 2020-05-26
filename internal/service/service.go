@@ -20,20 +20,20 @@ type serviceLogger struct {
 var LogContext = serviceLogger{contextName: "srv"}
 
 // log hold logging context
-var ctx = sys.ContextLogger{}
+var logger = sys.ContextLogger{}
 
 func (l serviceLogger) ApplyLogger() error {
-	err := ctx.ApplyLogger(l.contextName)
+	err := logger.ApplyLogger(l.contextName)
 	if err != nil {
 		return err
 	}
-	ctx.Log().Infof("apply service logger behavior: %s", l.contextName)
-	ctx.Log().Info("::: finish apply service logger")
+	logger.Log().Infof("apply service logger behavior: %s", l.contextName)
+	logger.Log().Info("::: finish apply service logger")
 	return nil
 }
 
 func (serviceLogger) GetContextName() string {
-	return ctx.ContextName()
+	return logger.ContextName()
 }
 
 //
@@ -56,36 +56,36 @@ type Client struct {
 }
 
 func (manager *ClientManager) start() {
-	ctx.Log().Info("start manage client connections")
+	logger.Log().Info("start manage client connections")
 	for {
 		select {
 		case connection := <-manager.register:
 			manager.clients[connection] = true
-			ctx.Log().Info("::: register client connection")
+			logger.Log().Info("::: register client connection")
 		case connection := <-manager.unregister:
 			if _, ok := manager.clients[connection]; ok {
 				close(connection.data)
 				delete(manager.clients, connection)
-				ctx.Log().Info("::: unregister terminated client connection")
+				logger.Log().Info("::: unregister terminated client connection")
 			}
 		case message := <-manager.broadcast:
-			ctx.Log().Info("::: broadcast to all managed client connections")
+			logger.Log().Info("::: broadcast to all managed client connections")
 			for connection := range manager.clients {
 				select {
 				case connection.data <- message:
 				default:
-					ctx.Log().Info("::: delete terminated client connections")
+					logger.Log().Info("::: delete terminated client connections")
 					close(connection.data)
 					delete(manager.clients, connection)
 				}
 			}
 		}
-		ctx.Log().Info("::: finish manage client connections")
+		logger.Log().Info("::: finish manage client connections")
 	}
 }
 
 func (manager *ClientManager) receive(client *Client) {
-	ctx.Log().Info("receive data from managed client connections")
+	logger.Log().Info("receive data from managed client connections")
 	for {
 		data := make([]byte, 4096)
 		length, err := client.socket.Read(data)
@@ -96,7 +96,7 @@ func (manager *ClientManager) receive(client *Client) {
 		}
 		if length > 0 {
 			hexData := hex.EncodeToString(data[:length])
-			ctx.Log().Infof("received data [0x %s]", hexData)
+			logger.Log().Infof("received data [0x %s]", hexData)
 
 			if manager.service.Archive != nil {
 				r := archive.NewRecord(hexData, "RX", "TCP")
@@ -108,17 +108,17 @@ func (manager *ClientManager) receive(client *Client) {
 			//manager.broadcast <- data
 		}
 	}
-	ctx.Log().Info("::: finish receive data")
+	logger.Log().Info("::: finish receive data")
 }
 
 func (manager *ClientManager) send(client *Client) {
 	defer client.socket.Close()
-	ctx.Log().Info("send data to managed client")
+	logger.Log().Info("send data to managed client")
 	for {
 		select {
 		case msg, ok := <-client.data:
 			if !ok {
-				ctx.Log().Info("::: finish send data")
+				logger.Log().Info("::: finish send data")
 				return
 			}
 			client.socket.Write(msg)
@@ -127,7 +127,7 @@ func (manager *ClientManager) send(client *Client) {
 }
 
 func (client *Client) receive() {
-	ctx.Log().Info("receive data")
+	logger.Log().Info("receive data")
 	for {
 		data := make([]byte, 4096)
 		length, err := client.socket.Read(data)
@@ -136,31 +136,31 @@ func (client *Client) receive() {
 			break
 		}
 		if length > 0 {
-			ctx.Log().Infof("::: received data [0x %s]", hex.EncodeToString(data[:length]))
+			logger.Log().Infof("::: received data [0x %s]", hex.EncodeToString(data[:length]))
 		}
 	}
-	ctx.Log().Info("::: finish receive data")
+	logger.Log().Info("::: finish receive data")
 }
 
 func (client *Client) send() {
-	ctx.Log().Info("send data")
+	logger.Log().Info("send data")
 	for {
-		ctx.Log().Trace("::: wait for send data")
+		logger.Log().Trace("::: wait for send data")
 		data := <-client.data
 
 		if string(data) == "EOF" {
-			ctx.Log().Trace("::: receive EOF flag")
+			logger.Log().Trace("::: receive EOF flag")
 			break
 		}
 
 		length, err := client.socket.Write(data)
 		if err != nil {
-			ctx.Log().Errorf("::: failure send data due '%s'", err.Error())
+			logger.Log().Errorf("::: failure send data due '%s'", err.Error())
 			break
 		}
-		ctx.Log().Tracef("::: successful send data: [0x %s]", hex.EncodeToString(data[:length]))
+		logger.Log().Tracef("::: successful send data: [0x %s]", hex.EncodeToString(data[:length]))
 	}
-	ctx.Log().Info("::: finish send data")
+	logger.Log().Info("::: finish send data")
 }
 
 // // https://www.thepolyglotdeveloper.com/2017/05/network-sockets-with-the-go-programming-language/

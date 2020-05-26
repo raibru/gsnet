@@ -21,20 +21,20 @@ type pktLogger struct {
 var LogContext = pktLogger{contextName: "pkt"}
 
 // log hold logging context
-var ctx = sys.ContextLogger{}
+var logger = sys.ContextLogger{}
 
 func (l pktLogger) ApplyLogger() error {
-	err := ctx.ApplyLogger(l.contextName)
+	err := logger.ApplyLogger(l.contextName)
 	if err != nil {
 		return err
 	}
-	ctx.Log().Infof("apply package logger behavior: %s", l.contextName)
-	ctx.Log().Info("::: finish apply package logger")
+	logger.Log().Infof("apply package logger behavior: %s", l.contextName)
+	logger.Log().Info("::: finish apply package logger")
 	return nil
 }
 
 func (pktLogger) GetContextName() string {
-	return ctx.ContextName()
+	return logger.ContextName()
 }
 
 //
@@ -70,24 +70,24 @@ func readPacketRawData(pktRead *PacketReader) {
 	fn := pktRead.Filename
 
 	if pktRead.Supply == nil {
-		ctx.Log().Errorf("fatal misbehavior data channel is not initialized. Can not provide data from '%s'", fn)
+		logger.Log().Errorf("fatal misbehavior data channel is not initialized. Can not provide data from '%s'", fn)
 		return
 	}
 
 	s, err := os.Stat(fn)
 	if err != nil {
-		ctx.Log().Errorf("failure get os status from. '%s'", fn)
+		logger.Log().Errorf("failure get os status from. '%s'", fn)
 		return
 	}
 
 	if s.IsDir() {
-		ctx.Log().Errorf("failure access input packet file. '%s' is a directory, not a file", fn)
+		logger.Log().Errorf("failure access input packet file. '%s' is a directory, not a file", fn)
 		return
 	}
 
 	f, err := os.Open(fn)
 	if err != nil {
-		ctx.Log().Errorf("failure open input packet file '%s'", fn)
+		logger.Log().Errorf("failure open input packet file '%s'", fn)
 		return
 	}
 	defer f.Close()
@@ -99,7 +99,7 @@ func readPacketRawData(pktRead *PacketReader) {
 			pktRead.Supply <- "EOF"
 			break
 		} else if err != nil {
-			ctx.Log().Errorf("failure read line from input packet file. '%s'", fn)
+			logger.Log().Errorf("failure read line from input packet file. '%s'", fn)
 			pktRead.Supply <- "EOF"
 			return //err
 		}

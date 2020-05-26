@@ -37,12 +37,12 @@ func NewClientService(name string, host string, port string, reader *pkt.PacketR
 
 // ApplyConnection create a connection to server and handle outgoing data stream
 func (s *ClientServiceData) ApplyConnection() error {
-	ctx.Log().Infof("apply client connection for service %s", s.Name)
-	ctx.Log().Tracef("::: create TCP client dialer for service %s", s.Name)
+	logger.Log().Infof("apply client connection for service %s", s.Name)
+	logger.Log().Tracef("::: create TCP client dialer for service %s", s.Name)
 	conn, err := CreateTCPClientConnection(s)
 
 	if err != nil {
-		ctx.Log().Errorf("::: failure create client TCP connection due '%s'", err.Error())
+		logger.Log().Errorf("::: failure create client TCP connection due '%s'", err.Error())
 		fmt.Fprintf(os.Stderr, "Fatal error create client TCP connection: %s\n", err.Error())
 		return err
 	}
@@ -61,20 +61,20 @@ func (s *ClientServiceData) ApplyConnection() error {
 
 // Finalize cleanup data used by ClientServiceData
 func (s *ClientServiceData) Finalize() {
-	ctx.Log().Infof("finalize service %s", s.Name)
+	logger.Log().Infof("finalize service %s", s.Name)
 	s.Conn.socket.Close()
 	close(s.Archive)
 	close(s.Transfer)
-	ctx.Log().Info("::: finish finalize service")
+	logger.Log().Info("::: finish finalize service")
 }
 
 // SendPackets sends from file readed lines of packets and send them
 func (s *ClientServiceData) SendPackets() error {
-	ctx.Log().Infof("send packets from  %s to connected service", s.Name)
+	logger.Log().Infof("send packets from  %s to connected service", s.Name)
 	for line := range s.PacketReader.Supply {
-		ctx.Log().Tracef("::: Send packet: [0x %s]", hex.EncodeToString([]byte(line)))
+		logger.Log().Tracef("::: Send packet: [0x %s]", hex.EncodeToString([]byte(line)))
 		if line == "EOF" {
-			ctx.Log().Trace("::: read EOF flag from packet reader")
+			logger.Log().Trace("::: read EOF flag from packet reader")
 			break
 		}
 
@@ -90,32 +90,32 @@ func (s *ClientServiceData) SendPackets() error {
 		time.Sleep(s.PacketReader.Wait)
 	}
 
-	ctx.Log().Info("::: finish apply client connection")
+	logger.Log().Info("::: finish apply client connection")
 	return nil
 
 }
 
 // CreateTCPClientConnection create new TCP connection with parameter in ClientService
 func CreateTCPClientConnection(s *ClientServiceData) (net.Conn, error) {
-	ctx.Log().Infof("create client dialer service %s with connecting to %s:%s", s.Name, s.Addr, s.Port)
-	ctx.Log().Tracef("::: resolve tcpTCPAddr %s:%s", s.Addr, s.Port)
+	logger.Log().Infof("create client dialer service %s with connecting to %s:%s", s.Name, s.Addr, s.Port)
+	logger.Log().Tracef("::: resolve tcpTCPAddr %s:%s", s.Addr, s.Port)
 
 	serv := s.Addr + ":" + s.Port
 	addr, err := net.ResolveTCPAddr("tcp4", serv)
 	if err != nil {
-		ctx.Log().Errorf("::: failure resolve TCPAddr due '%s'", err.Error())
+		logger.Log().Errorf("::: failure resolve TCPAddr due '%s'", err.Error())
 		fmt.Fprintf(os.Stderr, "Fatal error resolve dailer TCP address %s: %s\n", serv, err.Error())
 		return nil, err
 	}
 
-	ctx.Log().Tracef("::: start dial tcp %s@%s:%s", s.Name, s.Addr, s.Port)
+	logger.Log().Tracef("::: start dial tcp %s@%s:%s", s.Name, s.Addr, s.Port)
 	conn, err := net.DialTCP("tcp", nil, addr)
 	if err != nil {
-		ctx.Log().Errorf("::: failure connect TCPAddr due '%s'", err.Error())
+		logger.Log().Errorf("::: failure connect TCPAddr due '%s'", err.Error())
 		fmt.Fprintf(os.Stderr, "Fatal error connect TCP address %s: %s\n", serv, err.Error())
 		return nil, err
 	}
 
-	ctx.Log().Info("::: finish create client connection")
+	logger.Log().Info("::: finish create client connection")
 	return conn, nil
 }

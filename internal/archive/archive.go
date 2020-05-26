@@ -21,20 +21,20 @@ type archLogger struct {
 var LogContext = archLogger{contextName: "ach"}
 
 // log hold logging context
-var ctx = sys.ContextLogger{}
+var logger = sys.ContextLogger{}
 
 func (l archLogger) ApplyLogger() error {
-	err := ctx.ApplyLogger(l.contextName)
+	err := logger.ApplyLogger(l.contextName)
 	if err != nil {
 		return err
 	}
-	ctx.Log().Infof("apply archive logger behavior: %s", l.contextName)
-	ctx.Log().Info("::: finish apply archive logger")
+	logger.Log().Infof("apply archive logger behavior: %s", l.contextName)
+	logger.Log().Info("::: finish apply archive logger")
 	return nil
 }
 
 func (archLogger) GetContextName() string {
-	return ctx.ContextName()
+	return logger.ContextName()
 }
 
 //
@@ -105,10 +105,10 @@ func NewArchive(name string, archType string, ctxDesc string) *Archive {
 // Start starts archiving inside goroutine
 func (a *Archive) Start() {
 	go func() {
-		ctx.Log().Info("start service to write data into archive")
+		logger.Log().Info("start service to write data into archive")
 		f, err := os.OpenFile(a.filename, os.O_WRONLY|os.O_SYNC|os.O_APPEND|os.O_CREATE, 0644)
 		if err != nil {
-			ctx.Log().Errorf("Failure open/create archive file: %s", err.Error())
+			logger.Log().Errorf("Failure open/create archive file: %s", err.Error())
 			return
 		}
 		defer f.Close()
@@ -116,17 +116,17 @@ func (a *Archive) Start() {
 		w := csv.NewWriter(f)
 		defer w.Flush()
 
-		ctx.Log().Info("ready write data into archive")
+		logger.Log().Info("ready write data into archive")
 
 		for rec := range a.Archivate {
 
 			if rec == nil {
-				ctx.Log().Trace("::: receive archive stop event")
+				logger.Log().Trace("::: receive archive stop event")
 				w.Flush()
 				return
 			}
 
-			ctx.Log().Tracef("::: write data into archive: %s-%d", rec.direction, rec.id)
+			logger.Log().Tracef("::: write data into archive: %s-%d", rec.direction, rec.id)
 
 			data := []string{
 				fmt.Sprintf("%s-%d", rec.direction, rec.id),
@@ -137,7 +137,7 @@ func (a *Archive) Start() {
 				rec.data}
 
 			if err := w.Write(data); err != nil {
-				ctx.Log().Errorf("Failure write data into archive: %s", err.Error())
+				logger.Log().Errorf("Failure write data into archive: %s", err.Error())
 			}
 			w.Flush()
 		}
@@ -147,5 +147,5 @@ func (a *Archive) Start() {
 // Stop stops archiving incoming data
 func (a *Archive) Stop() {
 	a.Archivate <- &Record{}
-	ctx.Log().Info("stop service to write data into archive")
+	logger.Log().Info("stop service to write data into archive")
 }

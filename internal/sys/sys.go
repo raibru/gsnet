@@ -17,20 +17,20 @@ type sysLogger struct {
 var LogContext = sysLogger{contextName: "sys"}
 
 // log hold logging context
-var ctx = ContextLogger{}
+var logger = ContextLogger{}
 
 func (l sysLogger) ApplyLogger() error {
-	err := ctx.ApplyLogger(l.contextName)
+	err := logger.ApplyLogger(l.contextName)
 	if err != nil {
 		return err
 	}
-	ctx.Log().Infof("apply system logger behavior: %s", l.contextName)
-	ctx.Log().Info("::: finish apply system logger")
+	logger.Log().Infof("apply system logger behavior: %s", l.contextName)
+	logger.Log().Info("::: finish apply system logger")
 	return nil
 }
 
 func (sysLogger) GetContextName() string {
-	return ctx.ContextName()
+	return logger.ContextName()
 }
 
 // Exit stop the logging and exit
@@ -45,7 +45,7 @@ func StartSignalHandler() {
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-c
-		ctx.Log().Info("handle system signal SIGTERM")
+		logger.Log().Info("handle system signal SIGTERM")
 		Exit(0) // use own exit func
 	}()
 }
@@ -57,7 +57,7 @@ func validateFileExists(fn string) error {
 		return err
 	}
 	if s.IsDir() {
-		ctx.Log().Errorf("failure access logging file. '%s' is a directory, not a file", fn)
+		logger.Log().Errorf("failure access logging file. '%s' is a directory, not a file", fn)
 		return fmt.Errorf("'%s' is a directory, not a file", fn)
 	}
 	return nil
