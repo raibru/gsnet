@@ -14,34 +14,19 @@ type ServiceConfig interface {
 
 // LoadConfig set configuration parameter from given filename fn
 func LoadConfig(fn string, conf ServiceConfig) error {
-	if verr := validateFileExists(fn); verr != nil {
-		return verr
+	if err := validateFileExists(fn); err != nil {
+		return err
 	}
 
-	bytes, rerr := ioutil.ReadFile(fn)
-	if rerr != nil {
-		return rerr
+	bytes, err := ioutil.ReadFile(fn)
+	if err != nil {
+		return err
 	}
 
-	uerr := yaml.Unmarshal(bytes, conf)
-	if uerr != nil {
-		return uerr
+	err = yaml.Unmarshal(bytes, conf)
+	if err != nil {
+		return err
 	}
-
-	//	// Open config file
-	//	f, err := os.Open(fn)
-	//	if err != nil {
-	//		return err
-	//	}
-	//	defer f.Close()
-	//
-	//	// Init new YAML decode
-	//	d := yaml.NewDecoder(f)
-	//
-	//	// Start YAML decoding from file
-	//	if err := d.Decode(conf); err != nil {
-	//		return err
-	//	}
 
 	return nil
 }
