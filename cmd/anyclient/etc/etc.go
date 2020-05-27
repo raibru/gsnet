@@ -10,7 +10,7 @@ import (
 // ClientServiceParam holds data about client services
 type ClientServiceParam struct {
 	Name       string
-	Addr       string
+	Host       string
 	Port       string
 	ConfigFile string
 }
@@ -19,7 +19,7 @@ type ClientServiceParam struct {
 type AnyClientConfig struct {
 	Service struct {
 		Name string `yaml: "name"`
-		Addr string `yaml: "addr"`
+		Host string `yaml: "host"`
 		Port string `yaml: "port"`
 	} `yaml: "Service"`
 	Packet struct {

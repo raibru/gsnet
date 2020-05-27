@@ -11,7 +11,7 @@ import (
 // ServerServiceData holds connection data about server services
 type ServerServiceData struct {
 	Name     string
-	Addr     string
+	Host     string
 	Port     string
 	Transfer chan []byte
 	Archive  chan *archive.Record
@@ -22,7 +22,7 @@ type ServerServiceData struct {
 func NewServerService(name string, host string, port string, transfer chan []byte, archSlot chan *archive.Record) *ServerServiceData {
 	s := &ServerServiceData{
 		Name:     name,
-		Addr:     host,
+		Host:     host,
 		Port:     port,
 		Transfer: transfer,
 		Archive:  archSlot,
@@ -41,7 +41,7 @@ func (s *ServerServiceData) ApplyConnection() error {
 		return err
 	}
 
-	logger.Log().Tracef("::: establish listener for service %s@%s:%s", s.Name, s.Addr, s.Port)
+	logger.Log().Tracef("::: establish listener for service %s@%s:%s", s.Name, s.Host, s.Port)
 
 	manager := ClientManager{
 		clients:    make(map[*Client]bool),
@@ -71,10 +71,10 @@ func (s *ServerServiceData) ApplyConnection() error {
 
 // CreateTCPServerListener create new TCP listener with parameter in ServerService
 func CreateTCPServerListener(s *ServerServiceData) (net.Listener, error) {
-	logger.Log().Infof("create server listener service %s@%s:%s", s.Name, s.Addr, s.Port)
-	logger.Log().Tracef("::: resolve tcpTCPAddr %s:%s", s.Addr, s.Port)
+	logger.Log().Infof("create server listener service %s@%s:%s", s.Name, s.Host, s.Port)
+	logger.Log().Tracef("::: resolve tcpTCPAddr %s:%s", s.Host, s.Port)
 
-	serv := s.Addr + ":" + s.Port
+	serv := s.Host + ":" + s.Port
 	addr, err := net.ResolveTCPAddr("tcp4", serv)
 	if err != nil {
 		logger.Log().Errorf("::: failure resolve TCP address due '%s'", err.Error())
@@ -82,7 +82,7 @@ func CreateTCPServerListener(s *ServerServiceData) (net.Listener, error) {
 		return nil, err
 	}
 
-	logger.Log().Tracef("::: start listen TCP %s@%s:%s", s.Name, s.Addr, s.Port)
+	logger.Log().Tracef("::: start listen TCP %s@%s:%s", s.Name, s.Host, s.Port)
 	lsn, err := net.ListenTCP("tcp", addr)
 	if err != nil {
 		logger.Log().Errorf("::: failure listen TCP due '%s'", err.Error())

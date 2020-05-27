@@ -1,6 +1,6 @@
 service:
   name: anyclient_1
-  addr: 127.0.0.1
+  host: 127.0.0.1
   port: 32100
 logging:
   filename: ./anyclient_1.log

@@ -78,7 +78,7 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		archiveService = archive.NewArchive(cf.Archive.Filename, cf.Archive.Type, cf.Service.Name)
 		srvService = service.NewServerService(
 			cf.Service.Name,
-			cf.Service.Addr,
+			cf.Service.Host,
 			cf.Service.Port,
 			nil,
 			archiveService.Archivate)

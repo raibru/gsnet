@@ -12,7 +12,7 @@ import (
 // ClientServiceData holds connection data about client services
 type ClientServiceData struct {
 	Name     string
-	Addr     string
+	Host     string
 	Port     string
 	Conn     *Client
 	Process  chan string
@@ -24,7 +24,7 @@ type ClientServiceData struct {
 func NewClientService(name string, host string, port string, procSlot chan string, archSlot chan *archive.Record) *ClientServiceData {
 	s := &ClientServiceData{
 		Name:     name,
-		Addr:     host,
+		Host:     host,
 		Port:     port,
 		Process:  procSlot,
 		Archive:  archSlot,
@@ -93,10 +93,10 @@ func (s *ClientServiceData) SendPackets() error {
 
 // CreateTCPClientConnection create new TCP connection with parameter in ClientService
 func CreateTCPClientConnection(s *ClientServiceData) (net.Conn, error) {
-	logger.Log().Infof("create client dialer service %s with connecting to %s:%s", s.Name, s.Addr, s.Port)
-	logger.Log().Tracef("::: resolve tcpTCPAddr %s:%s", s.Addr, s.Port)
+	logger.Log().Infof("create client dialer service %s with connecting to %s:%s", s.Name, s.Host, s.Port)
+	logger.Log().Tracef("::: resolve tcpTCPAddr %s:%s", s.Host, s.Port)
 
-	serv := s.Addr + ":" + s.Port
+	serv := s.Host + ":" + s.Port
 	addr, err := net.ResolveTCPAddr("tcp4", serv)
 	if err != nil {
 		logger.Log().Errorf("::: failure resolve TCPAddr due '%s'", err.Error())
@@ -104,7 +104,7 @@ func CreateTCPClientConnection(s *ClientServiceData) (net.Conn, error) {
 		return nil, err
 	}
 
-	logger.Log().Tracef("::: start dial tcp %s@%s:%s", s.Name, s.Addr, s.Port)
+	logger.Log().Tracef("::: start dial tcp %s@%s:%s", s.Name, s.Host, s.Port)
 	conn, err := net.DialTCP("tcp", nil, addr)
 	if err != nil {
 		logger.Log().Errorf("::: failure connect TCPAddr due '%s'", err.Error())

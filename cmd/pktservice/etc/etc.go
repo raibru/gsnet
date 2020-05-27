@@ -10,7 +10,7 @@ import (
 // PktServiceParam holds data about server services
 type PktServiceParam struct {
 	Name       string
-	Addr       string
+	Host       string
 	Port       string
 	ConfigFile string
 }
