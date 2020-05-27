@@ -7,29 +7,28 @@ import (
 	"os"
 
 	"github.com/raibru/gsnet/internal/archive"
-	"github.com/raibru/gsnet/internal/pkt"
 )
 
 // ClientServiceData holds connection data about client services
 type ClientServiceData struct {
-	Name         string
-	Addr         string
-	Port         string
-	Transfer     chan []byte
-	Conn         *Client
-	Archive      chan *archive.Record
-	PacketReader *pkt.PacketReader
+	Name     string
+	Addr     string
+	Port     string
+	Conn     *Client
+	Process  chan string
+	Archive  chan *archive.Record
+	Transfer chan []byte
 }
 
 // NewClientService deploy a client service with needed data
-func NewClientService(name string, host string, port string, reader *pkt.PacketReader, archSlot chan *archive.Record) *ClientServiceData {
+func NewClientService(name string, host string, port string, procSlot chan string, archSlot chan *archive.Record) *ClientServiceData {
 	s := &ClientServiceData{
-		Name:         name,
-		Addr:         host,
-		Port:         port,
-		Transfer:     make(chan []byte),
-		PacketReader: reader,
-		Archive:      archSlot,
+		Name:     name,
+		Addr:     host,
+		Port:     port,
+		Process:  procSlot,
+		Archive:  archSlot,
+		Transfer: make(chan []byte),
 	}
 	return s
 }
@@ -70,7 +69,7 @@ func (s *ClientServiceData) Finalize() {
 // SendPackets sends from file readed lines of packets and send them
 func (s *ClientServiceData) SendPackets() error {
 	logger.Log().Infof("send packets from  %s to connected service", s.Name)
-	for line := range s.PacketReader.Supply {
+	for line := range s.Process {
 		logger.Log().Tracef("::: Send packet: [0x %s]", hex.EncodeToString([]byte(line)))
 		if line == "EOF" {
 			logger.Log().Trace("::: read EOF flag from packet reader")

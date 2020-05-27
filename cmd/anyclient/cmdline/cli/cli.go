@@ -43,6 +43,7 @@ func handleParam(cmd *cobra.Command, args []string) error {
 	sys.StartSignalHandler()
 	var clientService *service.ClientServiceData
 	var archiveService *archive.Archive
+	var readerService *pkt.PacketReader
 
 	if configFile != "" {
 		var cf = &etc.AnyClientConfig{}
@@ -75,11 +76,12 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		}
 
 		archiveService = archive.NewArchive(cf.Archive.Filename, cf.Archive.Type, cf.Service.Name)
+		readerService = pkt.NewPacketReader(cf.Packet.Filename, cf.Packet.Wait)
 		clientService = service.NewClientService(
 			cf.Service.Name,
 			cf.Service.Addr,
 			cf.Service.Port,
-			pkt.NewPacketReader(cf.Packet.Filename, cf.Packet.Wait),
+			readerService.Supply,
 			archiveService.Archivate)
 	} else {
 		clientService = service.NewClientService(
@@ -101,7 +103,9 @@ func handleParam(cmd *cobra.Command, args []string) error {
 	if archiveService != nil {
 		archiveService.Start()
 	}
-	clientService.PacketReader.Start()
+	if readerService != nil {
+		readerService.Start()
+	}
 	clientService.SendPackets()
 
 	return nil
