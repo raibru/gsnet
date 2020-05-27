@@ -61,53 +61,51 @@ func NewPacketReader(name string, wait uint32) *PacketReader {
 }
 
 // Start read packet data
-func (ctx *PacketReader) Start() {
-	go readPacketRawData(ctx)
-}
+func (pktRead *PacketReader) Start() {
+	go func() {
+		fn := pktRead.filename
 
-// readPacketRawData read packet data from file which hold raw packet data in each line
-func readPacketRawData(pktRead *PacketReader) {
-	fn := pktRead.filename
-
-	if pktRead.Supply == nil {
-		logger.Log().Errorf("fatal misbehavior data channel is not initialized. Can not provide data from '%s'", fn)
-		return
-	}
-
-	s, err := os.Stat(fn)
-	if err != nil {
-		logger.Log().Errorf("failure get os status from. '%s'", fn)
-		return
-	}
-
-	if s.IsDir() {
-		logger.Log().Errorf("failure access input packet file. '%s' is a directory, not a file", fn)
-		return
-	}
-
-	f, err := os.Open(fn)
-	if err != nil {
-		logger.Log().Errorf("failure open input packet file '%s'", fn)
-		return
-	}
-	defer f.Close()
-
-	r := bufio.NewReader(f)
-	for {
-		data, err := r.ReadString('\n')
-		if err == io.EOF {
-			pktRead.Supply <- "EOF"
-			break
-		} else if err != nil {
-			logger.Log().Errorf("failure read line from input packet file. '%s'", fn)
-			pktRead.Supply <- "EOF"
+		if pktRead.Supply == nil {
+			logger.Log().Errorf("fatal misbehavior data channel is not initialized. Can not provide data from '%s'", fn)
 			return
 		}
-		pktRead.Supply <- data
-		time.Sleep(pktRead.waitMsec)
-	}
 
-	close(pktRead.Supply)
+		s, err := os.Stat(fn)
+		if err != nil {
+			logger.Log().Errorf("failure get os status from. '%s'", fn)
+			return
+		}
 
-	return
+		if s.IsDir() {
+			logger.Log().Errorf("failure access input packet file. '%s' is a directory, not a file", fn)
+			return
+		}
+
+		f, err := os.Open(fn)
+		if err != nil {
+			logger.Log().Errorf("failure open input packet file '%s'", fn)
+			return
+		}
+		defer f.Close()
+		defer close(pktRead.Supply)
+
+		r := bufio.NewReader(f)
+		for {
+			data, err := r.ReadString('\n')
+			if err == io.EOF {
+				pktRead.Supply <- "EOF"
+				break
+			} else if err != nil {
+				logger.Log().Errorf("failure read line from input packet file. '%s'", fn)
+				pktRead.Supply <- "EOF"
+				break
+			}
+			pktRead.Supply <- data
+			time.Sleep(pktRead.waitMsec)
+		}
+	}()
 }
+
+//// Stop read packet data
+//func (pktRead *PacketReader) Stop() {
+//}
