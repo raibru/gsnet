@@ -69,16 +69,17 @@ func (s *ClientServiceData) Finalize() {
 // SendPackets sends from file readed lines of packets and send them
 func (s *ClientServiceData) SendPackets() error {
 	logger.Log().Infof("send packets from  %s to connected service", s.Name)
-	for line := range s.Process {
-		logger.Log().Tracef("::: Send packet: [0x %s]", hex.EncodeToString([]byte(line)))
-		if line == "EOF" {
+	for data := range s.Process {
+		logger.Log().Tracef("::: Send packet: [0x %s]", hex.EncodeToString([]byte(data)))
+		if data == "EOF" {
 			logger.Log().Trace("::: read EOF flag from packet reader")
+			s.Conn.data <- []byte(data)
 			break
 		}
 
-		s.Conn.data <- []byte(line)
+		s.Conn.data <- []byte(data)
 
-		hexData := hex.EncodeToString([]byte(line))
+		hexData := hex.EncodeToString([]byte(data))
 
 		if s.Archive != nil {
 			r := archive.NewRecord(hexData, "TX", "TCP")

@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"io"
 	"os"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/raibru/gsnet/internal/sys"
@@ -91,18 +93,31 @@ func (pktRead *PacketReader) Start() {
 
 		r := bufio.NewReader(f)
 		for {
-			data, err := r.ReadString('\n')
+			line, err := r.ReadString('\n')
 			if err == io.EOF {
-				pktRead.Supply <- "EOF"
+				logger.Log().Trace("read EOF from data file")
 				break
 			} else if err != nil {
 				logger.Log().Errorf("failure read line from input packet file. '%s'", fn)
-				pktRead.Supply <- "EOF"
 				break
 			}
-			pktRead.Supply <- data
-			time.Sleep(pktRead.waitMsec)
+
+			if match, _ := regexp.MatchString(`^#`, line); match {
+				continue
+			} else if match, _ := regexp.MatchString(`^\w*$`, line); match {
+				continue
+			} else if match, _ := regexp.MatchString(`^EOF`, line); match {
+				break
+			}
+
+			line = strings.Replace(line, "\n", "", -1)
+			line = strings.Replace(line, "\r", "", -1)
+			if len(line) > 0 {
+				pktRead.Supply <- line
+				time.Sleep(pktRead.waitMsec)
+			}
 		}
+		pktRead.Supply <- "EOF"
 	}()
 }
 

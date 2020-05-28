@@ -153,12 +153,12 @@ func (client *Client) send() {
 			break
 		}
 
-		length, err := client.socket.Write(data)
+		_, err := client.socket.Write(data)
 		if err != nil {
 			logger.Log().Errorf("::: failure send data due '%s'", err.Error())
 			break
 		}
-		logger.Log().Tracef("::: successful send data: [0x %s]", hex.EncodeToString(data[:length]))
+		logger.Log().Trace("::: successful send data")
 	}
 	logger.Log().Info("::: finish send data")
 }
