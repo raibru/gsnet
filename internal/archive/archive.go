@@ -104,44 +104,46 @@ func NewArchive(name string, archType string, ctxDesc string) *Archive {
 
 // Start starts archiving inside goroutine
 func (a *Archive) Start() {
-	go func() {
-		logger.Log().Info("start service to write data into archive")
-		f, err := os.OpenFile(a.filename, os.O_WRONLY|os.O_SYNC|os.O_APPEND|os.O_CREATE, 0644)
-		if err != nil {
-			logger.Log().Errorf("Failure open/create archive file: %s", err.Error())
+	go handle(a)
+}
+
+func handle(a *Archive) {
+	logger.Log().Info("start service to write data into archive")
+	f, err := os.OpenFile(a.filename, os.O_WRONLY|os.O_SYNC|os.O_APPEND|os.O_CREATE, 0644)
+	if err != nil {
+		logger.Log().Errorf("Failure open/create archive file: %s", err.Error())
+		return
+	}
+	defer f.Close()
+
+	w := csv.NewWriter(f)
+	defer w.Flush()
+
+	logger.Log().Info("ready write data into archive")
+
+	for rec := range a.Archivate {
+
+		if rec == nil {
+			logger.Log().Trace("::: receive archive stop event")
+			w.Flush()
 			return
 		}
-		defer f.Close()
 
-		w := csv.NewWriter(f)
-		defer w.Flush()
+		logger.Log().Tracef("::: write data into archive: %s-%d", rec.direction, rec.id)
 
-		logger.Log().Info("ready write data into archive")
+		data := []string{
+			fmt.Sprintf("%s-%d", rec.direction, rec.id),
+			rec.time,
+			a.contextDesciption,
+			rec.direction,
+			rec.protocol,
+			rec.data}
 
-		for rec := range a.Archivate {
-
-			if rec == nil {
-				logger.Log().Trace("::: receive archive stop event")
-				w.Flush()
-				return
-			}
-
-			logger.Log().Tracef("::: write data into archive: %s-%d", rec.direction, rec.id)
-
-			data := []string{
-				fmt.Sprintf("%s-%d", rec.direction, rec.id),
-				rec.time,
-				a.contextDesciption,
-				rec.direction,
-				rec.protocol,
-				rec.data}
-
-			if err := w.Write(data); err != nil {
-				logger.Log().Errorf("Failure write data into archive: %s", err.Error())
-			}
-			w.Flush()
+		if err := w.Write(data); err != nil {
+			logger.Log().Errorf("Failure write data into archive: %s", err.Error())
 		}
-	}()
+		w.Flush()
+	}
 }
 
 // Stop stops archiving incoming data
