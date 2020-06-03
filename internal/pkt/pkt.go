@@ -63,32 +63,36 @@ func NewPacketReader(name string, wait uint32) *PacketReader {
 }
 
 // Start read packet data
-func (pktRead *PacketReader) Start() {
-	go handle(pktRead)
+func (pktRead *PacketReader) Start(done chan bool) {
+	go handle(pktRead, done)
 }
 
-func handle(pktRead *PacketReader) {
+func handle(pktRead *PacketReader, done chan bool) {
 	fn := pktRead.filename
 
 	if pktRead.Supply == nil {
 		logger.Log().Errorf("fatal misbehavior data channel is not initialized. Can not provide data from '%s'", fn)
+		done <- true
 		return
 	}
 
 	s, err := os.Stat(fn)
 	if err != nil {
 		logger.Log().Errorf("failure get os status from. '%s'", fn)
+		done <- true
 		return
 	}
 
 	if s.IsDir() {
 		logger.Log().Errorf("failure access input packet file. '%s' is a directory, not a file", fn)
+		done <- true
 		return
 	}
 
 	f, err := os.Open(fn)
 	if err != nil {
 		logger.Log().Errorf("failure open input packet file '%s'", fn)
+		done <- true
 		return
 	}
 	defer f.Close()
@@ -120,7 +124,8 @@ func handle(pktRead *PacketReader) {
 			time.Sleep(pktRead.waitMsec)
 		}
 	}
-	pktRead.Supply <- "EOF"
+	//pktRead.Supply <- "EOF"
+	done <- true
 }
 
 //// Stop read packet data

@@ -67,18 +67,23 @@ func (s *ClientServiceData) Finalize() {
 }
 
 // SendPackets sends from file readed lines of packets and send them
-func (s *ClientServiceData) SendPackets() error {
+func (s *ClientServiceData) SendPackets(done chan bool) {
+	go handle(s, done)
+}
+
+func handle(s *ClientServiceData, done chan bool) {
 	logger.Log().Infof("send packets from  %s to connected service", s.Name)
-	for data := range s.Process {
-		logger.Log().Tracef("::: Send packet: [0x %s]", hex.EncodeToString([]byte(data)))
-		if data == "EOF" {
-			logger.Log().Trace("::: read EOF flag from packet reader")
-			s.Conn.data <- []byte(data)
+	for {
+		data, more := <-s.Process
+
+		if !more || data == "EOF" {
+			logger.Log().Trace("::: get notify by no more data to send")
+			done <- true
 			break
 		}
 
+		logger.Log().Tracef("::: send packet: [0x %s]", hex.EncodeToString([]byte(data)))
 		s.Conn.data <- []byte(data)
-
 		hexData := hex.EncodeToString([]byte(data))
 
 		if s.Archive != nil {
@@ -88,8 +93,6 @@ func (s *ClientServiceData) SendPackets() error {
 	}
 
 	logger.Log().Info("::: finish apply client connection")
-	return nil
-
 }
 
 // CreateTCPClientConnection create new TCP connection with parameter in ClientService

@@ -100,15 +100,19 @@ func handleParam(cmd *cobra.Command, args []string) error {
 
 	defer clientService.Finalize()
 
-	wait := make(chan bool)
+	wait := make(chan bool, 1)
+	readed := make(chan bool, 1)
+	sent := make(chan bool, 1)
 
 	if archiveService != nil {
 		archiveService.Start(wait)
 	}
 	if readerService != nil {
-		readerService.Start()
+		readerService.Start(readed)
 	}
-	clientService.SendPackets()
+	clientService.SendPackets(sent)
+
+	<-sent
 
 	return nil
 }
