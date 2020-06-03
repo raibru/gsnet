@@ -40,6 +40,7 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
+	wait := make(chan bool)
 	sys.StartSignalHandler()
 
 	if configFile != "" {
@@ -73,7 +74,7 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		}
 
 		archive := archive.NewArchive(cf.Archive.Filename, cf.Archive.Type, cf.Service.Name)
-		archive.Start()
+		archive.Start(wait)
 
 		for _, elem := range cf.Service.Network {
 
@@ -109,8 +110,7 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	w := make(chan string)
-	<-w
+	<-wait
 
 	return nil
 }

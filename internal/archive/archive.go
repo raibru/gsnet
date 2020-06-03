@@ -103,11 +103,11 @@ func NewArchive(name string, archType string, ctxDesc string) *Archive {
 }
 
 // Start starts archiving inside goroutine
-func (a *Archive) Start() {
-	go handle(a)
+func (a *Archive) Start(done chan bool) {
+	go handle(a, done)
 }
 
-func handle(a *Archive) {
+func handle(a *Archive, done chan bool) {
 	logger.Log().Info("start service to write data into archive")
 	f, err := os.OpenFile(a.filename, os.O_WRONLY|os.O_SYNC|os.O_APPEND|os.O_CREATE, 0644)
 	if err != nil {
@@ -119,15 +119,23 @@ func handle(a *Archive) {
 	w := csv.NewWriter(f)
 	defer w.Flush()
 
+	done = make(chan bool)
 	logger.Log().Info("ready write data into archive")
 
-	for rec := range a.Archivate {
+	for {
+		rec, more := <-a.Archivate
 
-		if rec == nil {
+		if !more {
 			logger.Log().Trace("::: receive archive stop event")
 			w.Flush()
+			done <- true
 			return
 		}
+		//		if rec == nil {
+		//			logger.Log().Trace("::: receive archive stop event")
+		//			w.Flush()
+		//			return
+		//		}
 
 		logger.Log().Tracef("::: write data into archive: %s-%d", rec.direction, rec.id)
 
@@ -148,6 +156,7 @@ func handle(a *Archive) {
 
 // Stop stops archiving incoming data
 func (a *Archive) Stop() {
-	a.Archivate <- &Record{}
-	logger.Log().Info("stop service to write data into archive")
+	//a.Archivate <- &Record{}
+	close(a.Archivate)
+	logger.Log().Info("stop service write data into archive")
 }

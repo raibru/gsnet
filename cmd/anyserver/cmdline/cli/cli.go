@@ -91,8 +91,10 @@ func handleParam(cmd *cobra.Command, args []string) error {
 			nil)
 	}
 
+	wait := make(chan bool)
+
 	if archiveService != nil {
-		archiveService.Start()
+		archiveService.Start(wait)
 	}
 
 	err := srvService.ApplyConnection()
