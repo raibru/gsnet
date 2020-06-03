@@ -61,8 +61,8 @@ func (s *ClientServiceData) ApplyConnection() error {
 func (s *ClientServiceData) Finalize() {
 	logger.Log().Infof("finalize service %s", s.Name)
 	s.Conn.socket.Close()
-	close(s.Archive)
-	close(s.Transfer)
+	//close(s.Archive)
+	//close(s.Transfer)
 	logger.Log().Info("::: finish finalize service")
 }
 
