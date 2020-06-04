@@ -63,13 +63,13 @@ func handleParam(cmd *cobra.Command, args []string) error {
 			sys.Exit(2)
 		}
 
-		loggables := []sys.LoggableContext{
+		loggables := []sys.ContextLogger{
 			sys.LogContext, service.LogContext, pkt.LogContext, archive.LogContext,
 		}
 
-		for _, c := range loggables {
-			if err := c.ApplyLogger(); err != nil {
-				fmt.Fprintf(os.Stderr, "Error: apply logging for: %s -> %s\n", c.GetContextName(), err.Error())
+		for _, l := range loggables {
+			if err := l.Apply(); err != nil {
+				fmt.Fprintf(os.Stderr, "Error: apply logging for: %s -> %s\n", l.Identify(), err.Error())
 			}
 		}
 

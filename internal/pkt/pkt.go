@@ -23,9 +23,9 @@ type pktLogger struct {
 var LogContext = pktLogger{contextName: "pkt"}
 
 // log hold logging context
-var logger = sys.ContextLogger{}
+var logger = sys.LoggerEntity{}
 
-func (l pktLogger) ApplyLogger() error {
+func (l pktLogger) Apply() error {
 	err := logger.ApplyLogger(l.contextName)
 	if err != nil {
 		return err
@@ -35,7 +35,7 @@ func (l pktLogger) ApplyLogger() error {
 	return nil
 }
 
-func (pktLogger) GetContextName() string {
+func (pktLogger) Identify() string {
 	return logger.ContextName()
 }
 

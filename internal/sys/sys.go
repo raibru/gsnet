@@ -9,6 +9,16 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// Applier apply system behavior
+type Applier interface {
+	Apply() error
+}
+
+// Identifier identify used logger
+type Identifier interface {
+	Identify() string
+}
+
 type sysLogger struct {
 	contextName string
 }
@@ -17,9 +27,9 @@ type sysLogger struct {
 var LogContext = sysLogger{contextName: "sys"}
 
 // log hold logging context
-var logger = ContextLogger{}
+var logger = LoggerEntity{}
 
-func (l sysLogger) ApplyLogger() error {
+func (l sysLogger) Apply() error {
 	err := logger.ApplyLogger(l.contextName)
 	if err != nil {
 		return err
@@ -29,7 +39,7 @@ func (l sysLogger) ApplyLogger() error {
 	return nil
 }
 
-func (sysLogger) GetContextName() string {
+func (sysLogger) Identify() string {
 	return logger.ContextName()
 }
 

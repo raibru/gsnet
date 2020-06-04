@@ -81,21 +81,20 @@ func InitLogging(lp *LoggingParam) error {
 // Logging Context
 //
 
-// LoggableContext how to use unified context dependence logger
-type LoggableContext interface {
-	ApplyLogger() error
-	GetContextName() string
-	//	Log() *log.Entry
+// ContextLogger how to use unified context dependence logger
+type ContextLogger interface {
+	Applier
+	Identifier
 }
 
-// ContextLogger data
-type ContextLogger struct {
+// LoggerEntity data
+type LoggerEntity struct {
 	contextName string
 	logEntry    *log.Entry
 }
 
-// ApplyLogger create new named context logger and set ContextLogger data
-func (c *ContextLogger) ApplyLogger(cn string) error {
+// ApplyLogger create new named context logger and set LoggerEntity data
+func (c *LoggerEntity) ApplyLogger(cn string) error {
 	c.contextName = cn
 	e, err := createContextLogging(cn)
 	if err != nil {
@@ -109,13 +108,13 @@ func (c *ContextLogger) ApplyLogger(cn string) error {
 	return nil
 }
 
-// ContextName answer name from ContextLogger data
-func (c *ContextLogger) ContextName() string {
+// ContextName answer name from LoggerEntity data
+func (c *LoggerEntity) ContextName() string {
 	return c.contextName
 }
 
-// Log answer log entry object from ContextLogger data
-func (c *ContextLogger) Log() *log.Entry {
+// Log answer log entry object from LoggerEntity data
+func (c *LoggerEntity) Log() *log.Entry {
 	return c.logEntry
 }
 

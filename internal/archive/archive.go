@@ -21,9 +21,9 @@ type archLogger struct {
 var LogContext = archLogger{contextName: "ach"}
 
 // log hold logging context
-var logger = sys.ContextLogger{}
+var logger = sys.LoggerEntity{}
 
-func (l archLogger) ApplyLogger() error {
+func (l archLogger) Apply() error {
 	err := logger.ApplyLogger(l.contextName)
 	if err != nil {
 		return err
@@ -33,7 +33,7 @@ func (l archLogger) ApplyLogger() error {
 	return nil
 }
 
-func (archLogger) GetContextName() string {
+func (archLogger) Identify() string {
 	return logger.ContextName()
 }
 

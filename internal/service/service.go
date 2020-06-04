@@ -20,9 +20,9 @@ type serviceLogger struct {
 var LogContext = serviceLogger{contextName: "srv"}
 
 // log hold logging context
-var logger = sys.ContextLogger{}
+var logger = sys.LoggerEntity{}
 
-func (l serviceLogger) ApplyLogger() error {
+func (l serviceLogger) Apply() error {
 	err := logger.ApplyLogger(l.contextName)
 	if err != nil {
 		return err
@@ -32,7 +32,7 @@ func (l serviceLogger) ApplyLogger() error {
 	return nil
 }
 
-func (serviceLogger) GetContextName() string {
+func (serviceLogger) Identify() string {
 	return logger.ContextName()
 }
 
