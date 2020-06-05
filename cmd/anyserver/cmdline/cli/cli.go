@@ -41,7 +41,8 @@ func handleParam(cmd *cobra.Command, args []string) error {
 	}
 
 	var srvService *service.ServerServiceData
-	var archiveService *archive.Archive
+	archiveService := archive.NonArchive()
+	readerService := pkt.NonPacketReader()
 
 	sys.StartSignalHandler()
 
@@ -75,12 +76,20 @@ func handleParam(cmd *cobra.Command, args []string) error {
 			}
 		}
 
-		archiveService = archive.NewArchive(cf.Archive.Filename, cf.Archive.Type, cf.Service.Name)
+		if cf.Packet.Use {
+			archiveService = archive.NewArchive(cf.Archive.Filename, cf.Archive.Type, cf.Service.Name)
+		}
+
+		if cf.Packet.Use {
+			readerService = pkt.NewPacketReader(cf.Packet.Filename, cf.Packet.Wait)
+		}
+		//_ = readerService
+
 		srvService = service.NewServerService(
 			cf.Service.Name,
 			cf.Service.Host,
 			cf.Service.Port,
-			nil,
+			readerService.Supply,
 			archiveService.Archivate)
 	} else {
 		srvService = service.NewServerService(

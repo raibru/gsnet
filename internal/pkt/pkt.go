@@ -49,7 +49,7 @@ type PacketReader struct {
 	filename string
 	waitMsec time.Duration // wait duration time in milliseconds
 	Use      bool
-	Supply   chan string
+	Supply   chan []byte
 }
 
 // NewPacketReader create a new packet reader
@@ -58,7 +58,7 @@ func NewPacketReader(name string, wait uint32) *PacketReader {
 		filename: name,
 		waitMsec: time.Duration(wait) * time.Millisecond,
 		Use:      true,
-		Supply:   make(chan string),
+		Supply:   make(chan []byte),
 	}
 }
 
@@ -127,7 +127,7 @@ func handle(pktRead *PacketReader, done chan bool) {
 		line = strings.Replace(line, "\n", "", -1)
 		line = strings.Replace(line, "\r", "", -1)
 		if len(line) > 0 {
-			pktRead.Supply <- line
+			pktRead.Supply <- []byte(line)
 			time.Sleep(pktRead.waitMsec)
 		}
 	}
