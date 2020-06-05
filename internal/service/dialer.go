@@ -15,13 +15,13 @@ type ClientServiceData struct {
 	Host     string
 	Port     string
 	Conn     *Client
-	Process  chan string
+	Process  chan []byte
 	Archive  chan *archive.Record
 	Transfer chan []byte
 }
 
 // NewClientService deploy a client service with needed data
-func NewClientService(name string, host string, port string, procSlot chan string, archSlot chan *archive.Record) *ClientServiceData {
+func NewClientService(name string, host string, port string, procSlot chan []byte, archSlot chan *archive.Record) *ClientServiceData {
 	s := &ClientServiceData{
 		Name:     name,
 		Host:     host,
@@ -79,7 +79,7 @@ func handle(s *ClientServiceData, done chan bool) {
 	for {
 		data, more := <-s.Process
 
-		if !more || data == "EOF" {
+		if !more || string(data) == "EOF" {
 			logger.Log().Trace("::: get notify by no more data to send")
 			done <- true
 			break
