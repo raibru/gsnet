@@ -3,9 +3,11 @@ service:
   host: 127.0.0.1
   port: 32100
 packet:
+  use: true
   filename: ./sendlist.txt
   wait: 5000
 archive:
+  use: true
   filename: ./archive.csv
   type: cvs
 logging:

@@ -42,8 +42,8 @@ func handleParam(cmd *cobra.Command, args []string) error {
 
 	sys.StartSignalHandler()
 	var clientService *service.ClientServiceData
-	var archiveService *archive.Archive
-	var readerService *pkt.PacketReader
+	archiveService := archive.NonArchive()
+	readerService := pkt.NonPacketReader()
 
 	if configFile != "" {
 		var cf = &etc.AnyClientConfig{}
@@ -75,8 +75,14 @@ func handleParam(cmd *cobra.Command, args []string) error {
 			}
 		}
 
-		archiveService = archive.NewArchive(cf.Archive.Filename, cf.Archive.Type, cf.Service.Name)
-		readerService = pkt.NewPacketReader(cf.Packet.Filename, cf.Packet.Wait)
+		if cf.Packet.Use {
+			archiveService = archive.NewArchive(cf.Archive.Filename, cf.Archive.Type, cf.Service.Name)
+		}
+
+		if cf.Packet.Use {
+			readerService = pkt.NewPacketReader(cf.Packet.Filename, cf.Packet.Wait)
+		}
+
 		clientService = service.NewClientService(
 			cf.Service.Name,
 			cf.Service.Host,
@@ -104,15 +110,17 @@ func handleParam(cmd *cobra.Command, args []string) error {
 	readed := make(chan bool, 1)
 	sent := make(chan bool, 1)
 
-	if archiveService != nil {
+	if archiveService.Use {
 		archiveService.Start(wait)
 	}
-	if readerService != nil {
+	if readerService.Use {
 		readerService.Start(readed)
+		clientService.SendPackets(sent)
+		<-sent
+	} else {
+		ok := make(chan bool)
+		<-ok
 	}
-	clientService.SendPackets(sent)
-
-	<-sent
 
 	return nil
 }

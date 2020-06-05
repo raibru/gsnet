@@ -80,6 +80,7 @@ func NewRecord(hexData string, rxtx string, protocol string) *Record {
 
 // Archive hold archive runable parameter
 type Archive struct {
+	Use               bool
 	Archivate         chan *Record
 	filename          string
 	archiveType       string
@@ -90,7 +91,8 @@ type Archive struct {
 
 // NewArchive create a new archive object to write archive records
 func NewArchive(name string, archType string, ctxDesc string) *Archive {
-	a := &Archive{
+	return &Archive{
+		Use:               true,
 		Archivate:         make(chan *Record, 10),
 		filename:          name,
 		archiveType:       archType,
@@ -98,8 +100,13 @@ func NewArchive(name string, archType string, ctxDesc string) *Archive {
 		txCount:           0,
 		rxCount:           0,
 	}
+}
 
-	return a
+// NonArchive create a new archive object to write archive records
+func NonArchive() *Archive {
+	return &Archive{
+		Use: false,
+	}
 }
 
 // Start starts archiving inside goroutine

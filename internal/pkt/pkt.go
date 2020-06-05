@@ -48,18 +48,25 @@ func (pktLogger) Identify() string {
 type PacketReader struct {
 	filename string
 	waitMsec time.Duration // wait duration time in milliseconds
+	Use      bool
 	Supply   chan string
 }
 
 // NewPacketReader create a new packet reader
 func NewPacketReader(name string, wait uint32) *PacketReader {
-	m := &PacketReader{
+	return &PacketReader{
 		filename: name,
 		waitMsec: time.Duration(wait) * time.Millisecond,
+		Use:      true,
 		Supply:   make(chan string),
 	}
+}
 
-	return m
+// NonPacketReader create a new packet reader
+func NonPacketReader() *PacketReader {
+	return &PacketReader{
+		Use: false,
+	}
 }
 
 // Start read packet data

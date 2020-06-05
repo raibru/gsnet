@@ -38,10 +38,12 @@ type PktServiceConfig struct {
 		} `yaml: "network"`
 	} `yaml: "service"`
 	Packet struct {
+		Use      bool   `yaml: "use"`
 		Filename string `yaml: "filename"`
-		Wait     uint32 `yaml:"wait"`
+		Wait     uint32 `yaml: "wait"`
 	} `yaml: "packet"`
 	Archive struct {
+		Use      bool   `yaml: "use"`
 		Filename string `yaml: "filename"`
 		Type     string `yaml: "type"` // yaml, csv, ??? json, xml
 	} `yaml: "archive"`

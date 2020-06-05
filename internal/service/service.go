@@ -145,7 +145,7 @@ func (client *Client) receive() {
 func (client *Client) send() {
 	logger.Log().Info("send data")
 	for {
-		logger.Log().Trace("::: wait for send data")
+		logger.Log().Trace("::: wait for data")
 		data := <-client.data
 
 		if string(data) == "EOF" {

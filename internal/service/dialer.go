@@ -45,11 +45,14 @@ func (s *ClientServiceData) ApplyConnection() error {
 		return err
 	}
 
-	//defer conn.Close()
-
 	s.Conn = &Client{socket: conn, data: s.Transfer}
-	//go client.receive()
 	go s.Conn.send()
+
+	//if s.Process != nil {
+	//	go s.Conn.send()
+	//}
+
+	//go client.receive()
 	//defer func() {
 	//	s.Conn.data <- []byte("EOF")
 	//}()
