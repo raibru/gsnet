@@ -1,0 +1,12 @@
+service:
+  name: anyclient-dev-rx
+  host: 127.0.0.1
+  port: 32200
+archive:
+  use: true
+  filename: ./archive.csv
+  type: cvs
+logging:
+  filename: ./anyclient.log
+  timestamp: 2006-01-02 15:04:05.000
+
