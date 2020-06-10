@@ -2,19 +2,19 @@ package service
 
 import "github.com/raibru/gsnet/internal/archive"
 
-// PacketServiceData holds connection data about client/server services
-type PacketServiceData struct {
+// PacketServiceValues holds connection data about client/server services
+type PacketServiceValues struct {
 	Name     string
 	Type     string
-	Dialer   *ClientServiceData
-	Listener *ServerServiceData
+	Dialer   *ClientServiceValues
+	Listener *ServerServiceValues
 	Archive  chan *archive.Record
 	Mode     chan string
 }
 
 // NewPacketService build new object for listener and dialer service context.
-func NewPacketService(name string, typ string) *PacketServiceData {
-	return &PacketServiceData{
+func NewPacketService(name string, typ string) *PacketServiceValues {
+	return &PacketServiceValues{
 		Name:     name,
 		Type:     typ,
 		Dialer:   nil,
@@ -25,22 +25,22 @@ func NewPacketService(name string, typ string) *PacketServiceData {
 }
 
 // SetDialer set dialer object
-func (s *PacketServiceData) SetDialer(d *ClientServiceData) {
+func (s *PacketServiceValues) SetDialer(d *ClientServiceValues) {
 	s.Dialer = d
 }
 
 // SetListener set listener object
-func (s *PacketServiceData) SetListener(l *ServerServiceData) {
+func (s *PacketServiceValues) SetListener(l *ServerServiceValues) {
 	s.Listener = l
 }
 
 // SetArchive set archive record channel
-func (s *PacketServiceData) SetArchive(r chan *archive.Record) {
+func (s *PacketServiceValues) SetArchive(r chan *archive.Record) {
 	s.Archive = r
 }
 
 // ApplyConnection build all dialer/listener connection for current packet service
-func (s *PacketServiceData) ApplyConnection() error {
+func (s *PacketServiceValues) ApplyConnection() error {
 	logger.Log().Infof("apply all connections for packet service %s", s.Name)
 	go func() {
 		if err := s.Listener.ApplyConnection(); err != nil {

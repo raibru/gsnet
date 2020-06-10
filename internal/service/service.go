@@ -46,7 +46,7 @@ type ClientManager struct {
 	broadcast  chan []byte
 	register   chan *Client
 	unregister chan *Client
-	service    *ServerServiceData
+	service    *ServerServiceValues
 }
 
 // Client hold client communication behavior
