@@ -21,16 +21,30 @@ type ClientServiceData struct {
 }
 
 // NewClientService deploy a client service with needed data
-func NewClientService(name string, host string, port string, procSlot chan []byte, archSlot chan *archive.Record) *ClientServiceData {
-	s := &ClientServiceData{
+func NewClientService(name string, host string, port string) *ClientServiceData {
+	return &ClientServiceData{
 		Name:     name,
 		Host:     host,
 		Port:     port,
-		Process:  procSlot,
-		Archive:  archSlot,
+		Process:  nil,
+		Archive:  nil,
 		Transfer: make(chan []byte),
 	}
-	return s
+}
+
+// SetProcess set process data channel
+func (s *ClientServiceData) SetProcess(p chan []byte) {
+	s.Process = p
+}
+
+// SetTransfer set transfer data channel
+func (s *ClientServiceData) SetTransfer(t chan []byte) {
+	s.Transfer = t
+}
+
+// SetArchive set archive record channel
+func (s *ClientServiceData) SetArchive(r chan *archive.Record) {
+	s.Archive = r
 }
 
 // ApplyConnection create a connection to server and handle outgoing data stream

@@ -10,24 +10,40 @@ import (
 
 // ServerServiceData holds connection data about server services
 type ServerServiceData struct {
-	Name     string
-	Host     string
-	Port     string
-	Transfer chan []byte
-	Archive  chan *archive.Record
+	Name    string
+	Host    string
+	Port    string
+	Process chan []byte
+	Forward chan []byte
+	Archive chan *archive.Record
 }
 
 // NewServerService build new object for listener service context.
 // If transfer channel is nil this object is a data sink
-func NewServerService(name string, host string, port string, transfer chan []byte, archSlot chan *archive.Record) *ServerServiceData {
-	s := &ServerServiceData{
-		Name:     name,
-		Host:     host,
-		Port:     port,
-		Transfer: transfer,
-		Archive:  archSlot,
+func NewServerService(name string, host string, port string) *ServerServiceData {
+	return &ServerServiceData{
+		Name:    name,
+		Host:    host,
+		Port:    port,
+		Process: nil,
+		Forward: nil,
+		Archive: nil,
 	}
-	return s
+}
+
+// SetProcess set process data channel
+func (s *ServerServiceData) SetProcess(p chan []byte) {
+	s.Process = p
+}
+
+// SetForward set forward data channel
+func (s *ServerServiceData) SetForward(f chan []byte) {
+	s.Forward = f
+}
+
+// SetArchive set archive record channel
+func (s *ServerServiceData) SetArchive(r chan *archive.Record) {
+	s.Archive = r
 }
 
 // ApplyConnection accept a connection from client and handle incoming data stream
@@ -92,4 +108,35 @@ func CreateTCPServerListener(s *ServerServiceData) (net.Listener, error) {
 
 	logger.Log().Info("::: finish create server listener")
 	return lsn, nil
+}
+
+// BroadcastPackets broadcast packet data to managed clients
+func (s *ServerServiceData) BroadcastPackets(done chan bool) {
+	go broadcast(s, done)
+}
+
+func broadcast(s *ServerServiceData, done chan bool) {
+	logger.Log().Infof("send packets from  %s to managed client services", s.Name)
+	for {
+		_ = s
+		done <- true
+		//		data, more := <-s.Process
+		//
+		//		if !more || string(data) == "EOF" {
+		//			logger.Log().Trace("::: get notify by no more data to send")
+		//			done <- true
+		//			break
+		//		}
+		//
+		//		logger.Log().Tracef("::: send packet: [0x %s]", hex.EncodeToString([]byte(data)))
+		//		s.Conn.data <- []byte(data)
+		//		hexData := hex.EncodeToString([]byte(data))
+		//
+		//		if s.Archive != nil {
+		//			r := archive.NewRecord(hexData, "TX", "TCP")
+		//			s.Archive <- r
+		//		}
+	}
+
+	logger.Log().Info("::: finish apply client connection")
 }

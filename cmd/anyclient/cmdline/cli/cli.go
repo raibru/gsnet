@@ -75,27 +75,20 @@ func handleParam(cmd *cobra.Command, args []string) error {
 			}
 		}
 
-		if cf.Packet.Use {
+		clientService = service.NewClientService(cf.Service.Name, cf.Service.Host, cf.Service.Port)
+
+		if cf.Archive.Use {
 			archiveService = archive.NewArchive(cf.Archive.Filename, cf.Archive.Type, cf.Service.Name)
+			clientService.SetArchive(archiveService.Archivate)
 		}
 
 		if cf.Packet.Use {
 			readerService = pkt.NewPacketReader(cf.Packet.Filename, cf.Packet.Wait)
+			clientService.SetProcess(readerService.Supply)
 		}
 
-		clientService = service.NewClientService(
-			cf.Service.Name,
-			cf.Service.Host,
-			cf.Service.Port,
-			readerService.Supply,
-			archiveService.Archivate)
 	} else {
-		clientService = service.NewClientService(
-			"anyclient",
-			"127.0.0.1",
-			"30100",
-			nil,
-			nil)
+		clientService = service.NewClientService("anyclient", "129.0.0.1", "30100")
 	}
 
 	err := clientService.ApplyConnection()

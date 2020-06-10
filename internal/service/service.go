@@ -102,8 +102,8 @@ func (manager *ClientManager) receive(client *Client) {
 				r := archive.NewRecord(hexData, "RX", "TCP")
 				manager.service.Archive <- r
 			}
-			if manager.service.Transfer != nil {
-				manager.service.Transfer <- data[:length]
+			if manager.service.Forward != nil {
+				manager.service.Forward <- data[:length]
 			}
 			//manager.broadcast <- data
 		}

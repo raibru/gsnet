@@ -13,21 +13,30 @@ type PacketServiceData struct {
 }
 
 // NewPacketService build new object for listener and dialer service context.
-func NewPacketService(
-	name string,
-	typ string,
-	dialer *ClientServiceData,
-	listener *ServerServiceData,
-	archSlot chan *archive.Record) *PacketServiceData {
-	s := &PacketServiceData{
+func NewPacketService(name string, typ string) *PacketServiceData {
+	return &PacketServiceData{
 		Name:     name,
 		Type:     typ,
-		Dialer:   dialer,
-		Listener: listener,
-		Archive:  archSlot,
+		Dialer:   nil,
+		Listener: nil,
+		Archive:  nil,
 		Mode:     make(chan string),
 	}
-	return s
+}
+
+// SetDialer set dialer object
+func (s *PacketServiceData) SetDialer(d *ClientServiceData) {
+	s.Dialer = d
+}
+
+// SetListener set listener object
+func (s *PacketServiceData) SetListener(l *ServerServiceData) {
+	s.Listener = l
+}
+
+// SetArchive set archive record channel
+func (s *PacketServiceData) SetArchive(r chan *archive.Record) {
+	s.Archive = r
 }
 
 // ApplyConnection build all dialer/listener connection for current packet service

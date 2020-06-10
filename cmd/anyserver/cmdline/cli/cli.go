@@ -76,40 +76,42 @@ func handleParam(cmd *cobra.Command, args []string) error {
 			}
 		}
 
-		if cf.Packet.Use {
+		srvService = service.NewServerService(cf.Service.Name, cf.Service.Host, cf.Service.Port)
+
+		if cf.Archive.Use {
 			archiveService = archive.NewArchive(cf.Archive.Filename, cf.Archive.Type, cf.Service.Name)
+			srvService.SetArchive(archiveService.Archivate)
 		}
 
 		if cf.Packet.Use {
 			readerService = pkt.NewPacketReader(cf.Packet.Filename, cf.Packet.Wait)
+			srvService.SetProcess(readerService.Supply)
 		}
-		//_ = readerService
 
-		srvService = service.NewServerService(
-			cf.Service.Name,
-			cf.Service.Host,
-			cf.Service.Port,
-			readerService.Supply,
-			archiveService.Archivate)
 	} else {
-		srvService = service.NewServerService(
-			"anyserver",
-			"127.0.0.1",
-			"30100",
-			nil,
-			nil)
+		srvService = service.NewServerService("anyserver", "127.0.0.1", "30100")
 	}
 
-	wait := make(chan bool)
-
-	if archiveService != nil {
-		archiveService.Start(wait)
-	}
+	wait := make(chan bool, 1)
+	readed := make(chan bool, 1)
+	sent := make(chan bool, 1)
 
 	err := srvService.ApplyConnection()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Fatal Failure. See log. Exit service: %s\n", err.Error())
 		sys.Exit(2)
+	}
+	if archiveService != nil {
+		archiveService.Start(wait)
+	}
+
+	if readerService.Use {
+		readerService.Start(readed)
+		srvService.BroadcastPackets(sent)
+		<-sent
+	} else {
+		ok := make(chan bool)
+		<-ok
 	}
 
 	return nil

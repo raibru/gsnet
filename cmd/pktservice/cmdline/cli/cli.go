@@ -73,31 +73,39 @@ func handleParam(cmd *cobra.Command, args []string) error {
 			}
 		}
 
-		archive := archive.NewArchive(cf.Archive.Filename, cf.Archive.Type, cf.Service.Name)
-		archive.Start(wait)
+		var arch *archive.Archive
+
+		if cf.Archive.Use {
+			arch = archive.NewArchive(cf.Archive.Filename, cf.Archive.Type, cf.Service.Name)
+			arch.Start(wait)
+		}
 
 		for _, elem := range cf.Service.Network {
 
 			cliService := service.NewClientService(
 				elem.Channel.Dialer.Name,
 				elem.Channel.Dialer.Host,
-				elem.Channel.Dialer.Port,
-				nil,
-				archive.Archivate)
+				elem.Channel.Dialer.Port)
 
 			srvService := service.NewServerService(
 				elem.Channel.Listener.Name,
 				elem.Channel.Listener.Host,
-				elem.Channel.Listener.Port,
-				cliService.Transfer,
-				archive.Archivate)
+				elem.Channel.Listener.Port)
 
 			pktService := service.NewPacketService(
 				elem.Channel.Name,
-				elem.Channel.Type,
-				cliService,
-				srvService,
-				archive.Archivate)
+				elem.Channel.Type)
+
+			srvService.SetForward(cliService.Transfer)
+
+			pktService.SetDialer(cliService)
+			pktService.SetListener(srvService)
+
+			if cf.Archive.Use {
+				cliService.SetArchive(arch.Archivate)
+				srvService.SetArchive(arch.Archivate)
+				pktService.SetArchive(arch.Archivate)
+			}
 
 			go func() {
 				err := pktService.ApplyConnection()
