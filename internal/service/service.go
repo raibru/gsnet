@@ -116,12 +116,12 @@ func (manager *ClientManager) send(client *Client) {
 	logger.Log().Info("send data to managed client")
 	for {
 		select {
-		case msg, ok := <-client.data:
+		case data, ok := <-manager.broadcast:
 			if !ok {
 				logger.Log().Info("::: finish send data")
 				return
 			}
-			client.socket.Write(msg)
+			client.socket.Write(data)
 		}
 	}
 }

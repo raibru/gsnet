@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/hex"
 	"fmt"
 	"net"
 	"os"
@@ -68,21 +69,27 @@ func (s *ServerServiceValues) ApplyConnection() error {
 	}
 
 	go manager.start()
+	go func() {
+		for {
+			logger.Log().Trace("::: wait for input...")
+			conn, err := lsn.Accept()
+			logger.Log().Trace("::: accept input...")
+			if err != nil {
+				logger.Log().Errorf("::: failure accept connection due '%s'", err.Error())
+				continue
+			}
+			client := &Client{socket: conn, data: make(chan []byte)}
+			manager.register <- client
 
-	for {
-		logger.Log().Trace("::: wait for input...")
-		conn, err := lsn.Accept()
-		logger.Log().Trace("::: accept input...")
-		if err != nil {
-			logger.Log().Errorf("::: failure accept connection due '%s'", err.Error())
-			continue
+			go manager.receive(client)
+
+			//s.Forward = manager.broadcast
+			go manager.send(client)
+
+			logger.Log().Info("::: finish apply server listener")
 		}
-		client := &Client{socket: conn, data: make(chan []byte)}
-		manager.register <- client
-		go manager.receive(client)
-		//go manager.send(client)
-		logger.Log().Info("::: finish apply server listener")
-	}
+	}()
+	return nil
 }
 
 // CreateTCPServerListener create new TCP listener with parameter in ServerService
@@ -118,24 +125,22 @@ func (s *ServerServiceValues) BroadcastPackets(done chan bool) {
 func broadcast(s *ServerServiceValues, done chan bool) {
 	logger.Log().Infof("send packets from  %s to managed client services", s.Name)
 	for {
-		_ = s
-		done <- true
-		//		data, more := <-s.Process
-		//
-		//		if !more || string(data) == "EOF" {
-		//			logger.Log().Trace("::: get notify by no more data to send")
-		//			done <- true
-		//			break
-		//		}
-		//
-		//		logger.Log().Tracef("::: send packet: [0x %s]", hex.EncodeToString([]byte(data)))
-		//		s.Conn.data <- []byte(data)
-		//		hexData := hex.EncodeToString([]byte(data))
-		//
-		//		if s.Archive != nil {
-		//			r := archive.NewRecord(hexData, "TX", "TCP")
-		//			s.Archive <- r
-		//		}
+		data, more := <-s.Process
+
+		if !more || string(data) == "EOF" {
+			logger.Log().Trace("::: get notify by no more data to send")
+			done <- true
+			break
+		}
+
+		logger.Log().Tracef("::: send packet: [0x %s]", hex.EncodeToString([]byte(data)))
+		s.Forward <- []byte(data)
+		hexData := hex.EncodeToString([]byte(data))
+
+		if s.Archive != nil {
+			r := archive.NewRecord(hexData, "TX", "TCP")
+			s.Archive <- r
+		}
 	}
 
 	logger.Log().Info("::: finish apply client connection")
