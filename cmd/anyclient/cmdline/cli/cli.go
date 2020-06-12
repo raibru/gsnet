@@ -83,7 +83,7 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		}
 
 		if cf.Packet.Use {
-			readerService = pkt.NewPacketReader(cf.Packet.Filename, cf.Packet.Wait)
+			readerService = pkt.NewPacketReader(cf.Packet.Filename, cf.Packet.Wait, waitTransfer)
 			clientService.SetProcess(readerService.Supply)
 		}
 

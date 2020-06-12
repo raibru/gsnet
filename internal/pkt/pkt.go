@@ -46,19 +46,21 @@ func (pktLogger) Identify() string {
 // PacketReader read packet data from input file and distribute it via
 // channel which can be used by consumer
 type PacketReader struct {
-	filename string
-	waitMsec time.Duration // wait duration time in milliseconds
-	Use      bool
-	Supply   chan []byte
+	filename     string
+	waitMsec     time.Duration // wait duration time in milliseconds
+	waitStartSec time.Duration // wait duration until supply data is started
+	Use          bool
+	Supply       chan []byte
 }
 
 // NewPacketReader create a new packet reader
-func NewPacketReader(name string, wait uint32) *PacketReader {
+func NewPacketReader(name string, wait uint, waitStart uint) *PacketReader {
 	return &PacketReader{
-		filename: name,
-		waitMsec: time.Duration(wait) * time.Millisecond,
-		Use:      true,
-		Supply:   make(chan []byte),
+		filename:     name,
+		waitMsec:     time.Duration(wait) * time.Millisecond,
+		waitStartSec: time.Duration(waitStart) * time.Second,
+		Use:          true,
+		Supply:       make(chan []byte),
 	}
 }
 
@@ -71,6 +73,7 @@ func NonPacketReader() *PacketReader {
 
 // Start read packet data
 func (pktRead *PacketReader) Start(done chan bool) {
+	time.Sleep(pktRead.waitStartSec)
 	go handle(pktRead, done)
 }
 

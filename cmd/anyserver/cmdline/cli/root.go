@@ -5,9 +5,10 @@ import "github.com/raibru/gsnet/cmd/anyserver/etc"
 var (
 	serverParam etc.ServerServiceParam
 
-	prtVersion bool
-	inputFile  string
-	configFile string
+	prtVersion   bool
+	inputFile    string
+	configFile   string
+	waitTransfer uint
 )
 
 func init() {
@@ -17,4 +18,5 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&serverParam.Name, "name", "", "", "Name of the server service")
 	rootCmd.PersistentFlags().StringVarP(&inputFile, "input-file", "i", "", "Use input file send multible data packages")
 	rootCmd.PersistentFlags().StringVarP(&configFile, "config-file", "f", "", "Use config file for service behavior")
+	rootCmd.PersistentFlags().UintVarP(&waitTransfer, "wait-transfer", "", 0, "Wait time to start transfer action in sec")
 }

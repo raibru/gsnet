@@ -84,7 +84,8 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		}
 
 		if cf.Packet.Use {
-			readerService = pkt.NewPacketReader(cf.Packet.Filename, cf.Packet.Wait)
+			waitService := waitTransfer
+			readerService = pkt.NewPacketReader(cf.Packet.Filename, cf.Packet.Wait, waitService)
 			srvService.SetProcess(readerService.Supply)
 		}
 

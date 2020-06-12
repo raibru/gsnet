@@ -25,7 +25,7 @@ type AnyClientConfig struct {
 	Packet struct {
 		Use      bool   `yaml: "use"`
 		Filename string `yaml: "filename"`
-		Wait     uint32 `yaml: "wait"`
+		Wait     uint   `yaml: "wait"`
 	} `yaml: "packet"`
 	Archive struct {
 		Use      bool   `yaml: "use"`
