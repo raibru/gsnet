@@ -56,7 +56,7 @@ type Client struct {
 }
 
 func (manager *ClientManager) start() {
-	logger.Log().Info("start manage client connections")
+	logger.Log().Info("start managed client connections")
 	for {
 		select {
 		case connection := <-manager.register:
@@ -68,11 +68,11 @@ func (manager *ClientManager) start() {
 				delete(manager.clients, connection)
 				logger.Log().Info("::: unregister terminated client connection")
 			}
-		case message := <-manager.broadcast:
-			logger.Log().Info("::: broadcast to all managed client connections")
+		case data := <-manager.broadcast:
+			logger.Log().Info("::: broadcast to managed client connections")
 			for connection := range manager.clients {
 				select {
-				case connection.data <- message:
+				case connection.data <- data:
 				default:
 					logger.Log().Info("::: delete terminated client connections")
 					close(connection.data)
@@ -80,8 +80,8 @@ func (manager *ClientManager) start() {
 				}
 			}
 		}
-		logger.Log().Info("::: finish manage client connections")
 	}
+	//logger.Log().Info("::: finish managed client connections")
 }
 
 func (manager *ClientManager) receive(client *Client) {
@@ -105,7 +105,9 @@ func (manager *ClientManager) receive(client *Client) {
 			if manager.service.Forward != nil {
 				manager.service.Forward <- data[:length]
 			}
-			//manager.broadcast <- data
+			if manager.service.Broadcast != nil {
+				manager.service.Broadcast <- data[:length]
+			}
 		}
 	}
 	logger.Log().Info("::: finish receive data")
@@ -113,15 +115,20 @@ func (manager *ClientManager) receive(client *Client) {
 
 func (manager *ClientManager) send(client *Client) {
 	defer client.socket.Close()
-	logger.Log().Info("send data to managed client")
 	for {
 		select {
-		case data, ok := <-manager.broadcast:
+		case data, ok := <-client.data:
 			if !ok {
 				logger.Log().Info("::: finish send data")
 				return
 			}
+			logger.Log().Info("::: send data to managed client")
 			client.socket.Write(data)
+			if manager.service.Archive != nil {
+				hexData := hex.EncodeToString(data)
+				r := archive.NewRecord(hexData, "TX", "TCP")
+				manager.service.Archive <- r
+			}
 		}
 	}
 }

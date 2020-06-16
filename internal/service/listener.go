@@ -11,35 +11,42 @@ import (
 
 // ServerServiceValues holds connection data about server services
 type ServerServiceValues struct {
-	Name    string
-	Host    string
-	Port    string
-	Process chan []byte
-	Forward chan []byte
-	Archive chan *archive.Record
+	Name      string
+	Host      string
+	Port      string
+	Process   chan []byte
+	Forward   chan []byte
+	Broadcast chan []byte
+	Archive   chan *archive.Record
 }
 
 // NewServerService build new object for listener service context.
 // If transfer channel is nil this object is a data sink
 func NewServerService(name string, host string, port string) *ServerServiceValues {
 	return &ServerServiceValues{
-		Name:    name,
-		Host:    host,
-		Port:    port,
-		Process: nil,
-		Forward: nil,
-		Archive: nil,
+		Name:      name,
+		Host:      host,
+		Port:      port,
+		Process:   nil,
+		Forward:   nil,
+		Broadcast: nil,
+		Archive:   nil,
 	}
 }
 
 // SetProcess set process data channel
-func (s *ServerServiceValues) SetProcess(p chan []byte) {
-	s.Process = p
+func (s *ServerServiceValues) SetProcess(c chan []byte) {
+	s.Process = c
 }
 
 // SetForward set forward data channel
-func (s *ServerServiceValues) SetForward(f chan []byte) {
-	s.Forward = f
+func (s *ServerServiceValues) SetForward(c chan []byte) {
+	s.Forward = c
+}
+
+// SetBroadcast set broadcast data channel
+func (s *ServerServiceValues) SetBroadcast(c chan []byte) {
+	s.Broadcast = c
 }
 
 // SetArchive set archive record channel
@@ -68,6 +75,8 @@ func (s *ServerServiceValues) ApplyConnection() error {
 		service:    s,
 	}
 
+	s.Broadcast = manager.broadcast
+
 	go manager.start()
 	go func() {
 		for {
@@ -82,13 +91,11 @@ func (s *ServerServiceValues) ApplyConnection() error {
 			manager.register <- client
 
 			go manager.receive(client)
-
-			//s.Forward = manager.broadcast
 			go manager.send(client)
 
-			logger.Log().Info("::: finish apply server listener")
 		}
 	}()
+	logger.Log().Info("::: finish apply server listener")
 	return nil
 }
 
@@ -123,7 +130,7 @@ func (s *ServerServiceValues) BroadcastPackets(done chan bool) {
 }
 
 func broadcast(s *ServerServiceValues, done chan bool) {
-	logger.Log().Infof("send packets from  %s to managed client services", s.Name)
+	logger.Log().Infof("broadcast packets from  %s to managed client services", s.Name)
 	for {
 		data, more := <-s.Process
 
@@ -134,7 +141,7 @@ func broadcast(s *ServerServiceValues, done chan bool) {
 		}
 
 		logger.Log().Tracef("::: send packet: [0x %s]", hex.EncodeToString([]byte(data)))
-		s.Forward <- []byte(data)
+		s.Broadcast <- []byte(data)
 		hexData := hex.EncodeToString([]byte(data))
 
 		if s.Archive != nil {
@@ -143,5 +150,5 @@ func broadcast(s *ServerServiceValues, done chan bool) {
 		}
 	}
 
-	logger.Log().Info("::: finish apply client connection")
+	logger.Log().Info("::: finish broadcast server data")
 }

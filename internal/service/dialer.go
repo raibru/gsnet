@@ -61,6 +61,7 @@ func (s *ClientServiceValues) ApplyConnection() error {
 
 	s.Conn = &Client{socket: conn, data: s.Transfer}
 	go s.Conn.send()
+	go s.Conn.receive()
 
 	//if s.Process != nil {
 	//	go s.Conn.send()
