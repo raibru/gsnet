@@ -109,7 +109,7 @@ func handleParam(cmd *cobra.Command, args []string) error {
 
 	if readerService.Use {
 		readerService.Start(readed)
-		srvService.BroadcastPackets(sent)
+		srvService.NotifyPackets(sent)
 		<-sent
 	} else {
 		ok := make(chan bool)

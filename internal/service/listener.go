@@ -11,26 +11,26 @@ import (
 
 // ServerServiceValues holds connection data about server services
 type ServerServiceValues struct {
-	Name      string
-	Host      string
-	Port      string
-	Process   chan []byte
-	Forward   chan []byte
-	Broadcast chan []byte
-	Archive   chan *archive.Record
+	Name    string
+	Host    string
+	Port    string
+	Process chan []byte
+	Forward chan []byte
+	Notify  chan []byte
+	Archive chan *archive.Record
 }
 
 // NewServerService build new object for listener service context.
 // If transfer channel is nil this object is a data sink
 func NewServerService(name string, host string, port string) *ServerServiceValues {
 	return &ServerServiceValues{
-		Name:      name,
-		Host:      host,
-		Port:      port,
-		Process:   nil,
-		Forward:   nil,
-		Broadcast: nil,
-		Archive:   nil,
+		Name:    name,
+		Host:    host,
+		Port:    port,
+		Process: nil,
+		Forward: nil,
+		Notify:  nil,
+		Archive: nil,
 	}
 }
 
@@ -44,9 +44,9 @@ func (s *ServerServiceValues) SetForward(c chan []byte) {
 	s.Forward = c
 }
 
-// SetBroadcast set broadcast data channel
-func (s *ServerServiceValues) SetBroadcast(c chan []byte) {
-	s.Broadcast = c
+// SetNotify set notify data channel
+func (s *ServerServiceValues) SetNotify(c chan []byte) {
+	s.Notify = c
 }
 
 // SetArchive set archive record channel
@@ -69,13 +69,13 @@ func (s *ServerServiceValues) ApplyConnection() error {
 
 	manager := ClientManager{
 		clients:    make(map[*Client]bool),
-		broadcast:  make(chan []byte),
+		notify:     make(chan []byte),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
 		service:    s,
 	}
 
-	s.Broadcast = manager.broadcast
+	s.Notify = manager.notify
 
 	go manager.start()
 	go func() {
@@ -124,10 +124,10 @@ func CreateTCPServerListener(s *ServerServiceValues) (net.Listener, error) {
 	return lsn, nil
 }
 
-// BroadcastPackets broadcast packet data to managed clients
-func (s *ServerServiceValues) BroadcastPackets(done chan bool) {
+// NotifyPackets notify packet data to managed clients
+func (s *ServerServiceValues) NotifyPackets(done chan bool) {
 	go func() {
-		logger.Log().Infof("broadcast packets from  %s to managed client services", s.Name)
+		logger.Log().Infof("notify packets from  %s to managed client services", s.Name)
 		for {
 			data, more := <-s.Process
 
@@ -138,9 +138,9 @@ func (s *ServerServiceValues) BroadcastPackets(done chan bool) {
 			}
 
 			logger.Log().Tracef("::: transfer packet: [0x %s]", hex.EncodeToString([]byte(data)))
-			s.Broadcast <- []byte(data)
+			s.Notify <- []byte(data)
 		}
 
-		logger.Log().Info("::: finish broadcast server data")
+		logger.Log().Info("::: finish notify server data")
 	}()
 }

@@ -43,7 +43,7 @@ func (serviceLogger) Identify() string {
 // ClientManager hold communication behavior
 type ClientManager struct {
 	clients    map[*Client]bool
-	broadcast  chan []byte
+	notify     chan []byte
 	register   chan *Client
 	unregister chan *Client
 	service    *ServerServiceValues
@@ -63,8 +63,8 @@ func (manager *ClientManager) start() {
 				delete(manager.clients, connection)
 				logger.Log().Info("::: unregister terminated client connection")
 			}
-		case data := <-manager.broadcast:
-			logger.Log().Info("::: broadcast to managed client connections")
+		case data := <-manager.notify:
+			logger.Log().Info("::: notify managed client connections")
 			for connection := range manager.clients {
 				select {
 				case connection.txData <- data:
@@ -101,8 +101,8 @@ func (manager *ClientManager) receive(client *Client) {
 			if manager.service.Forward != nil {
 				manager.service.Forward <- data[:length]
 			}
-			if manager.service.Broadcast != nil {
-				manager.service.Broadcast <- data[:length]
+			if manager.service.Notify != nil {
+				manager.service.Notify <- data[:length]
 			}
 		}
 	}
