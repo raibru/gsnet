@@ -87,7 +87,7 @@ func (s *ServerServiceValues) ApplyConnection() error {
 				logger.Log().Errorf("::: failure accept connection due '%s'", err.Error())
 				continue
 			}
-			client := &Client{socket: conn, data: make(chan []byte)}
+			client := &Client{socket: conn, txData: make(chan []byte), rxData: make(chan []byte)}
 			manager.register <- client
 
 			go manager.receive(client)

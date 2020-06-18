@@ -49,12 +49,6 @@ type ClientManager struct {
 	service    *ServerServiceValues
 }
 
-// Client hold client communication behavior
-type Client struct {
-	socket net.Conn
-	data   chan []byte
-}
-
 func (manager *ClientManager) start() {
 	logger.Log().Info("start managed client connections")
 	for {
@@ -64,7 +58,8 @@ func (manager *ClientManager) start() {
 			logger.Log().Info("::: register client connection")
 		case connection := <-manager.unregister:
 			if _, ok := manager.clients[connection]; ok {
-				close(connection.data)
+				close(connection.txData)
+				close(connection.rxData)
 				delete(manager.clients, connection)
 				logger.Log().Info("::: unregister terminated client connection")
 			}
@@ -72,10 +67,11 @@ func (manager *ClientManager) start() {
 			logger.Log().Info("::: broadcast to managed client connections")
 			for connection := range manager.clients {
 				select {
-				case connection.data <- data:
+				case connection.txData <- data:
 				default:
 					logger.Log().Info("::: delete terminated client connections")
-					close(connection.data)
+					close(connection.txData)
+					close(connection.rxData)
 					delete(manager.clients, connection)
 				}
 			}
@@ -117,7 +113,7 @@ func (manager *ClientManager) send(client *Client) {
 	defer client.socket.Close()
 	for {
 		select {
-		case data, ok := <-client.data:
+		case data, ok := <-client.txData:
 			if !ok {
 				logger.Log().Info("::: finish send data")
 				return
@@ -133,6 +129,13 @@ func (manager *ClientManager) send(client *Client) {
 	}
 }
 
+// Client hold client communication behavior
+type Client struct {
+	socket net.Conn
+	txData chan []byte
+	rxData chan []byte
+}
+
 func (client *Client) receive() {
 	logger.Log().Info("receive data")
 	for {
@@ -145,18 +148,22 @@ func (client *Client) receive() {
 		if length > 0 {
 			logger.Log().Infof("::: received data [0x %s]", hex.EncodeToString(data[:length]))
 		}
+		if client.rxData != nil {
+			logger.Log().Trace("::: wait for receive data")
+			client.rxData <- data[:length]
+		}
 	}
 	logger.Log().Info("::: finish receive data")
 }
 
 func (client *Client) send() {
-	logger.Log().Info("send data")
+	logger.Log().Info("transfer data")
 	for {
-		logger.Log().Trace("::: wait for data")
-		data := <-client.data
+		logger.Log().Trace("::: wait for transfer data")
+		data := <-client.txData
 
 		if string(data) == "EOF" {
-			logger.Log().Trace("::: receive EOF flag")
+			logger.Log().Trace("::: notify EOF flag")
 			break
 		}
 

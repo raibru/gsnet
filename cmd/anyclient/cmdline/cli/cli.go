@@ -101,18 +101,18 @@ func handleParam(cmd *cobra.Command, args []string) error {
 
 	wait := make(chan bool, 1)
 	readed := make(chan bool, 1)
-	sent := make(chan bool, 1)
+	done := make(chan bool, 1)
 
 	if archiveService.Use {
 		archiveService.Start(wait)
 	}
 	if readerService.Use {
 		readerService.Start(readed)
-		clientService.SendPackets(sent)
-		<-sent
+		clientService.SendPackets(done)
+		<-done
 	} else {
-		ok := make(chan bool)
-		<-ok
+		clientService.ReceivePackets(done)
+		<-done
 	}
 
 	return nil

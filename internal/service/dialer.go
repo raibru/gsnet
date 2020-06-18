@@ -18,6 +18,7 @@ type ClientServiceValues struct {
 	Process  chan []byte
 	Archive  chan *archive.Record
 	Transfer chan []byte
+	Receive  chan []byte
 }
 
 // NewClientService deploy a client service with needed data
@@ -29,22 +30,28 @@ func NewClientService(name string, host string, port string) *ClientServiceValue
 		Process:  nil,
 		Archive:  nil,
 		Transfer: make(chan []byte),
+		Receive:  make(chan []byte),
 	}
 }
 
 // SetProcess set process data channel
-func (s *ClientServiceValues) SetProcess(p chan []byte) {
-	s.Process = p
+func (s *ClientServiceValues) SetProcess(c chan []byte) {
+	s.Process = c
 }
 
 // SetTransfer set transfer data channel
-func (s *ClientServiceValues) SetTransfer(t chan []byte) {
-	s.Transfer = t
+func (s *ClientServiceValues) SetTransfer(c chan []byte) {
+	s.Transfer = c
+}
+
+// SetReceive set receive data channel
+func (s *ClientServiceValues) SetReceive(c chan []byte) {
+	s.Receive = c
 }
 
 // SetArchive set archive record channel
-func (s *ClientServiceValues) SetArchive(r chan *archive.Record) {
-	s.Archive = r
+func (s *ClientServiceValues) SetArchive(c chan *archive.Record) {
+	s.Archive = c
 }
 
 // ApplyConnection create a connection to server and handle outgoing data stream
@@ -59,7 +66,7 @@ func (s *ClientServiceValues) ApplyConnection() error {
 		return err
 	}
 
-	s.Conn = &Client{socket: conn, data: s.Transfer}
+	s.Conn = &Client{socket: conn, txData: s.Transfer, rxData: s.Receive}
 	go s.Conn.send()
 	go s.Conn.receive()
 
@@ -81,36 +88,60 @@ func (s *ClientServiceValues) Finalize() {
 	s.Conn.socket.Close()
 	//close(s.Archive)
 	//close(s.Transfer)
+	//close(s.Receive)
 	logger.Log().Info("::: finish finalize service")
+}
+
+// ReceivePackets receive from connected server packet data
+func (s *ClientServiceValues) ReceivePackets(done chan bool) {
+	go func() {
+		logger.Log().Infof("start service receiving packets from  %s:%s", s.Host, s.Port)
+
+		for {
+			data := <-s.Receive
+			logger.Log().Tracef("::: receive packet: [0x %s]", hex.EncodeToString([]byte(data)))
+
+			if string(data) == "EOF" {
+				logger.Log().Trace("::: get no more data to receive notification")
+				done <- true
+				break
+			}
+			hexData := hex.EncodeToString([]byte(data))
+
+			if s.Archive != nil {
+				r := archive.NewRecord(hexData, "RX", "TCP")
+				s.Archive <- r
+			}
+		}
+		logger.Log().Info("::: finish receive from client connection")
+	}()
 }
 
 // SendPackets sends from file readed lines of packets and send them
 func (s *ClientServiceValues) SendPackets(done chan bool) {
-	go handle(s, done)
-}
+	go func() {
+		logger.Log().Infof("start service transfer packets to  %s:%s", s.Host, s.Port)
+		for {
+			data, more := <-s.Process
 
-func handle(s *ClientServiceValues, done chan bool) {
-	logger.Log().Infof("send packets from  %s to connected service", s.Name)
-	for {
-		data, more := <-s.Process
+			if !more || string(data) == "EOF" {
+				logger.Log().Trace("::: get no more data to send notification")
+				done <- true
+				break
+			}
 
-		if !more || string(data) == "EOF" {
-			logger.Log().Trace("::: get notify by no more data to send")
-			done <- true
-			break
+			logger.Log().Tracef("::: send packet: [0x %s]", hex.EncodeToString([]byte(data)))
+			s.Conn.txData <- []byte(data)
+			hexData := hex.EncodeToString([]byte(data))
+
+			if s.Archive != nil {
+				r := archive.NewRecord(hexData, "TX", "TCP")
+				s.Archive <- r
+			}
 		}
 
-		logger.Log().Tracef("::: send packet: [0x %s]", hex.EncodeToString([]byte(data)))
-		s.Conn.data <- []byte(data)
-		hexData := hex.EncodeToString([]byte(data))
-
-		if s.Archive != nil {
-			r := archive.NewRecord(hexData, "TX", "TCP")
-			s.Archive <- r
-		}
-	}
-
-	logger.Log().Info("::: finish apply client connection")
+		logger.Log().Info("::: finish apply client connection")
+	}()
 }
 
 // CreateTCPClientConnection create new TCP connection with parameter in ClientService
