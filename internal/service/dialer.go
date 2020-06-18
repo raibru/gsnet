@@ -106,9 +106,9 @@ func (s *ClientServiceValues) ReceivePackets(done chan bool) {
 				done <- true
 				break
 			}
-			hexData := hex.EncodeToString([]byte(data))
 
 			if s.Archive != nil {
+				hexData := hex.EncodeToString([]byte(data))
 				r := archive.NewRecord(hexData, "RX", "TCP")
 				s.Archive <- r
 			}
