@@ -40,7 +40,7 @@ func (pktLogger) Identify() string {
 }
 
 //
-// Input Packets to send
+// Input Packets to supply
 //
 
 // PacketReader read packet data from input file and distribute it via

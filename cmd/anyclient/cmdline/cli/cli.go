@@ -108,7 +108,7 @@ func handleParam(cmd *cobra.Command, args []string) error {
 	}
 	if readerService.Use {
 		readerService.Start(readed)
-		clientService.SendPackets(done)
+		clientService.TransferPackets(done)
 		<-done
 	} else {
 		clientService.ReceivePackets(done)

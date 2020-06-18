@@ -67,11 +67,11 @@ func (s *ClientServiceValues) ApplyConnection() error {
 	}
 
 	s.Conn = &Client{socket: conn, txData: s.Transfer, rxData: s.Receive}
-	go s.Conn.send()
+	go s.Conn.transfer()
 	go s.Conn.receive()
 
 	//if s.Process != nil {
-	//	go s.Conn.send()
+	//	go s.Conn.transfer()
 	//}
 
 	//go client.receive()
@@ -117,20 +117,20 @@ func (s *ClientServiceValues) ReceivePackets(done chan bool) {
 	}()
 }
 
-// SendPackets sends from file readed lines of packets and send them
-func (s *ClientServiceValues) SendPackets(done chan bool) {
+// TransferPackets transfers from file readed lines of packets and transfer them
+func (s *ClientServiceValues) TransferPackets(done chan bool) {
 	go func() {
 		logger.Log().Infof("start service transfer packets to  %s:%s", s.Host, s.Port)
 		for {
 			data, more := <-s.Process
 
 			if !more || string(data) == "EOF" {
-				logger.Log().Trace("::: get no more data to send notification")
+				logger.Log().Trace("::: get no more data to transfer notification")
 				done <- true
 				break
 			}
 
-			logger.Log().Tracef("::: send packet: [0x %s]", hex.EncodeToString([]byte(data)))
+			logger.Log().Tracef("::: transfer packet: [0x %s]", hex.EncodeToString([]byte(data)))
 			s.Conn.txData <- []byte(data)
 			hexData := hex.EncodeToString([]byte(data))
 

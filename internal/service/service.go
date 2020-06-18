@@ -109,16 +109,16 @@ func (manager *ClientManager) receive(client *Client) {
 	logger.Log().Info("::: finish receive data")
 }
 
-func (manager *ClientManager) send(client *Client) {
+func (manager *ClientManager) transfer(client *Client) {
 	defer client.socket.Close()
 	for {
 		select {
 		case data, ok := <-client.txData:
 			if !ok {
-				logger.Log().Info("::: finish send data")
+				logger.Log().Info("::: finish transfer data")
 				return
 			}
-			logger.Log().Info("::: send data to managed client")
+			logger.Log().Info("::: transfer data to managed client")
 			client.socket.Write(data)
 			if manager.service.Archive != nil {
 				hexData := hex.EncodeToString(data)
@@ -156,7 +156,7 @@ func (client *Client) receive() {
 	logger.Log().Info("::: finish receive data")
 }
 
-func (client *Client) send() {
+func (client *Client) transfer() {
 	logger.Log().Info("transfer data")
 	for {
 		logger.Log().Trace("::: wait for transfer data")
@@ -169,12 +169,12 @@ func (client *Client) send() {
 
 		_, err := client.socket.Write(data)
 		if err != nil {
-			logger.Log().Errorf("::: failure send data due '%s'", err.Error())
+			logger.Log().Errorf("::: failure transfer data due '%s'", err.Error())
 			break
 		}
-		logger.Log().Trace("::: successful send data")
+		logger.Log().Trace("::: successful transfer data")
 	}
-	logger.Log().Info("::: finish send data")
+	logger.Log().Info("::: finish transfer data")
 }
 
 // // https://www.thepolyglotdeveloper.com/2017/05/network-sockets-with-the-go-programming-language/

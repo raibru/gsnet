@@ -46,7 +46,7 @@ var (
 	rxCount uint32
 )
 
-// Record holds send/receive data with meta info per record
+// Record holds transfered/received data with meta info per record
 type Record struct {
 	id        uint32
 	time      string

@@ -91,7 +91,7 @@ func (s *ServerServiceValues) ApplyConnection() error {
 			manager.register <- client
 
 			go manager.receive(client)
-			go manager.send(client)
+			go manager.transfer(client)
 
 		}
 	}()
@@ -135,12 +135,12 @@ func broadcast(s *ServerServiceValues, done chan bool) {
 		data, more := <-s.Process
 
 		if !more || string(data) == "EOF" {
-			logger.Log().Trace("::: get notify by no more data to send")
+			logger.Log().Trace("::: get notify by no more data to transfer")
 			done <- true
 			break
 		}
 
-		logger.Log().Tracef("::: send packet: [0x %s]", hex.EncodeToString([]byte(data)))
+		logger.Log().Tracef("::: transfer packet: [0x %s]", hex.EncodeToString([]byte(data)))
 		s.Broadcast <- []byte(data)
 		hexData := hex.EncodeToString([]byte(data))
 
