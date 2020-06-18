@@ -54,7 +54,7 @@ func (s *PacketServiceValues) ApplyConnection() error {
 		}
 	}()
 
-	logger.Log().Info("::: finish setup channel connections")
+	logger.Log().Info("finish setup channel connections")
 
 	return nil
 }

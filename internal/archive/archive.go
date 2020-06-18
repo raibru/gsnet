@@ -29,7 +29,7 @@ func (l archLogger) Apply() error {
 		return err
 	}
 	logger.Log().Infof("apply archive logger behavior: %s", l.contextName)
-	logger.Log().Info("::: finish apply archive logger")
+	logger.Log().Info("finish apply archive logger")
 	return nil
 }
 
@@ -133,18 +133,18 @@ func handle(a *Archive, done chan bool) {
 		rec, more := <-a.Archivate
 
 		if !more {
-			logger.Log().Trace("::: receive archive stop event")
+			logger.Log().Trace("receive archive stop event")
 			w.Flush()
 			done <- true
 			return
 		}
 		//		if rec == nil {
-		//			logger.Log().Trace("::: receive archive stop event")
+		//			logger.Log().Trace("receive archive stop event")
 		//			w.Flush()
 		//			return
 		//		}
 
-		logger.Log().Tracef("::: write data into archive: %s-%d", rec.direction, rec.id)
+		logger.Log().Tracef("write data into archive: %s-%d", rec.direction, rec.id)
 
 		data := []string{
 			fmt.Sprintf("%s-%d", rec.direction, rec.id),

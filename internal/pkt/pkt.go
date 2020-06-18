@@ -31,7 +31,7 @@ func (l pktLogger) Apply() error {
 		return err
 	}
 	logger.Log().Infof("apply package logger behavior: %s", l.contextName)
-	logger.Log().Info("::: finish apply package logger")
+	logger.Log().Info("finish apply package logger")
 	return nil
 }
 

@@ -57,15 +57,15 @@ func (s *ServerServiceValues) SetArchive(r chan *archive.Record) {
 // ApplyConnection accept a connection from client and handle incoming data stream
 func (s *ServerServiceValues) ApplyConnection() error {
 	logger.Log().Infof("apply server connection for service %s", s.Name)
-	logger.Log().Tracef("::: create TCP server listener for service %s", s.Name)
+	logger.Log().Tracef("create TCP server listener for service %s", s.Name)
 	lsn, err := CreateTCPServerListener(s)
 	if err != nil {
-		logger.Log().Errorf("::: failure create TCP server listener due '%s'", err.Error())
+		logger.Log().Errorf("failure create TCP server listener due '%s'", err.Error())
 		fmt.Fprintf(os.Stderr, "Fatal error create TCP listener: %s\n", err.Error())
 		return err
 	}
 
-	logger.Log().Tracef("::: establish listener for service %s@%s:%s", s.Name, s.Host, s.Port)
+	logger.Log().Tracef("establish listener for service %s@%s:%s", s.Name, s.Host, s.Port)
 
 	manager := ClientManager{
 		clients:    make(map[*Client]bool),
@@ -80,11 +80,11 @@ func (s *ServerServiceValues) ApplyConnection() error {
 	go manager.start()
 	go func() {
 		for {
-			logger.Log().Trace("::: wait for input...")
+			logger.Log().Trace("wait for input...")
 			conn, err := lsn.Accept()
-			logger.Log().Trace("::: accept input...")
+			logger.Log().Trace("accept input...")
 			if err != nil {
-				logger.Log().Errorf("::: failure accept connection due '%s'", err.Error())
+				logger.Log().Errorf("failure accept connection due '%s'", err.Error())
 				continue
 			}
 			client := &Client{socket: conn, txData: make(chan []byte), rxData: make(chan []byte)}
@@ -95,32 +95,32 @@ func (s *ServerServiceValues) ApplyConnection() error {
 
 		}
 	}()
-	logger.Log().Info("::: finish apply server listener")
+	logger.Log().Info("finish apply server listener")
 	return nil
 }
 
 // CreateTCPServerListener create new TCP listener with parameter in ServerService
 func CreateTCPServerListener(s *ServerServiceValues) (net.Listener, error) {
 	logger.Log().Infof("create server listener service %s@%s:%s", s.Name, s.Host, s.Port)
-	logger.Log().Tracef("::: resolve tcpTCPAddr %s:%s", s.Host, s.Port)
+	logger.Log().Tracef("resolve tcpTCPAddr %s:%s", s.Host, s.Port)
 
 	serv := s.Host + ":" + s.Port
 	addr, err := net.ResolveTCPAddr("tcp4", serv)
 	if err != nil {
-		logger.Log().Errorf("::: failure resolve TCP address due '%s'", err.Error())
+		logger.Log().Errorf("failure resolve TCP address due '%s'", err.Error())
 		fmt.Fprintf(os.Stderr, "Fatal error resolve TCP address %s: %s\n", s.Name, err.Error())
 		return nil, err
 	}
 
-	logger.Log().Tracef("::: start listen TCP %s@%s:%s", s.Name, s.Host, s.Port)
+	logger.Log().Tracef("start listen TCP %s@%s:%s", s.Name, s.Host, s.Port)
 	lsn, err := net.ListenTCP("tcp", addr)
 	if err != nil {
-		logger.Log().Errorf("::: failure listen TCP due '%s'", err.Error())
+		logger.Log().Errorf("failure listen TCP due '%s'", err.Error())
 		fmt.Fprintf(os.Stderr, "Fatal error listen TCP %s: %s\n", s.Name, err.Error())
 		return nil, err
 	}
 
-	logger.Log().Info("::: finish create server listener")
+	logger.Log().Info("finish create server listener")
 	return lsn, nil
 }
 
@@ -132,15 +132,15 @@ func (s *ServerServiceValues) NotifyPackets(done chan bool) {
 			data, more := <-s.Process
 
 			if !more || string(data) == "EOF" {
-				logger.Log().Trace("::: get notify by no more data to transfer")
+				logger.Log().Trace("get notify by no more data to transfer")
 				done <- true
 				break
 			}
 
-			logger.Log().Tracef("::: transfer packet: [0x %s]", hex.EncodeToString([]byte(data)))
+			logger.Log().Tracef("transfer packet: [0x %s]", hex.EncodeToString([]byte(data)))
 			s.Notify <- []byte(data)
 		}
 
-		logger.Log().Info("::: finish notify server data")
+		logger.Log().Info("finish notify server data")
 	}()
 }

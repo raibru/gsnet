@@ -102,8 +102,8 @@ func (c *LoggerEntity) ApplyLogger(cn string) error {
 	}
 	c.logEntry = e
 	c.logEntry.Infof("apply context logger for: %s", cn)
-	c.logEntry.Tracef("::: create context logging for: %s", cn)
-	c.logEntry.Info("::: finish apply context logger")
+	c.logEntry.Tracef("create context logging for: %s", cn)
+	c.logEntry.Info("finish apply context logger")
 
 	return nil
 }

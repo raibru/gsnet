@@ -28,7 +28,7 @@ func (l serviceLogger) Apply() error {
 		return err
 	}
 	logger.Log().Infof("apply service logger behavior: %s", l.contextName)
-	logger.Log().Info("::: finish apply service logger")
+	logger.Log().Info("finish apply service logger")
 	return nil
 }
 
@@ -55,21 +55,21 @@ func (manager *ClientManager) start() {
 		select {
 		case connection := <-manager.register:
 			manager.clients[connection] = true
-			logger.Log().Info("::: register client connection")
+			logger.Log().Info("register client connection")
 		case connection := <-manager.unregister:
 			if _, ok := manager.clients[connection]; ok {
 				close(connection.txData)
 				close(connection.rxData)
 				delete(manager.clients, connection)
-				logger.Log().Info("::: unregister terminated client connection")
+				logger.Log().Info("unregister terminated client connection")
 			}
 		case data := <-manager.notify:
-			logger.Log().Info("::: notify managed client connections")
+			logger.Log().Info("notify managed client connections")
 			for connection := range manager.clients {
 				select {
 				case connection.txData <- data:
 				default:
-					logger.Log().Info("::: delete terminated client connections")
+					logger.Log().Info("delete terminated client connections")
 					close(connection.txData)
 					close(connection.rxData)
 					delete(manager.clients, connection)
@@ -77,7 +77,7 @@ func (manager *ClientManager) start() {
 			}
 		}
 	}
-	//logger.Log().Info("::: finish managed client connections")
+	//logger.Log().Info("finish managed client connections")
 }
 
 func (manager *ClientManager) receive(client *Client) {
@@ -106,7 +106,7 @@ func (manager *ClientManager) receive(client *Client) {
 			}
 		}
 	}
-	logger.Log().Info("::: finish receive data")
+	logger.Log().Info("finish receive data")
 }
 
 func (manager *ClientManager) transfer(client *Client) {
@@ -115,10 +115,10 @@ func (manager *ClientManager) transfer(client *Client) {
 		select {
 		case data, ok := <-client.txData:
 			if !ok {
-				logger.Log().Info("::: finish transfer data")
+				logger.Log().Info("finish transfer data")
 				return
 			}
-			logger.Log().Info("::: transfer data to managed client")
+			logger.Log().Info("transfer data to managed client")
 			client.socket.Write(data)
 			if manager.service.Archive != nil {
 				hexData := hex.EncodeToString(data)
@@ -146,35 +146,35 @@ func (client *Client) receive() {
 			break
 		}
 		if length > 0 {
-			logger.Log().Infof("::: received data [0x %s]", hex.EncodeToString(data[:length]))
+			logger.Log().Infof("received data [0x %s]", hex.EncodeToString(data[:length]))
 		}
 		if client.rxData != nil {
-			logger.Log().Trace("::: wait for receive data")
+			logger.Log().Trace("wait for receive data")
 			client.rxData <- data[:length]
 		}
 	}
-	logger.Log().Info("::: finish receive data")
+	logger.Log().Info("finish receive data")
 }
 
 func (client *Client) transfer() {
 	logger.Log().Info("transfer data")
 	for {
-		logger.Log().Trace("::: wait for transfer data")
+		logger.Log().Trace("wait for transfer data")
 		data := <-client.txData
 
 		if string(data) == "EOF" {
-			logger.Log().Trace("::: notify EOF flag")
+			logger.Log().Trace("notify EOF flag")
 			break
 		}
 
 		_, err := client.socket.Write(data)
 		if err != nil {
-			logger.Log().Errorf("::: failure transfer data due '%s'", err.Error())
+			logger.Log().Errorf("failure transfer data due '%s'", err.Error())
 			break
 		}
-		logger.Log().Trace("::: successful transfer data")
+		logger.Log().Trace("successful transfer data")
 	}
-	logger.Log().Info("::: finish transfer data")
+	logger.Log().Info("finish transfer data")
 }
 
 // // https://www.thepolyglotdeveloper.com/2017/05/network-sockets-with-the-go-programming-language/

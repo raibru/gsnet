@@ -35,7 +35,7 @@ func (l sysLogger) Apply() error {
 		return err
 	}
 	logger.Log().Infof("apply system logger behavior: %s", l.contextName)
-	logger.Log().Info("::: finish apply system logger")
+	logger.Log().Info("finish apply system logger")
 	return nil
 }
 
