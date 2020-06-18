@@ -126,29 +126,21 @@ func CreateTCPServerListener(s *ServerServiceValues) (net.Listener, error) {
 
 // BroadcastPackets broadcast packet data to managed clients
 func (s *ServerServiceValues) BroadcastPackets(done chan bool) {
-	go broadcast(s, done)
-}
+	go func() {
+		logger.Log().Infof("broadcast packets from  %s to managed client services", s.Name)
+		for {
+			data, more := <-s.Process
 
-func broadcast(s *ServerServiceValues, done chan bool) {
-	logger.Log().Infof("broadcast packets from  %s to managed client services", s.Name)
-	for {
-		data, more := <-s.Process
+			if !more || string(data) == "EOF" {
+				logger.Log().Trace("::: get notify by no more data to transfer")
+				done <- true
+				break
+			}
 
-		if !more || string(data) == "EOF" {
-			logger.Log().Trace("::: get notify by no more data to transfer")
-			done <- true
-			break
+			logger.Log().Tracef("::: transfer packet: [0x %s]", hex.EncodeToString([]byte(data)))
+			s.Broadcast <- []byte(data)
 		}
 
-		logger.Log().Tracef("::: transfer packet: [0x %s]", hex.EncodeToString([]byte(data)))
-		s.Broadcast <- []byte(data)
-		hexData := hex.EncodeToString([]byte(data))
-
-		if s.Archive != nil {
-			r := archive.NewRecord(hexData, "TX", "TCP")
-			s.Archive <- r
-		}
-	}
-
-	logger.Log().Info("::: finish broadcast server data")
+		logger.Log().Info("::: finish broadcast server data")
+	}()
 }
