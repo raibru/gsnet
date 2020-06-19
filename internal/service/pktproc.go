@@ -6,8 +6,8 @@ import "github.com/raibru/gsnet/internal/archive"
 type PacketService struct {
 	Name      string
 	Type      string
-	Dialer    *ClientService
-	Listener  *ServerService
+	dialer    *ClientService
+	listener  *ServerService
 	archivate chan *archive.Record
 	Mode      chan string
 }
@@ -17,8 +17,8 @@ func NewPacketService(name string, typ string) *PacketService {
 	return &PacketService{
 		Name:      name,
 		Type:      typ,
-		Dialer:    nil,
-		Listener:  nil,
+		dialer:    nil,
+		listener:  nil,
 		archivate: nil,
 		Mode:      make(chan string),
 	}
@@ -26,12 +26,12 @@ func NewPacketService(name string, typ string) *PacketService {
 
 // SetDialer set dialer object
 func (s *PacketService) SetDialer(d *ClientService) {
-	s.Dialer = d
+	s.dialer = d
 }
 
 // SetListener set listener object
 func (s *PacketService) SetListener(l *ServerService) {
-	s.Listener = l
+	s.listener = l
 }
 
 // SetArchivate set archive record channel
@@ -43,14 +43,14 @@ func (s *PacketService) SetArchivate(r chan *archive.Record) {
 func (s *PacketService) ApplyConnection() error {
 	logger.Log().Infof("apply all connections for packet service %s", s.Name)
 	go func() {
-		if err := s.Listener.ApplyConnection(); err != nil {
-			logger.Log().Errorf("Error apply server connection %s: %s", s.Listener.Name, err.Error())
+		if err := s.listener.ApplyConnection(); err != nil {
+			logger.Log().Errorf("Error apply server connection %s: %s", s.listener.Name, err.Error())
 		}
 	}()
 
 	go func() {
-		if err := s.Dialer.ApplyConnection(); err != nil {
-			logger.Log().Errorf("Error apply dialer connection %s: %s", s.Dialer.Name, err.Error())
+		if err := s.dialer.ApplyConnection(); err != nil {
+			logger.Log().Errorf("Error apply dialer connection %s: %s", s.dialer.Name, err.Error())
 		}
 	}()
 
