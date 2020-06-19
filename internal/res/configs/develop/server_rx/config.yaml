@@ -1,9 +1,9 @@
 service:
-  name: anyclient-dev
+  name: anyserver-dev-tx
   host: 127.0.0.1
-  port: 32100
+  port: 33100
 packet:
-  use: true
+  use: false
   filename: ./sendlist.txt
   wait: 5000
 archive:
@@ -11,6 +11,7 @@ archive:
   filename: ./archive.csv
   type: cvs
 logging:
-  filename: ./anyclient.log
+  filename: ./anyserver.log
   timestamp: 2006-01-02 15:04:05.000
+
 

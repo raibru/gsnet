@@ -11,23 +11,23 @@ tmux new-session -d -s $session -n shell \; \
     split-window -h \; \
     split-window -v \; \
     select-pane -t 0 \; \
-  new-window -n 'runtime-tx' \; \
-    send-keys 'cd build/develop/serverservice && clear' C-m \; \
+  new-window -n 'runtime-1' \; \
+    send-keys 'cd build/develop/server_rx && clear' C-m \; \
     split-window -v -p 70 \; \
     send-keys 'cd build/develop/pktservice && clear' C-m \; \
     split-window -v -p 50 \; \
-    send-keys 'cd build/develop/clientservice && clear' C-m \; \
+    send-keys 'cd build/develop/client_tx && clear' C-m \; \
     select-pane -t 0 \; \
     split-window -h \; \
-    send-keys 'cd build/develop/serverservice && clear && tail -f anyserver.log' C-m \; \
+    send-keys 'cd build/develop/server_rx && clear && tail -f anyserver.log' C-m \; \
     select-pane -t 2 \; \
     split-window -h \; \
     send-keys 'cd build/develop/pktservice && clear && tail -f pktservice.log' C-m \; \
     select-pane -t 4 \; \
     split-window -h \; \
-    send-keys 'cd build/develop/clientservice && clear && tail -f anyclient.log' C-m \; \
+    send-keys 'cd build/develop/client_tx && clear && tail -f anyclient.log' C-m \; \
     select-pane -t 0 \; \
-  new-window -n 'runtime-rx' \; \
+  new-window -n 'runtime-2' \; \
     send-keys 'cd build/develop/server_tx && clear' C-m \; \
     split-window -v -p 70 \; \
     send-keys 'cd build/develop/pktservice && clear' C-m \; \
