@@ -14,10 +14,10 @@ type ServerService struct {
 	Name    string
 	Host    string
 	Port    string
-	Process chan []byte
-	Forward chan []byte
-	Notify  chan []byte
 	Archive chan *archive.Record
+	Process chan []byte // use this chan to accept data which have to be processed
+	Forward chan []byte // use this chan to forward data to somewhere
+	Notify  chan []byte // use this chan to notify registered clients
 }
 
 // NewServerService build new object for listener service context.
@@ -27,10 +27,10 @@ func NewServerService(name string, host string, port string) *ServerService {
 		Name:    name,
 		Host:    host,
 		Port:    port,
+		Archive: nil,
 		Process: nil,
 		Forward: nil,
 		Notify:  nil,
-		Archive: nil,
 	}
 }
 

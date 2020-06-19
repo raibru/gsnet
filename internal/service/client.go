@@ -15,10 +15,10 @@ type ClientService struct {
 	Host     string
 	Port     string
 	Conn     *Client
-	Process  chan []byte
 	Archive  chan *archive.Record
-	Transfer chan []byte
-	Receive  chan []byte
+	Process  chan []byte // use this chan to acceppt data which have to be processed
+	Transfer chan []byte // use this chan to provide data to transfer somewhere
+	Receive  chan []byte // use this chan to handle received data from somewhere
 }
 
 // NewClientService deploy a client service with needed data
@@ -27,8 +27,8 @@ func NewClientService(name string, host string, port string) *ClientService {
 		Name:     name,
 		Host:     host,
 		Port:     port,
-		Process:  nil,
 		Archive:  nil,
+		Process:  nil,
 		Transfer: make(chan []byte),
 		Receive:  make(chan []byte),
 	}
@@ -70,15 +70,6 @@ func (s *ClientService) ApplyConnection() error {
 	go s.Conn.transfer()
 	go s.Conn.receive()
 
-	//if s.Process != nil {
-	//	go s.Conn.transfer()
-	//}
-
-	//go client.receive()
-	//defer func() {
-	//	s.Conn.data <- []byte("EOF")
-	//}()
-
 	return nil
 }
 
@@ -86,9 +77,6 @@ func (s *ClientService) ApplyConnection() error {
 func (s *ClientService) Finalize() {
 	logger.Log().Infof("finalize service %s", s.Name)
 	s.Conn.socket.Close()
-	//close(s.Archive)
-	//close(s.Transfer)
-	//close(s.Receive)
 	logger.Log().Info("finish finalize service")
 }
 
