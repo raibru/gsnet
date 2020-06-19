@@ -14,11 +14,11 @@ type ClientService struct {
 	Name      string
 	Host      string
 	Port      string
-	Conn      *Client
+	conn      *Client
 	archivate chan *archive.Record
-	Process   chan []byte // use this chan to acceppt data which have to be processed
-	Transfer  chan []byte // use this chan to provide data to transfer somewhere
-	Receive   chan []byte // use this chan to handle received data from somewhere
+	process   chan []byte // use this chan to acceppt data which have to be processed
+	transfer  chan []byte // use this chan to provide data to transfer somewhere
+	receive   chan []byte // use this chan to handle received data from somewhere
 }
 
 // NewClientService deploy a client service with needed data
@@ -28,25 +28,25 @@ func NewClientService(name string, host string, port string) *ClientService {
 		Host:      host,
 		Port:      port,
 		archivate: nil,
-		Process:   nil,
-		Transfer:  make(chan []byte),
-		Receive:   make(chan []byte),
+		process:   nil,
+		transfer:  make(chan []byte),
+		receive:   make(chan []byte),
 	}
 }
 
 // SetProcess set process data channel
 func (s *ClientService) SetProcess(c chan []byte) {
-	s.Process = c
+	s.process = c
 }
 
 // SetTransfer set transfer data channel
 func (s *ClientService) SetTransfer(c chan []byte) {
-	s.Transfer = c
+	s.transfer = c
 }
 
 // SetReceive set receive data channel
 func (s *ClientService) SetReceive(c chan []byte) {
-	s.Receive = c
+	s.receive = c
 }
 
 // SetArchivate set archive record channel
@@ -66,9 +66,9 @@ func (s *ClientService) ApplyConnection() error {
 		return err
 	}
 
-	s.Conn = &Client{socket: conn, txData: s.Transfer, rxData: s.Receive}
-	go s.Conn.transfer()
-	go s.Conn.receive()
+	s.conn = &Client{socket: conn, txData: s.transfer, rxData: s.receive}
+	go s.conn.transfer()
+	go s.conn.receive()
 
 	return nil
 }
@@ -76,7 +76,7 @@ func (s *ClientService) ApplyConnection() error {
 // Finalize cleanup data used by ClientService
 func (s *ClientService) Finalize() {
 	logger.Log().Infof("finalize service %s", s.Name)
-	s.Conn.socket.Close()
+	s.conn.socket.Close()
 	logger.Log().Info("finish finalize service")
 }
 
@@ -86,7 +86,7 @@ func (s *ClientService) ReceivePackets(done chan bool) {
 		logger.Log().Infof("start service receiving packets from  %s:%s", s.Host, s.Port)
 
 		for {
-			data := <-s.Receive
+			data := <-s.receive
 			logger.Log().Tracef("receive packet: [0x %s]", hex.EncodeToString([]byte(data)))
 
 			if string(data) == "EOF" {
@@ -110,7 +110,7 @@ func (s *ClientService) TransferPackets(done chan bool) {
 	go func() {
 		logger.Log().Infof("start service transfer packets to  %s:%s", s.Host, s.Port)
 		for {
-			data, more := <-s.Process
+			data, more := <-s.process
 
 			if !more || string(data) == "EOF" {
 				logger.Log().Trace("get no more data to transfer notification")
@@ -119,7 +119,7 @@ func (s *ClientService) TransferPackets(done chan bool) {
 			}
 
 			logger.Log().Tracef("transfer packet: [0x %s]", hex.EncodeToString([]byte(data)))
-			s.Conn.txData <- []byte(data)
+			s.conn.txData <- []byte(data)
 			hexData := hex.EncodeToString([]byte(data))
 
 			if s.archivate != nil {

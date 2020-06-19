@@ -99,7 +99,9 @@ func handleParam(cmd *cobra.Command, args []string) error {
 				elem.Channel.Name,
 				elem.Channel.Type)
 
-			srvService.SetForward(cliService.Transfer)
+			takeover := make(chan []byte)
+			cliService.SetTransfer(takeover)
+			srvService.SetForward(takeover)
 
 			pktService.SetDialer(cliService)
 			pktService.SetListener(srvService)
