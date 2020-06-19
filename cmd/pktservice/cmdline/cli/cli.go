@@ -74,9 +74,12 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		}
 
 		var arch *archive.Archive
+		var archivate chan *archive.Record
 
 		if cf.Archive.Use {
+			archivate = make(chan *archive.Record, 10)
 			arch = archive.NewArchive(cf.Archive.Filename, cf.Archive.Type, cf.Service.Name)
+			arch.SetArchivate(archivate)
 			arch.Start(wait)
 		}
 
@@ -102,9 +105,9 @@ func handleParam(cmd *cobra.Command, args []string) error {
 			pktService.SetListener(srvService)
 
 			if cf.Archive.Use {
-				cliService.SetArchive(arch.Archivate)
-				srvService.SetArchive(arch.Archivate)
-				pktService.SetArchive(arch.Archivate)
+				cliService.SetArchivate(archivate)
+				srvService.SetArchivate(archivate)
+				pktService.SetArchivate(archivate)
 			}
 
 			go func() {

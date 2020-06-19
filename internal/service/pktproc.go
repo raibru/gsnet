@@ -4,23 +4,23 @@ import "github.com/raibru/gsnet/internal/archive"
 
 // PacketService holds connection data about client/server services
 type PacketService struct {
-	Name     string
-	Type     string
-	Dialer   *ClientService
-	Listener *ServerService
-	Archive  chan *archive.Record
-	Mode     chan string
+	Name      string
+	Type      string
+	Dialer    *ClientService
+	Listener  *ServerService
+	archivate chan *archive.Record
+	Mode      chan string
 }
 
 // NewPacketService build new object for listener and dialer service context.
 func NewPacketService(name string, typ string) *PacketService {
 	return &PacketService{
-		Name:     name,
-		Type:     typ,
-		Dialer:   nil,
-		Listener: nil,
-		Archive:  nil,
-		Mode:     make(chan string),
+		Name:      name,
+		Type:      typ,
+		Dialer:    nil,
+		Listener:  nil,
+		archivate: nil,
+		Mode:      make(chan string),
 	}
 }
 
@@ -34,9 +34,9 @@ func (s *PacketService) SetListener(l *ServerService) {
 	s.Listener = l
 }
 
-// SetArchive set archive record channel
-func (s *PacketService) SetArchive(r chan *archive.Record) {
-	s.Archive = r
+// SetArchivate set archive record channel
+func (s *PacketService) SetArchivate(r chan *archive.Record) {
+	s.archivate = r
 }
 
 // ApplyConnection build all dialer/listener connection for current packet service

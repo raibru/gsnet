@@ -94,9 +94,9 @@ func (manager *ClientManager) receive(client *Client) {
 			hexData := hex.EncodeToString(data[:length])
 			logger.Log().Infof("received data [0x %s]", hexData)
 
-			if manager.service.Archive != nil {
+			if manager.service.archivate != nil {
 				r := archive.NewRecord(hexData, "RX", "TCP")
-				manager.service.Archive <- r
+				manager.service.archivate <- r
 			}
 			if manager.service.Forward != nil {
 				manager.service.Forward <- data[:length]
@@ -120,10 +120,10 @@ func (manager *ClientManager) transfer(client *Client) {
 			}
 			logger.Log().Info("transfer data to managed client")
 			client.socket.Write(data)
-			if manager.service.Archive != nil {
+			if manager.service.archivate != nil {
 				hexData := hex.EncodeToString(data)
 				r := archive.NewRecord(hexData, "TX", "TCP")
-				manager.service.Archive <- r
+				manager.service.archivate <- r
 			}
 		}
 	}

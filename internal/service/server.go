@@ -11,26 +11,26 @@ import (
 
 // ServerService holds connection data about server services
 type ServerService struct {
-	Name    string
-	Host    string
-	Port    string
-	Archive chan *archive.Record
-	Process chan []byte // use this chan to accept data which have to be processed
-	Forward chan []byte // use this chan to forward data to somewhere
-	Notify  chan []byte // use this chan to notify registered clients
+	Name      string
+	Host      string
+	Port      string
+	archivate chan *archive.Record
+	Process   chan []byte // use this chan to accept data which have to be processed
+	Forward   chan []byte // use this chan to forward data to somewhere
+	Notify    chan []byte // use this chan to notify registered clients
 }
 
 // NewServerService build new object for listener service context.
 // If transfer channel is nil this object is a data sink
 func NewServerService(name string, host string, port string) *ServerService {
 	return &ServerService{
-		Name:    name,
-		Host:    host,
-		Port:    port,
-		Archive: nil,
-		Process: nil,
-		Forward: nil,
-		Notify:  nil,
+		Name:      name,
+		Host:      host,
+		Port:      port,
+		archivate: nil,
+		Process:   nil,
+		Forward:   nil,
+		Notify:    nil,
 	}
 }
 
@@ -49,9 +49,9 @@ func (s *ServerService) SetNotify(c chan []byte) {
 	s.Notify = c
 }
 
-// SetArchive set archive record channel
-func (s *ServerService) SetArchive(r chan *archive.Record) {
-	s.Archive = r
+// SetArchivate set archive record channel
+func (s *ServerService) SetArchivate(r chan *archive.Record) {
+	s.archivate = r
 }
 
 // ApplyConnection accept a connection from client and handle incoming data stream

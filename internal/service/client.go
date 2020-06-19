@@ -11,26 +11,26 @@ import (
 
 // ClientService holds connection data about client services
 type ClientService struct {
-	Name     string
-	Host     string
-	Port     string
-	Conn     *Client
-	Archive  chan *archive.Record
-	Process  chan []byte // use this chan to acceppt data which have to be processed
-	Transfer chan []byte // use this chan to provide data to transfer somewhere
-	Receive  chan []byte // use this chan to handle received data from somewhere
+	Name      string
+	Host      string
+	Port      string
+	Conn      *Client
+	archivate chan *archive.Record
+	Process   chan []byte // use this chan to acceppt data which have to be processed
+	Transfer  chan []byte // use this chan to provide data to transfer somewhere
+	Receive   chan []byte // use this chan to handle received data from somewhere
 }
 
 // NewClientService deploy a client service with needed data
 func NewClientService(name string, host string, port string) *ClientService {
 	return &ClientService{
-		Name:     name,
-		Host:     host,
-		Port:     port,
-		Archive:  nil,
-		Process:  nil,
-		Transfer: make(chan []byte),
-		Receive:  make(chan []byte),
+		Name:      name,
+		Host:      host,
+		Port:      port,
+		archivate: nil,
+		Process:   nil,
+		Transfer:  make(chan []byte),
+		Receive:   make(chan []byte),
 	}
 }
 
@@ -49,9 +49,9 @@ func (s *ClientService) SetReceive(c chan []byte) {
 	s.Receive = c
 }
 
-// SetArchive set archive record channel
-func (s *ClientService) SetArchive(c chan *archive.Record) {
-	s.Archive = c
+// SetArchivate set archive record channel
+func (s *ClientService) SetArchivate(c chan *archive.Record) {
+	s.archivate = c
 }
 
 // ApplyConnection create a connection to server and handle outgoing data stream
@@ -95,10 +95,10 @@ func (s *ClientService) ReceivePackets(done chan bool) {
 				break
 			}
 
-			if s.Archive != nil {
+			if s.archivate != nil {
 				hexData := hex.EncodeToString([]byte(data))
 				r := archive.NewRecord(hexData, "RX", "TCP")
-				s.Archive <- r
+				s.archivate <- r
 			}
 		}
 		logger.Log().Info("finish receive from client connection")
@@ -122,9 +122,9 @@ func (s *ClientService) TransferPackets(done chan bool) {
 			s.Conn.txData <- []byte(data)
 			hexData := hex.EncodeToString([]byte(data))
 
-			if s.Archive != nil {
+			if s.archivate != nil {
 				r := archive.NewRecord(hexData, "TX", "TCP")
-				s.Archive <- r
+				s.archivate <- r
 			}
 		}
 

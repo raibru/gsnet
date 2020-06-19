@@ -53,6 +53,11 @@ type PacketReader struct {
 	Supply       chan []byte
 }
 
+// SetSupply set supply channel for data which have to process
+func (s *PacketReader) SetSupply(c chan []byte) {
+	s.Supply = c
+}
+
 // NewPacketReader create a new packet reader
 func NewPacketReader(name string, wait uint, waitStart uint) *PacketReader {
 	return &PacketReader{
@@ -60,7 +65,7 @@ func NewPacketReader(name string, wait uint, waitStart uint) *PacketReader {
 		waitMsec:     time.Duration(wait) * time.Millisecond,
 		waitStartSec: time.Duration(waitStart) * time.Second,
 		Use:          true,
-		Supply:       make(chan []byte),
+		Supply:       nil,
 	}
 }
 

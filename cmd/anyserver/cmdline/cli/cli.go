@@ -78,15 +78,24 @@ func handleParam(cmd *cobra.Command, args []string) error {
 
 		srvService = service.NewServerService(cf.Service.Name, cf.Service.Host, cf.Service.Port)
 
+		var archivate chan *archive.Record
+		var process chan []byte
+
 		if cf.Archive.Use {
+			archivate = make(chan *archive.Record, 10)
 			archiveService = archive.NewArchive(cf.Archive.Filename, cf.Archive.Type, cf.Service.Name)
-			srvService.SetArchive(archiveService.Archivate)
+			archiveService.SetArchivate(archivate)
+			srvService.SetArchivate(archivate)
+			//srvService.SetArchive(archiveService.Archivate)
 		}
 
 		if cf.Packet.Use {
+			process = make(chan []byte)
 			waitService := waitTransfer
 			readerService = pkt.NewPacketReader(cf.Packet.Filename, cf.Packet.Wait, waitService)
-			srvService.SetProcess(readerService.Supply)
+			readerService.SetSupply(process)
+			srvService.SetProcess(process)
+			//srvService.SetProcess(readerService.Supply)
 		}
 
 	} else {

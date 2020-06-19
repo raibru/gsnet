@@ -81,24 +81,25 @@ func NewRecord(hexData string, rxtx string, protocol string) *Record {
 // Archive hold archive runable parameter
 type Archive struct {
 	Use               bool
-	Archivate         chan *Record
 	filename          string
 	archiveType       string
 	contextDesciption string
 	txCount           uint32
 	rxCount           uint32
+	Archivate         chan *Record
 }
 
 // NewArchive create a new archive object to write archive records
 func NewArchive(name string, archType string, ctxDesc string) *Archive {
 	return &Archive{
 		Use:               true,
-		Archivate:         make(chan *Record, 10),
 		filename:          name,
 		archiveType:       archType,
 		contextDesciption: ctxDesc,
 		txCount:           0,
 		rxCount:           0,
+		Archivate:         nil,
+		//Archivate:         make(chan *Record, 10),
 	}
 }
 
@@ -107,6 +108,11 @@ func NonArchive() *Archive {
 	return &Archive{
 		Use: false,
 	}
+}
+
+// SetArchivate set process data channel
+func (a *Archive) SetArchivate(c chan *Record) {
+	a.Archivate = c
 }
 
 // Start starts archiving inside goroutine
