@@ -9,8 +9,8 @@ import (
 	"github.com/raibru/gsnet/internal/archive"
 )
 
-// ClientServiceValues holds connection data about client services
-type ClientServiceValues struct {
+// ClientService holds connection data about client services
+type ClientService struct {
 	Name     string
 	Host     string
 	Port     string
@@ -22,8 +22,8 @@ type ClientServiceValues struct {
 }
 
 // NewClientService deploy a client service with needed data
-func NewClientService(name string, host string, port string) *ClientServiceValues {
-	return &ClientServiceValues{
+func NewClientService(name string, host string, port string) *ClientService {
+	return &ClientService{
 		Name:     name,
 		Host:     host,
 		Port:     port,
@@ -35,27 +35,27 @@ func NewClientService(name string, host string, port string) *ClientServiceValue
 }
 
 // SetProcess set process data channel
-func (s *ClientServiceValues) SetProcess(c chan []byte) {
+func (s *ClientService) SetProcess(c chan []byte) {
 	s.Process = c
 }
 
 // SetTransfer set transfer data channel
-func (s *ClientServiceValues) SetTransfer(c chan []byte) {
+func (s *ClientService) SetTransfer(c chan []byte) {
 	s.Transfer = c
 }
 
 // SetReceive set receive data channel
-func (s *ClientServiceValues) SetReceive(c chan []byte) {
+func (s *ClientService) SetReceive(c chan []byte) {
 	s.Receive = c
 }
 
 // SetArchive set archive record channel
-func (s *ClientServiceValues) SetArchive(c chan *archive.Record) {
+func (s *ClientService) SetArchive(c chan *archive.Record) {
 	s.Archive = c
 }
 
 // ApplyConnection create a connection to server and handle outgoing data stream
-func (s *ClientServiceValues) ApplyConnection() error {
+func (s *ClientService) ApplyConnection() error {
 	logger.Log().Infof("apply client connection for service %s", s.Name)
 	logger.Log().Tracef("create TCP client dialer for service %s", s.Name)
 	conn, err := CreateTCPClientConnection(s)
@@ -82,8 +82,8 @@ func (s *ClientServiceValues) ApplyConnection() error {
 	return nil
 }
 
-// Finalize cleanup data used by ClientServiceValues
-func (s *ClientServiceValues) Finalize() {
+// Finalize cleanup data used by ClientService
+func (s *ClientService) Finalize() {
 	logger.Log().Infof("finalize service %s", s.Name)
 	s.Conn.socket.Close()
 	//close(s.Archive)
@@ -93,7 +93,7 @@ func (s *ClientServiceValues) Finalize() {
 }
 
 // ReceivePackets receive from connected server packet data
-func (s *ClientServiceValues) ReceivePackets(done chan bool) {
+func (s *ClientService) ReceivePackets(done chan bool) {
 	go func() {
 		logger.Log().Infof("start service receiving packets from  %s:%s", s.Host, s.Port)
 
@@ -118,7 +118,7 @@ func (s *ClientServiceValues) ReceivePackets(done chan bool) {
 }
 
 // TransferPackets transfers from file readed lines of packets and transfer them
-func (s *ClientServiceValues) TransferPackets(done chan bool) {
+func (s *ClientService) TransferPackets(done chan bool) {
 	go func() {
 		logger.Log().Infof("start service transfer packets to  %s:%s", s.Host, s.Port)
 		for {
@@ -145,7 +145,7 @@ func (s *ClientServiceValues) TransferPackets(done chan bool) {
 }
 
 // CreateTCPClientConnection create new TCP connection with parameter in ClientService
-func CreateTCPClientConnection(s *ClientServiceValues) (net.Conn, error) {
+func CreateTCPClientConnection(s *ClientService) (net.Conn, error) {
 	logger.Log().Infof("create client dialer service %s with connecting to %s:%s", s.Name, s.Host, s.Port)
 	logger.Log().Tracef("resolve tcpTCPAddr %s:%s", s.Host, s.Port)
 

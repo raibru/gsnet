@@ -46,7 +46,7 @@ type ClientManager struct {
 	notify     chan []byte
 	register   chan *Client
 	unregister chan *Client
-	service    *ServerServiceValues
+	service    *ServerService
 }
 
 func (manager *ClientManager) start() {

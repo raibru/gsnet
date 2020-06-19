@@ -9,8 +9,8 @@ import (
 	"github.com/raibru/gsnet/internal/archive"
 )
 
-// ServerServiceValues holds connection data about server services
-type ServerServiceValues struct {
+// ServerService holds connection data about server services
+type ServerService struct {
 	Name    string
 	Host    string
 	Port    string
@@ -22,8 +22,8 @@ type ServerServiceValues struct {
 
 // NewServerService build new object for listener service context.
 // If transfer channel is nil this object is a data sink
-func NewServerService(name string, host string, port string) *ServerServiceValues {
-	return &ServerServiceValues{
+func NewServerService(name string, host string, port string) *ServerService {
+	return &ServerService{
 		Name:    name,
 		Host:    host,
 		Port:    port,
@@ -35,27 +35,27 @@ func NewServerService(name string, host string, port string) *ServerServiceValue
 }
 
 // SetProcess set process data channel
-func (s *ServerServiceValues) SetProcess(c chan []byte) {
+func (s *ServerService) SetProcess(c chan []byte) {
 	s.Process = c
 }
 
 // SetForward set forward data channel
-func (s *ServerServiceValues) SetForward(c chan []byte) {
+func (s *ServerService) SetForward(c chan []byte) {
 	s.Forward = c
 }
 
 // SetNotify set notify data channel
-func (s *ServerServiceValues) SetNotify(c chan []byte) {
+func (s *ServerService) SetNotify(c chan []byte) {
 	s.Notify = c
 }
 
 // SetArchive set archive record channel
-func (s *ServerServiceValues) SetArchive(r chan *archive.Record) {
+func (s *ServerService) SetArchive(r chan *archive.Record) {
 	s.Archive = r
 }
 
 // ApplyConnection accept a connection from client and handle incoming data stream
-func (s *ServerServiceValues) ApplyConnection() error {
+func (s *ServerService) ApplyConnection() error {
 	logger.Log().Infof("apply server connection for service %s", s.Name)
 	logger.Log().Tracef("create TCP server listener for service %s", s.Name)
 	lsn, err := CreateTCPServerListener(s)
@@ -100,7 +100,7 @@ func (s *ServerServiceValues) ApplyConnection() error {
 }
 
 // CreateTCPServerListener create new TCP listener with parameter in ServerService
-func CreateTCPServerListener(s *ServerServiceValues) (net.Listener, error) {
+func CreateTCPServerListener(s *ServerService) (net.Listener, error) {
 	logger.Log().Infof("create server listener service %s@%s:%s", s.Name, s.Host, s.Port)
 	logger.Log().Tracef("resolve tcpTCPAddr %s:%s", s.Host, s.Port)
 
@@ -125,7 +125,7 @@ func CreateTCPServerListener(s *ServerServiceValues) (net.Listener, error) {
 }
 
 // NotifyPackets notify packet data to managed clients
-func (s *ServerServiceValues) NotifyPackets(done chan bool) {
+func (s *ServerService) NotifyPackets(done chan bool) {
 	go func() {
 		logger.Log().Infof("notify packets from  %s to managed client services", s.Name)
 		for {

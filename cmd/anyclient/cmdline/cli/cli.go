@@ -41,7 +41,7 @@ func handleParam(cmd *cobra.Command, args []string) error {
 	}
 
 	sys.StartSignalHandler()
-	var clientService *service.ClientServiceValues
+	var clientService *service.ClientService
 	archiveService := archive.NonArchive()
 	readerService := pkt.NonPacketReader()
 

@@ -40,7 +40,7 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	var srvService *service.ServerServiceValues
+	var srvService *service.ServerService
 	archiveService := archive.NonArchive()
 	readerService := pkt.NonPacketReader()
 
