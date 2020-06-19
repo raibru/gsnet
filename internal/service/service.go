@@ -98,11 +98,11 @@ func (manager *ClientManager) receive(client *Client) {
 				r := archive.NewRecord(hexData, "RX", "TCP")
 				manager.service.archivate <- r
 			}
-			if manager.service.Forward != nil {
-				manager.service.Forward <- data[:length]
+			if manager.service.forward != nil {
+				manager.service.forward <- data[:length]
 			}
-			if manager.service.Notify != nil {
-				manager.service.Notify <- data[:length]
+			if manager.service.notify != nil {
+				manager.service.notify <- data[:length]
 			}
 		}
 	}

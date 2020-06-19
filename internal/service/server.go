@@ -15,9 +15,9 @@ type ServerService struct {
 	Host      string
 	Port      string
 	archivate chan *archive.Record
-	Process   chan []byte // use this chan to accept data which have to be processed
-	Forward   chan []byte // use this chan to forward data to somewhere
-	Notify    chan []byte // use this chan to notify registered clients
+	process   chan []byte // use this chan to accept data which have to be processed
+	forward   chan []byte // use this chan to forward data to somewhere
+	notify    chan []byte // use this chan to notify registered clients
 }
 
 // NewServerService build new object for listener service context.
@@ -28,25 +28,25 @@ func NewServerService(name string, host string, port string) *ServerService {
 		Host:      host,
 		Port:      port,
 		archivate: nil,
-		Process:   nil,
-		Forward:   nil,
-		Notify:    nil,
+		process:   nil,
+		forward:   nil,
+		notify:    nil,
 	}
 }
 
 // SetProcess set process data channel
 func (s *ServerService) SetProcess(c chan []byte) {
-	s.Process = c
+	s.process = c
 }
 
 // SetForward set forward data channel
 func (s *ServerService) SetForward(c chan []byte) {
-	s.Forward = c
+	s.forward = c
 }
 
 // SetNotify set notify data channel
 func (s *ServerService) SetNotify(c chan []byte) {
-	s.Notify = c
+	s.notify = c
 }
 
 // SetArchivate set archive record channel
@@ -75,7 +75,7 @@ func (s *ServerService) ApplyConnection() error {
 		service:    s,
 	}
 
-	s.Notify = manager.notify
+	s.notify = manager.notify
 
 	go manager.start()
 	go func() {
@@ -129,7 +129,7 @@ func (s *ServerService) NotifyPackets(done chan bool) {
 	go func() {
 		logger.Log().Infof("notify packets from  %s to managed client services", s.Name)
 		for {
-			data, more := <-s.Process
+			data, more := <-s.process
 
 			if !more || string(data) == "EOF" {
 				logger.Log().Trace("get notify by no more data to transfer")
@@ -138,7 +138,7 @@ func (s *ServerService) NotifyPackets(done chan bool) {
 			}
 
 			logger.Log().Tracef("transfer packet: [0x %s]", hex.EncodeToString([]byte(data)))
-			s.Notify <- []byte(data)
+			s.notify <- []byte(data)
 		}
 
 		logger.Log().Info("finish notify server data")
