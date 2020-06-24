@@ -55,7 +55,7 @@ func handleParam(cmd *cobra.Command, args []string) error {
 
 		lp := &sys.LoggingParam{
 			Service:    cf.Service.Name,
-			Version:    Version,
+			Version:    VersionShort(),
 			Filename:   cf.Logging.Filename,
 			TimeFormat: cf.Logging.TimeFormat,
 		}

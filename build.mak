@@ -17,6 +17,7 @@ GOGET       := $(GOCMD) get
 BUILD_DIR   := $(_OUTTOP)
 
 $(_MODULE_NAME)_BINARY := $(_OUTTOP)/$(BINARY)
+$(_MODULE_NAME)_LDFLAGS := $(GO_LDFLAGS)
 
 #----------------------------------------
 
@@ -31,7 +32,7 @@ _BUILD := build-$(_MODULE_NAME)
 build: $(_BUILD)
 
 $(_BUILD):
-	@$(GOBUILD) -o $($(_MODULE_NAME)_BINARY) -v $(_MODULE_PATH)/$(GOMAIN)
+	@$(GOBUILD) $($(_MODULE_NAME)_LDFLAGS) -o $($(_MODULE_NAME)_BINARY) -v $(_MODULE_PATH)/$(GOMAIN)
 
 # Test services
 _TEST := test-$(_MODULE_NAME)

@@ -11,8 +11,22 @@ _ROOT := $(patsubst %/root.mak,%,$(call _find,$(CURDIR),root.mak))
 include $(_ROOT)/root.mak
 include $(_ROOT)/top.mak
 
+_GIT := $(_ROOT)/.git
+
 SERVICE := pktservice
 SERVICE_EXT := $(_PKTSERVICE_EXT)
+
+BUILD_HASH   := $(shell git rev-parse --short HEAD)
+BUILD_NUM   := $(shell expr `cat $(_GIT)/buildnum-$(SERVICE) 2>/dev/null` + 1 >$(_GIT)/buildnum-$(SERVICE) && cat $(_GIT)/buildnum-$(SERVICE))
+BUILD_DATE  := $(shell date +'%Y-%m-%d.%H:%M:%S')
+BUILD_TAG  := $(BUILD_HASH).$(BUILD_NUM)
+BUILD_VERSION := $(BUILD_HASH).$(BUILD_NUM) ($(BUILD_DATE))
+
+GOMAIN      := main.go
+BINARY      := $(SERVICE)
+LDBUILD     := -X github.com/raibru/gsnet/cmd/pktservice/cmdline/cli.buildTag=$(BUILD_TAG)
+LDDATE      := -X github.com/raibru/gsnet/cmd/pktservice/cmdline/cli.buildDate=$(BUILD_DATE)
+GO_LDFLAGS  := -ldflags="-X github.com/raibru/gsnet/cmd/pktservice/cmdline/cli.buildTag=$(BUILD_TAG) -X github.com/raibru/gsnet/cmd/pktservice/cmdline/cli.buildDate=$(BUILD_DATE)"
 
 GOMAIN      := main.go
 BINARY      := $(SERVICE)
