@@ -28,7 +28,7 @@ func PrintVersion(w io.Writer) {
 // VersionShort returns short version info
 func VersionShort() string {
 	s := ""
-	s += fmt.Sprintf("%s - v%s.%s.%s\n", appName, major, minor, patch)
-	s += fmt.Sprintf("  Build-%s (%s)\n", buildTag, buildDate)
+	s += fmt.Sprintf("%s - v%s.%s.%s", appName, major, minor, patch)
+	s += fmt.Sprintf(" Build-%s (%s)", buildTag, buildDate)
 	return s
 }
