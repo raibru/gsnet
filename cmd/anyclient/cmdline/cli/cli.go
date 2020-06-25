@@ -110,7 +110,7 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		archiveService.Start(wait)
 	}
 	if readerService.Use {
-		for {
+		for i := uint(0); i < repeatTransfer; i++ {
 			process := make(chan []byte)
 			readerService.SetSupply(process)
 			clientService.SetProcess(process)
