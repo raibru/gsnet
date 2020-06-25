@@ -3,7 +3,7 @@
 #
 
 
-session="work"
+session="gsnet"
 
 tmux new-session -d -s $session -n shell \; \
   split-window -h \; \
