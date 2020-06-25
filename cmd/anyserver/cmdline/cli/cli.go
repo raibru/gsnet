@@ -79,7 +79,6 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		srvService = service.NewServerService(cf.Service.Name, cf.Service.Host, cf.Service.Port)
 
 		var archivate chan *archive.Record
-		var process chan []byte
 
 		if cf.Archive.Use {
 			archivate = make(chan *archive.Record, 10)
@@ -90,12 +89,7 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		}
 
 		if cf.Packet.Use {
-			process = make(chan []byte)
-			waitService := waitTransfer
-			readerService = pkt.NewPacketReader(cf.Packet.Filename, cf.Packet.Wait, waitService)
-			readerService.SetSupply(process)
-			srvService.SetProcess(process)
-			//srvService.SetProcess(readerService.Supply)
+			readerService = pkt.NewPacketReader(cf.Packet.Filename, cf.Packet.Wait, waitTransfer)
 		}
 
 	} else {
@@ -117,9 +111,15 @@ func handleParam(cmd *cobra.Command, args []string) error {
 	}
 
 	if readerService.Use {
-		readerService.Start(readed)
-		srvService.NotifyPackets(sent)
-		<-sent
+		for {
+			process := make(chan []byte)
+			readerService.SetSupply(process)
+			srvService.SetProcess(process)
+			readerService.Start(readed)
+			srvService.NotifyPackets(sent)
+			<-readed
+			<-sent
+		}
 	} else {
 		ok := make(chan bool)
 		<-ok
