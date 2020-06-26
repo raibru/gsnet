@@ -88,7 +88,8 @@ func handleParam(cmd *cobra.Command, args []string) error {
 			cliService := service.NewClientService(
 				elem.Channel.Dialer.Name,
 				elem.Channel.Dialer.Host,
-				elem.Channel.Dialer.Port)
+				elem.Channel.Dialer.Port,
+				elem.Channel.Dialer.Retry)
 
 			srvService := service.NewServerService(
 				elem.Channel.Listener.Name,

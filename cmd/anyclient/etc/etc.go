@@ -18,9 +18,10 @@ type ClientServiceParam struct {
 // AnyClientConfig hold application config environment
 type AnyClientConfig struct {
 	Service struct {
-		Name string `yaml: "name"`
-		Host string `yaml: "host"`
-		Port string `yaml: "port"`
+		Name  string `yaml: "name"`
+		Host  string `yaml: "host"`
+		Port  string `yaml: "port"`
+		Retry uint   `yaml: "retry"`
 	} `yaml: "Service"`
 	Packet struct {
 		Use      bool   `yaml: "use"`

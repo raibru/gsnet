@@ -30,9 +30,10 @@ type PktServiceConfig struct {
 					Port string `yaml: "port"`
 				} `yaml: "listener"`
 				Dialer struct {
-					Name string `yaml: "name"`
-					Host string `yaml: "host"`
-					Port string `yaml: "port"`
+					Name  string `yaml: "name"`
+					Host  string `yaml: "host"`
+					Port  string `yaml: "port"`
+					Retry uint   `yaml: "retry"`
 				} `yaml: "dialer"`
 			} `yaml: "channel,flow"`
 		} `yaml: "network"`

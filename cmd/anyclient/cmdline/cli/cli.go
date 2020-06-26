@@ -75,7 +75,7 @@ func handleParam(cmd *cobra.Command, args []string) error {
 			}
 		}
 
-		clientService = service.NewClientService(cf.Service.Name, cf.Service.Host, cf.Service.Port)
+		clientService = service.NewClientService(cf.Service.Name, cf.Service.Host, cf.Service.Port, cf.Service.Retry)
 
 		var archivate chan *archive.Record
 
@@ -91,7 +91,7 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		}
 
 	} else {
-		clientService = service.NewClientService("anyclient", "129.0.0.1", "30100")
+		clientService = service.NewClientService("anyclient", "129.0.0.1", "30100", 10)
 	}
 
 	err := clientService.ApplyConnection()

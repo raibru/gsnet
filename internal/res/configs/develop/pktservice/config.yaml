@@ -13,6 +13,7 @@ service:
           name: ClientSrv1
           host: 127.0.0.1
           port: 33100    
+          retry: 10
 packet:
   use: false
   filename: ./sendlist.txt

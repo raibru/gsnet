@@ -2,6 +2,7 @@ service:
   name: anyclient-dev-rx
   host: 127.0.0.1
   port: 32200
+  retry: 10
 archive:
   use: true
   filename: ./archive.csv

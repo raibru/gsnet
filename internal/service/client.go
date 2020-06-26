@@ -2,9 +2,11 @@ package service
 
 import (
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"net"
 	"os"
+	"time"
 
 	"github.com/raibru/gsnet/internal/archive"
 )
@@ -14,6 +16,7 @@ type ClientService struct {
 	Name      string
 	Host      string
 	Port      string
+	retry     uint
 	conn      *Client
 	archivate chan *archive.Record
 	process   chan []byte // use this chan to acceppt data which have to be processed
@@ -22,11 +25,12 @@ type ClientService struct {
 }
 
 // NewClientService deploy a client service with needed data
-func NewClientService(name string, host string, port string) *ClientService {
+func NewClientService(name string, host string, port string, retry uint) *ClientService {
 	return &ClientService{
 		Name:      name,
 		Host:      host,
 		Port:      port,
+		retry:     retry,
 		archivate: nil,
 		process:   nil,
 		transfer:  make(chan []byte),
@@ -57,20 +61,22 @@ func (s *ClientService) SetArchivate(c chan *archive.Record) {
 // ApplyConnection create a connection to server and handle outgoing data stream
 func (s *ClientService) ApplyConnection() error {
 	logger.Log().Infof("apply client connection for service %s", s.Name)
-	logger.Log().Tracef("create TCP client dialer for service %s", s.Name)
-	conn, err := CreateTCPClientConnection(s)
+	for i := uint(0); i < s.retry || s.retry == uint(0); i++ {
+		logger.Log().Tracef("create TCP client dialer for service %s", s.Name)
+		conn, err := CreateTCPClientConnection(s)
 
-	if err != nil {
-		logger.Log().Errorf("failure create client TCP connection due '%s'", err.Error())
-		fmt.Fprintf(os.Stderr, "Fatal error create client TCP connection: %s\n", err.Error())
-		return err
+		if err != nil {
+			logger.Log().Errorf("failure create client TCP connection due '%s'", err.Error())
+			fmt.Fprintf(os.Stderr, "failure create client TCP connection: %s\n", err.Error())
+			time.Sleep(10 * time.Second)
+		} else {
+			s.conn = &Client{socket: conn, txData: s.transfer, rxData: s.receive}
+			go s.conn.transfer()
+			go s.conn.receive()
+			return nil
+		}
 	}
-
-	s.conn = &Client{socket: conn, txData: s.transfer, rxData: s.receive}
-	go s.conn.transfer()
-	go s.conn.receive()
-
-	return nil
+	return errors.New("Failure apply connection")
 }
 
 // Finalize cleanup data used by ClientService

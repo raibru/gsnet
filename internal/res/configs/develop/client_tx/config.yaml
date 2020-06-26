@@ -2,6 +2,7 @@ service:
   name: anyclient-dev-tx
   host: 127.0.0.1
   port: 32100
+  retry: 10
 packet:
   use: true
   filename: ./sendlist.txt
