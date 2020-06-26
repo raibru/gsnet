@@ -24,6 +24,7 @@ type LoggingParam struct {
 	Version    string
 	Filename   string
 	TimeFormat string
+	TeeStdout  bool
 }
 
 // InitLogging initialize application logging behavior
@@ -53,7 +54,11 @@ func InitLogging(lp *LoggingParam) error {
 		log.SetOutput(os.Stdout)
 	} else {
 		//logWriter := bufio.NewWriter(logFile)
-		log.SetOutput(io.MultiWriter(os.Stdout, logFile))
+		if lp.TeeStdout {
+			log.SetOutput(io.MultiWriter(os.Stdout, logFile))
+		} else {
+			log.SetOutput(logFile)
+		}
 		log.RegisterExitHandler(func() {
 			log.Info("close log file")
 			log.Info("==================== Finish Session ====================================")

@@ -58,6 +58,7 @@ func handleParam(cmd *cobra.Command, args []string) error {
 			Version:    VersionShort(),
 			Filename:   cf.Logging.Filename,
 			TimeFormat: cf.Logging.TimeFormat,
+			TeeStdout:  teeStdout,
 		}
 
 		if err := sys.InitLogging(lp); err != nil {
