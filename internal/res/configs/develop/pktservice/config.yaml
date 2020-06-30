@@ -3,7 +3,7 @@ service:
   network:
     - channel:
         name: Service1
-        tyüe: TC
+        type: TC
         recon_interval: 1000
         listener: 
           name: ServerSrv1
@@ -13,6 +13,19 @@ service:
           name: ClientSrv1
           host: 127.0.0.1
           port: 33100    
+          retry: 10
+    - channel:
+        name: Service2
+        type: TM
+        recon_interval: 1000
+        listener: 
+          name: ServerSrv2
+          host: 127.0.0.1
+          port: 32200
+        dialer:
+          name: ClientSrv2
+          host: 127.0.0.1
+          port: 33200    
           retry: 10
 packet:
   use: false
