@@ -105,6 +105,10 @@ func handleParam(cmd *cobra.Command, args []string) error {
 			cliService.SetTransfer(takeover)
 			srvService.SetForward(takeover)
 
+			notify := make(chan []byte)
+			cliService.SetReceive(notify)
+			srvService.SetNotify(notify)
+
 			pktService.SetDialer(cliService)
 			pktService.SetListener(srvService)
 
