@@ -97,17 +97,17 @@ func handleParam(cmd *cobra.Command, args []string) error {
 				elem.Channel.Listener.Host,
 				elem.Channel.Listener.Port)
 
-			pktService := service.NewPacketService(
-				elem.Channel.Name,
-				elem.Channel.Type)
-
-			takeover := make(chan []byte)
-			cliService.SetTransfer(takeover)
-			srvService.SetForward(takeover)
+			transfer := make(chan []byte)
+			cliService.SetTransfer(transfer)
+			srvService.SetForward(transfer)
 
 			notify := make(chan []byte)
 			cliService.SetReceive(notify)
 			srvService.SetNotify(notify)
+
+			pktService := service.NewPacketService(
+				elem.Channel.Name,
+				elem.Channel.Type)
 
 			pktService.SetDialer(cliService)
 			pktService.SetListener(srvService)
