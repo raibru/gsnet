@@ -149,7 +149,7 @@ func (client *Client) receive() {
 			logger.Log().Infof("received data [0x %s]", hex.EncodeToString(data[:length]))
 		}
 		if client.rxData != nil {
-			logger.Log().Trace("wait for receive data")
+			logger.Log().Trace("handle received data")
 			client.rxData <- data[:length]
 		}
 	}
