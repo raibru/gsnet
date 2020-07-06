@@ -117,7 +117,7 @@ func handleParam(cmd *cobra.Command, args []string) error {
 			readerService.SetSupply(process)
 			srvService.SetProcess(process)
 			readerService.Start(readed)
-			srvService.NotifyPackets(sent)
+			srvService.PushPackets(sent)
 			<-readed
 			<-sent
 		}

@@ -124,15 +124,15 @@ func CreateTCPServerListener(s *ServerService) (net.Listener, error) {
 	return lsn, nil
 }
 
-// NotifyPackets notify packet data to managed clients
-func (s *ServerService) NotifyPackets(done chan bool) {
+// PushPackets push packet data via transfer connection
+func (s *ServerService) PushPackets(done chan bool) {
 	go func() {
-		logger.Log().Infof("notify packets from  %s to managed client services", s.Name)
+		logger.Log().Info("push packet via server service transfer connection")
 		for {
 			data, more := <-s.process
 
 			if !more || string(data) == "EOF" {
-				logger.Log().Trace("get notify by no more data to transfer")
+				logger.Log().Trace("get EOF notification from process channel")
 				done <- true
 				break
 			}
