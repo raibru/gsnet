@@ -58,8 +58,6 @@ func (manager *ClientManager) start() {
 			logger.Log().Info("register client connection")
 		case connection := <-manager.unregister:
 			if _, ok := manager.clients[connection]; ok {
-				close(connection.txData)
-				close(connection.rxData)
 				delete(manager.clients, connection)
 				logger.Log().Info("unregister terminated client connection")
 			}
@@ -70,8 +68,6 @@ func (manager *ClientManager) start() {
 				case connection.txData <- data:
 				default:
 					logger.Log().Info("delete terminated client connections")
-					close(connection.txData)
-					close(connection.rxData)
 					delete(manager.clients, connection)
 				}
 			}
@@ -85,7 +81,9 @@ func (manager *ClientManager) receive(client *Client) {
 	for {
 		data := make([]byte, 4096)
 		length, err := client.socket.Read(data)
+		logger.Log().Trace("read data from managed client connection")
 		if err != nil {
+			logger.Log().Info("unregister client and close client connection")
 			manager.unregister <- client
 			client.socket.Close()
 			break
@@ -118,7 +116,7 @@ func (manager *ClientManager) transfer(client *Client) {
 				logger.Log().Info("finish transfer data")
 				return
 			}
-			logger.Log().Info("transfer data to managed client")
+			logger.Log().Info("write data to managed client connection")
 			client.socket.Write(data)
 			if manager.service.archivate != nil {
 				hexData := hex.EncodeToString(data)

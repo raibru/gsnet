@@ -127,7 +127,7 @@ func (s *ClientService) PushPackets(done chan bool) {
 			}
 
 			logger.Log().Tracef("transfer packet: [0x %s]", hex.EncodeToString([]byte(data)))
-			s.conn.txData <- []byte(data)
+			s.transfer <- []byte(data)
 			hexData := hex.EncodeToString([]byte(data))
 
 			if s.archivate != nil {

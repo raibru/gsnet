@@ -80,9 +80,9 @@ func (s *ServerService) ApplyConnection() error {
 	go manager.start()
 	go func() {
 		for {
-			logger.Log().Trace("wait for input...")
+			logger.Log().Trace("wait for connection")
 			conn, err := lsn.Accept()
-			logger.Log().Trace("accept input...")
+			logger.Log().Trace("accept connection")
 			if err != nil {
 				logger.Log().Errorf("failure accept connection due '%s'", err.Error())
 				continue
