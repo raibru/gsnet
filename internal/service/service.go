@@ -77,7 +77,7 @@ func (manager *ClientManager) start() {
 }
 
 func (manager *ClientManager) receive(client *Client) {
-	logger.Log().Info("receive data from managed client connections")
+	logger.Log().Info("start receive client manager service")
 	for {
 		data := make([]byte, 4096)
 		length, err := client.socket.Read(data)
@@ -108,6 +108,7 @@ func (manager *ClientManager) receive(client *Client) {
 }
 
 func (manager *ClientManager) transfer(client *Client) {
+	logger.Log().Info("start transfer client manager service")
 	defer client.socket.Close()
 	for {
 		select {
