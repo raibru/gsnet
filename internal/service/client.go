@@ -33,8 +33,10 @@ func NewClientService(name string, host string, port string, retry uint) *Client
 		retry:     retry,
 		archivate: nil,
 		process:   nil,
-		transfer:  make(chan []byte),
-		receive:   make(chan []byte),
+		transfer:  nil,
+		receive:   nil,
+		//		transfer:  make(chan []byte),
+		//		receive:   make(chan []byte),
 	}
 }
 
@@ -111,15 +113,15 @@ func (s *ClientService) ReceivePackets(done chan bool) {
 	}()
 }
 
-// TransferPackets transfers from file readed lines of packets and transfer them
-func (s *ClientService) TransferPackets(done chan bool) {
+// PushPackets push packet data via transfer connection
+func (s *ClientService) PushPackets(done chan bool) {
 	go func() {
-		logger.Log().Infof("start service transfer packets to  %s:%s", s.Host, s.Port)
+		logger.Log().Info("push packet via client service transfer connection")
 		for {
 			data, more := <-s.process
 
 			if !more || string(data) == "EOF" {
-				logger.Log().Trace("get no more data to transfer notification")
+				logger.Log().Trace("get EOF notification from process channel")
 				done <- true
 				break
 			}

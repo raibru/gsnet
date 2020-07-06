@@ -95,6 +95,11 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		clientService = service.NewClientService("anyclient", "129.0.0.1", "30100", 10)
 	}
 
+	transfer := make(chan []byte)
+	receive := make(chan []byte)
+	clientService.SetTransfer(transfer)
+	clientService.SetReceive(receive)
+
 	err := clientService.ApplyConnection()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Fatal Failure. See log. Exit service: %s\n", err.Error())
@@ -116,7 +121,7 @@ func handleParam(cmd *cobra.Command, args []string) error {
 			readerService.SetSupply(process)
 			clientService.SetProcess(process)
 			readerService.Start(readed)
-			clientService.TransferPackets(done)
+			clientService.PushPackets(done)
 			<-readed
 			<-done
 		}
