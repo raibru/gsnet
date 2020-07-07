@@ -83,7 +83,7 @@ func (s *ServerService) ApplyConnection() error {
 	}
 
 	s.process = manager.process
-	//s.notify = manager.notify
+	s.notify = manager.notify
 
 	go s.processPackets()
 	go manager.start()
@@ -138,7 +138,7 @@ func (s *ServerService) PushPackets(done chan bool) {
 	go func() {
 		logger.Log().Info("start push packet to transfer connection")
 		for {
-			data, more := <-s.process
+			data, more := <-s.push
 
 			if !more || string(data) == "EOF" {
 				logger.Log().Trace("get EOF notification from process channel")
@@ -148,6 +148,12 @@ func (s *ServerService) PushPackets(done chan bool) {
 
 			logger.Log().Tracef("transfer packet: [0x %s]", hex.EncodeToString([]byte(data)))
 			s.notify <- []byte(data)
+
+			if s.archivate != nil {
+				hexData := hex.EncodeToString(data)
+				r := archive.NewRecord(hexData, "TX", "TCP")
+				s.archivate <- r
+			}
 		}
 
 		logger.Log().Info("finish push packet to transfer connection")
