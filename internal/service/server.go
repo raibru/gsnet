@@ -15,6 +15,7 @@ type ServerService struct {
 	Host      string
 	Port      string
 	archivate chan *archive.Record
+	push      chan []byte // use this chan to push data to connection
 	process   chan []byte // use this chan to accept data which have to be processed
 	forward   chan []byte // use this chan to forward data to somewhere
 	notify    chan []byte // use this chan to notify registered clients
@@ -28,10 +29,16 @@ func NewServerService(name string, host string, port string) *ServerService {
 		Host:      host,
 		Port:      port,
 		archivate: nil,
+		push:      nil,
 		process:   nil,
 		forward:   nil,
 		notify:    nil,
 	}
+}
+
+// SetPush set push data channel
+func (s *ServerService) SetPush(c chan []byte) {
+	s.push = c
 }
 
 // SetProcess set process data channel
@@ -69,18 +76,20 @@ func (s *ServerService) ApplyConnection() error {
 
 	manager := ClientManager{
 		clients:    make(map[*Client]bool),
+		process:    make(chan []byte),
 		notify:     make(chan []byte),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
-		service:    s,
 	}
 
-	s.notify = manager.notify
+	s.process = manager.process
+	//s.notify = manager.notify
 
+	go s.processPackets()
 	go manager.start()
 	go func() {
 		for {
-			logger.Log().Trace("wait for connection")
+			logger.Log().Trace("wait for incoming connection")
 			conn, err := lsn.Accept()
 			logger.Log().Trace("accept connection")
 			if err != nil {
@@ -127,7 +136,7 @@ func CreateTCPServerListener(s *ServerService) (net.Listener, error) {
 // PushPackets push packet data via transfer connection
 func (s *ServerService) PushPackets(done chan bool) {
 	go func() {
-		logger.Log().Info("push packet via server service transfer connection")
+		logger.Log().Info("start push packet to transfer connection")
 		for {
 			data, more := <-s.process
 
@@ -141,6 +150,30 @@ func (s *ServerService) PushPackets(done chan bool) {
 			s.notify <- []byte(data)
 		}
 
-		logger.Log().Info("finish notify server data")
+		logger.Log().Info("finish push packet to transfer connection")
 	}()
+}
+
+// ProcessPackets processes received packets and transfer them
+func (s *ServerService) processPackets() {
+	logger.Log().Info("start process packets")
+	for {
+		data, more := <-s.process
+		if !more {
+			logger.Log().Trace("notify not more data from receive channel")
+			break
+		}
+		if s.archivate != nil {
+			hexData := hex.EncodeToString(data)
+			r := archive.NewRecord(hexData, "RX", "TCP")
+			s.archivate <- r
+		}
+		if s.forward != nil {
+			s.forward <- data
+		}
+		if s.notify != nil {
+			s.notify <- data
+		}
+	}
+	logger.Log().Info("finish process packets")
 }

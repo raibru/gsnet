@@ -113,9 +113,9 @@ func handleParam(cmd *cobra.Command, args []string) error {
 
 	if readerService.Use {
 		for i := uint(0); i < repeatTransfer; i++ {
-			process := make(chan []byte)
-			readerService.SetSupply(process)
-			srvService.SetProcess(process)
+			push := make(chan []byte)
+			readerService.SetSupply(push)
+			srvService.SetPush(push)
 			readerService.Start(readed)
 			srvService.PushPackets(sent)
 			<-readed

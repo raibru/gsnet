@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"net"
 
-	"github.com/raibru/gsnet/internal/archive"
 	"github.com/raibru/gsnet/internal/sys"
 )
 
@@ -44,9 +43,9 @@ func (serviceLogger) Identify() string {
 type ClientManager struct {
 	clients    map[*Client]bool
 	notify     chan []byte
+	process    chan []byte
 	register   chan *Client
 	unregister chan *Client
-	service    *ServerService
 }
 
 func (manager *ClientManager) start() {
@@ -92,15 +91,11 @@ func (manager *ClientManager) receive(client *Client) {
 			hexData := hex.EncodeToString(data[:length])
 			logger.Log().Infof("received data [0x %s]", hexData)
 
-			if manager.service.archivate != nil {
-				r := archive.NewRecord(hexData, "RX", "TCP")
-				manager.service.archivate <- r
-			}
-			if manager.service.forward != nil {
-				manager.service.forward <- data[:length]
-			}
-			if manager.service.notify != nil {
-				manager.service.notify <- data[:length]
+			if manager.process != nil {
+				logger.Log().Info("process received data")
+				manager.process <- data[:length]
+			} else {
+				logger.Log().Warn("process channel for received data not available")
 			}
 		}
 	}
@@ -119,11 +114,6 @@ func (manager *ClientManager) transfer(client *Client) {
 			}
 			logger.Log().Info("write data to managed client connection")
 			client.socket.Write(data)
-			if manager.service.archivate != nil {
-				hexData := hex.EncodeToString(data)
-				r := archive.NewRecord(hexData, "TX", "TCP")
-				manager.service.archivate <- r
-			}
 		}
 	}
 }

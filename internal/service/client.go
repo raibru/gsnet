@@ -19,6 +19,7 @@ type ClientService struct {
 	retry     uint
 	conn      *Client
 	archivate chan *archive.Record
+	push      chan []byte // use this chan to push data to connection
 	process   chan []byte // use this chan to acceppt data which have to be processed
 	transfer  chan []byte // use this chan to provide data to transfer somewhere
 	receive   chan []byte // use this chan to handle received data from somewhere
@@ -32,12 +33,18 @@ func NewClientService(name string, host string, port string, retry uint) *Client
 		Port:      port,
 		retry:     retry,
 		archivate: nil,
+		push:      nil,
 		process:   nil,
 		transfer:  nil,
 		receive:   nil,
 		//		transfer:  make(chan []byte),
 		//		receive:   make(chan []byte),
 	}
+}
+
+// SetPush set push data channel
+func (s *ClientService) SetPush(c chan []byte) {
+	s.process = c
 }
 
 // SetProcess set process data channel
