@@ -98,12 +98,12 @@ func handleParam(cmd *cobra.Command, args []string) error {
 				elem.Channel.Listener.Port)
 
 			transfer := make(chan []byte)
-			cliService.SetTransfer(transfer)
 			srvService.SetForward(transfer)
+			cliService.SetTransfer(transfer)
 
 			notify := make(chan []byte)
 			cliService.SetReceive(notify)
-			srvService.SetNotify(notify)
+			srvService.SetProcess(notify)
 
 			pktService := service.NewPacketService(
 				elem.Channel.Name,
