@@ -118,12 +118,16 @@ func handleParam(cmd *cobra.Command, args []string) error {
 				pktService.SetArchivate(archivate)
 			}
 
+			done := make(chan bool)
+			cliService.ReceivePackets(done)
+
 			go func() {
 				err := pktService.ApplyConnection()
 				if err != nil {
 					fmt.Fprintf(os.Stderr, "Fatal Failure. See log. Exit service: %s\n", err.Error())
 					sys.Exit(2)
 				}
+				<-done
 				<-pktService.Mode
 			}()
 		}

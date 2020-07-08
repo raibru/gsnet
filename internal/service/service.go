@@ -76,44 +76,25 @@ func (manager *ClientManager) start() {
 }
 
 func (manager *ClientManager) receive(client *Client) {
-	logger.Log().Info("start receive client manager service")
+	logger.Log().Info("start client manager receive service")
 	for {
-		data := make([]byte, 4096)
-		length, err := client.socket.Read(data)
-		logger.Log().Trace("read data from managed client connection")
-		if err != nil {
-			logger.Log().Info("unregister client and close client connection")
-			manager.unregister <- client
-			client.socket.Close()
-			break
-		}
-		if length > 0 {
-			hexData := hex.EncodeToString(data[:length])
-			logger.Log().Infof("received data [0x %s]", hexData)
-
-			if manager.process != nil {
-				logger.Log().Info("process received data")
-				manager.process <- data[:length]
-			} else {
-				logger.Log().Warn("process channel for received data not available")
-			}
+		logger.Log().Trace("wait for rxData in managed client receive")
+		select {
+		case data := <-client.rxData:
+			logger.Log().Trace("receive data from managed client rxData")
+			manager.process <- data
 		}
 	}
-	logger.Log().Info("finish receive data")
 }
 
 func (manager *ClientManager) transfer(client *Client) {
-	logger.Log().Info("start transfer client manager service")
-	defer client.socket.Close()
+	logger.Log().Info("start client manager transfer service")
 	for {
+		logger.Log().Trace("wait for txData in managed client transfer")
 		select {
-		case data, ok := <-client.txData:
-			if !ok {
-				logger.Log().Info("finish transfer data")
-				return
-			}
-			logger.Log().Info("write data to managed client connection")
-			client.socket.Write(data)
+		case data := <-manager.notify:
+			logger.Log().Trace("transfer data to managed client txData")
+			client.txData <- data
 		}
 	}
 }
@@ -126,8 +107,9 @@ type Client struct {
 }
 
 func (client *Client) receive() {
-	logger.Log().Info("receive data")
+	logger.Log().Info("start client receive service")
 	for {
+		logger.Log().Trace("wait for client incoming read data")
 		data := make([]byte, 4096)
 		length, err := client.socket.Read(data)
 		if err != nil {
@@ -137,18 +119,17 @@ func (client *Client) receive() {
 		if length > 0 {
 			logger.Log().Infof("received data [0x %s]", hex.EncodeToString(data[:length]))
 		}
-		if client.rxData != nil {
-			logger.Log().Trace("handle received data")
-			client.rxData <- data[:length]
-		}
+
+		logger.Log().Trace("handle received data")
+		client.rxData <- data[:length]
 	}
-	logger.Log().Info("finish receive data")
+	logger.Log().Info("finish client receive service")
 }
 
 func (client *Client) transfer() {
-	logger.Log().Info("transfer data")
+	logger.Log().Info("start client transfer service")
 	for {
-		logger.Log().Trace("wait for transfer data")
+		logger.Log().Trace("wait for client transfer data from txData")
 		data := <-client.txData
 
 		if string(data) == "EOF" {
@@ -156,14 +137,14 @@ func (client *Client) transfer() {
 			break
 		}
 
+		logger.Log().Infof("write data [0x %s]", hex.EncodeToString(data))
 		_, err := client.socket.Write(data)
 		if err != nil {
-			logger.Log().Errorf("failure transfer data due '%s'", err.Error())
+			logger.Log().Errorf("failure write data due '%s'", err.Error())
 			break
 		}
-		logger.Log().Trace("successful transfer data")
 	}
-	logger.Log().Info("finish transfer data")
+	logger.Log().Info("finish client transfer service")
 }
 
 // // https://www.thepolyglotdeveloper.com/2017/05/network-sockets-with-the-go-programming-language/

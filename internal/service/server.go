@@ -96,11 +96,15 @@ func (s *ServerService) ApplyConnection() error {
 				logger.Log().Errorf("failure accept connection due '%s'", err.Error())
 				continue
 			}
+
+			logger.Log().Trace("register new client connection")
 			client := &Client{socket: conn, txData: make(chan []byte), rxData: make(chan []byte)}
 			manager.register <- client
 
 			go manager.receive(client)
 			go manager.transfer(client)
+			go client.receive()
+			go client.transfer()
 
 		}
 	}()
