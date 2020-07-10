@@ -35,7 +35,8 @@ tmux new-session -d -s $session -n shell \; \
     select-pane -t 0 \; \
   new-window -n 'runtime-pkt' \; \
     send-keys 'cd build/develop/pktservice && clear' C-m \; \
-    split-window -v -p 50 \; \
+    select-pane -t 0 \; \
+    split-window -h -p 50 \; \
     send-keys 'cd build/develop/pktservice && clear && tail -f pktservice.log' C-m \; \
     select-pane -t 0 \;
 
