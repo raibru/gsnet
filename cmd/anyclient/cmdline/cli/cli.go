@@ -120,13 +120,13 @@ func handleParam(cmd *cobra.Command, args []string) error {
 			push := make(chan []byte)
 			readerService.SetSupply(push)
 			clientService.SetPush(push)
-			readerService.Start(readed)
-			clientService.PushPackets(done)
+			go readerService.Start(readed)
+			go clientService.PushPackets(done)
 			<-readed
 			<-done
 		}
 	} else {
-		clientService.ReceivePackets(done)
+		go clientService.ReceivePackets()
 		<-done
 	}
 

@@ -96,19 +96,13 @@ func (s *ClientService) Finalize() {
 }
 
 // ReceivePackets receive from connected server packet data
-func (s *ClientService) ReceivePackets(done chan bool) {
-	go func() {
-		logger.Log().Infof("start service receiving packets from  %s:%s", s.Host, s.Port)
+func (s *ClientService) ReceivePackets() {
+	logger.Log().Infof("start service receiving packets from  %s:%s", s.Host, s.Port)
 
-		for {
-			data := <-s.receive
+	for {
+		select {
+		case data := <-s.receive:
 			logger.Log().Tracef("receive packet: [0x %s]", hex.EncodeToString([]byte(data)))
-
-			if string(data) == "EOF" {
-				logger.Log().Trace("get no more data to receive notification")
-				done <- true
-				break
-			}
 
 			if s.archivate != nil {
 				hexData := hex.EncodeToString([]byte(data))
@@ -116,35 +110,71 @@ func (s *ClientService) ReceivePackets(done chan bool) {
 				s.archivate <- r
 			}
 		}
-		logger.Log().Info("finish receive from client connection")
-	}()
+	}
+}
+
+// NotifyPackets notify incoming data from client service receive channel
+func (s *ClientService) NotifyPackets() {
+	logger.Log().Info("start notify server service")
+
+	for {
+		select {
+		case data := <-s.receive:
+			logger.Log().Tracef("receive packet: [0x %s]", hex.EncodeToString([]byte(data)))
+
+			if s.archivate != nil {
+				hexData := hex.EncodeToString([]byte(data))
+				r := archive.NewRecord(hexData, "RX", "TCP")
+				s.archivate <- r
+			}
+			logger.Log().Trace("put data to client service process channel")
+			s.process <- data
+		}
+	}
 }
 
 // PushPackets push packet data via transfer connection
 func (s *ClientService) PushPackets(done chan bool) {
-	go func() {
-		logger.Log().Info("push packet via client service transfer connection")
-		for {
-			data, more := <-s.process
+	logger.Log().Info("push packet via client service transfer connection")
+	for {
+		data, more := <-s.process
 
-			if !more || string(data) == "EOF" {
-				logger.Log().Trace("get EOF notification from process channel")
-				done <- true
-				break
-			}
+		if !more || string(data) == "EOF" {
+			logger.Log().Trace("get EOF notification from process channel")
+			done <- true
+			break
+		}
 
-			logger.Log().Tracef("transfer packet: [0x %s]", hex.EncodeToString([]byte(data)))
-			s.transfer <- []byte(data)
+		logger.Log().Tracef("transfer packet: [0x %s]", hex.EncodeToString([]byte(data)))
+		s.transfer <- []byte(data)
+		hexData := hex.EncodeToString([]byte(data))
+
+		if s.archivate != nil {
+			r := archive.NewRecord(hexData, "TX", "TCP")
+			s.archivate <- r
+		}
+	}
+
+	logger.Log().Info("finish apply client connection")
+}
+
+// ProcessPackets process a packet into another state before transfer it
+func (s *ClientService) ProcessPackets() {
+	logger.Log().Info("start process packets service")
+	for {
+		select {
+		case data := <-s.process:
 			hexData := hex.EncodeToString([]byte(data))
-
+			logger.Log().Tracef("Process data: [0x %s]", hexData)
+			logger.Log().Tracef("This is a sink. Process have to implement")
 			if s.archivate != nil {
-				r := archive.NewRecord(hexData, "TX", "TCP")
+				r := archive.NewRecord(hexData, "PROC", "intern")
 				s.archivate <- r
 			}
 		}
 
 		logger.Log().Info("finish apply client connection")
-	}()
+	}
 }
 
 // CreateTCPClientConnection create new TCP connection with parameter in ClientService

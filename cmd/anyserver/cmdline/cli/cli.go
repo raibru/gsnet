@@ -100,6 +100,7 @@ func handleParam(cmd *cobra.Command, args []string) error {
 	wait := make(chan bool, 1)
 	readed := make(chan bool, 1)
 	sent := make(chan bool, 1)
+	done := make(chan bool)
 
 	err := srvService.ApplyConnection()
 	if err != nil {
@@ -116,14 +117,14 @@ func handleParam(cmd *cobra.Command, args []string) error {
 			push := make(chan []byte)
 			readerService.SetSupply(push)
 			srvService.SetPush(push)
-			readerService.Start(readed)
-			srvService.PushPackets(sent)
+			go readerService.Start(readed)
+			go srvService.PushPackets(sent)
 			<-readed
 			<-sent
 		}
 	} else {
-		ok := make(chan bool)
-		<-ok
+		go srvService.ProcessPackets()
+		<-done
 	}
 
 	return nil

@@ -79,10 +79,7 @@ func NonPacketReader() *PacketReader {
 // Start read packet data
 func (pktRead *PacketReader) Start(done chan bool) {
 	time.Sleep(pktRead.waitStartSec)
-	go handle(pktRead, done)
-}
 
-func handle(pktRead *PacketReader, done chan bool) {
 	fn := pktRead.filename
 
 	if pktRead.Supply == nil {
@@ -142,7 +139,3 @@ func handle(pktRead *PacketReader, done chan bool) {
 	//pktRead.Supply <- "EOF"
 	done <- true
 }
-
-//// Stop read packet data
-//func (pktRead *PacketReader) Stop() {
-//}

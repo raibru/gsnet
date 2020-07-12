@@ -85,7 +85,6 @@ func (s *ServerService) ApplyConnection() error {
 	s.process = manager.process
 	s.notify = manager.notify
 
-	go s.processPackets()
 	go manager.start()
 	go func() {
 		for {
@@ -112,6 +111,52 @@ func (s *ServerService) ApplyConnection() error {
 	return nil
 }
 
+// PushPackets push packet data via transfer connection
+func (s *ServerService) PushPackets(done chan bool) {
+	logger.Log().Info("start push packet to transfer connection")
+	for {
+		data, more := <-s.push
+
+		if !more || string(data) == "EOF" {
+			logger.Log().Trace("get EOF notification from process channel")
+			done <- true
+			break
+		}
+
+		logger.Log().Tracef("transfer packet: [0x %s]", hex.EncodeToString([]byte(data)))
+		s.notify <- []byte(data)
+
+		if s.archivate != nil {
+			hexData := hex.EncodeToString(data)
+			r := archive.NewRecord(hexData, "TX", "TCP")
+			s.archivate <- r
+		}
+	}
+
+	logger.Log().Info("finish push packet to transfer connection")
+}
+
+// ProcessPackets processes received packets and transfer them
+func (s *ServerService) ProcessPackets() {
+	logger.Log().Info("start process packets service")
+	for {
+		select {
+		case data := <-s.process:
+			if s.archivate != nil {
+				hexData := hex.EncodeToString(data)
+				r := archive.NewRecord(hexData, "PROC", "INTERN")
+				s.archivate <- r
+			}
+			if s.forward != nil {
+				s.forward <- data
+			}
+			if s.notify != nil {
+				s.notify <- data
+			}
+		}
+	}
+}
+
 // CreateTCPServerListener create new TCP listener with parameter in ServerService
 func CreateTCPServerListener(s *ServerService) (net.Listener, error) {
 	logger.Log().Infof("create server listener service %s@%s:%s", s.Name, s.Host, s.Port)
@@ -135,55 +180,4 @@ func CreateTCPServerListener(s *ServerService) (net.Listener, error) {
 
 	logger.Log().Info("finish create server listener")
 	return lsn, nil
-}
-
-// PushPackets push packet data via transfer connection
-func (s *ServerService) PushPackets(done chan bool) {
-	go func() {
-		logger.Log().Info("start push packet to transfer connection")
-		for {
-			data, more := <-s.push
-
-			if !more || string(data) == "EOF" {
-				logger.Log().Trace("get EOF notification from process channel")
-				done <- true
-				break
-			}
-
-			logger.Log().Tracef("transfer packet: [0x %s]", hex.EncodeToString([]byte(data)))
-			s.notify <- []byte(data)
-
-			if s.archivate != nil {
-				hexData := hex.EncodeToString(data)
-				r := archive.NewRecord(hexData, "TX", "TCP")
-				s.archivate <- r
-			}
-		}
-
-		logger.Log().Info("finish push packet to transfer connection")
-	}()
-}
-
-// ProcessPackets processes received packets and transfer them
-func (s *ServerService) processPackets() {
-	logger.Log().Info("start process packets")
-	for {
-		data, more := <-s.process
-		if !more {
-			logger.Log().Trace("notify not more data from receive channel")
-			break
-		}
-		if s.archivate != nil {
-			hexData := hex.EncodeToString(data)
-			r := archive.NewRecord(hexData, "RX", "TCP")
-			s.archivate <- r
-		}
-		if s.forward != nil {
-			s.forward <- data
-		}
-		if s.notify != nil {
-			s.notify <- data
-		}
-	}
-	logger.Log().Info("finish process packets")
 }

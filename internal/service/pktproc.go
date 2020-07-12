@@ -53,6 +53,8 @@ func (s *PacketService) ApplyConnection() error {
 			logger.Log().Errorf("Error apply dialer connection %s: %s", s.dialer.Name, err.Error())
 		}
 	}()
+	go s.dialer.ReceivePackets()
+	go s.listener.ProcessPackets()
 
 	logger.Log().Info("finish setup channel connections")
 

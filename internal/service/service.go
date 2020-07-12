@@ -90,10 +90,10 @@ func (manager *ClientManager) receive(client *Client) {
 func (manager *ClientManager) transfer(client *Client) {
 	logger.Log().Info("start client manager transfer service")
 	for {
-		logger.Log().Trace("wait for txData in managed client transfer")
+		logger.Log().Trace("wait for notify data in managed client")
 		select {
 		case data := <-manager.notify:
-			logger.Log().Trace("transfer data to managed client txData")
+			logger.Log().Trace("transfer data to client txData")
 			client.txData <- data
 		}
 	}
@@ -117,7 +117,7 @@ func (client *Client) receive() {
 			break
 		}
 		if length > 0 {
-			logger.Log().Infof("received data [0x %s]", hex.EncodeToString(data[:length]))
+			logger.Log().Infof("read data [0x %s]", hex.EncodeToString(data[:length]))
 		}
 
 		logger.Log().Trace("handle received data")
