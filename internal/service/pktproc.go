@@ -41,22 +41,25 @@ func (s *PacketService) SetArchivate(r chan *archive.Record) {
 
 // ApplyConnection build all dialer/listener connection for current packet service
 func (s *PacketService) ApplyConnection() error {
-	logger.Log().Infof("apply all connections for packet service %s", s.Name)
+	logger.Log().WithField("func", "11310").Infof("apply all connections for packet service %s", s.Name)
+
+	logger.Log().WithField("func", "11310").Info("call apply listener connection")
 	go func() {
 		if err := s.listener.ApplyConnection(); err != nil {
-			logger.Log().Errorf("Error apply server connection %s: %s", s.listener.Name, err.Error())
+			logger.Log().WithField("func", "11310").Errorf("Error apply server connection %s: %s", s.listener.Name, err.Error())
 		}
 	}()
 
+	logger.Log().WithField("func", "11310").Info("call apply dialer connection")
 	go func() {
 		if err := s.dialer.ApplyConnection(); err != nil {
-			logger.Log().Errorf("Error apply dialer connection %s: %s", s.dialer.Name, err.Error())
+			logger.Log().WithField("func", "11310").Errorf("Error apply dialer connection %s: %s", s.dialer.Name, err.Error())
 		}
 	}()
 	go s.dialer.ReceivePackets()
 	go s.listener.ProcessPackets()
 
-	logger.Log().Info("finish setup channel connections")
+	logger.Log().WithField("func", "11310").Info("finish setup channel connections")
 
 	return nil
 }
