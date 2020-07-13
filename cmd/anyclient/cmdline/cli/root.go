@@ -22,5 +22,5 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&configFile, "config-file", "f", "", "Use config file for service behavior")
 	rootCmd.PersistentFlags().UintVarP(&waitTransfer, "wait-transfer", "", 0, "Wait time to start transfer action in sec")
 	rootCmd.PersistentFlags().UintVarP(&repeatTransfer, "repeat-transfer", "", 1, "Repeat transfer action after wait-transfer time")
-	rootCmd.PersistentFlags().BoolVarP(&teeStdout, "tee-stdout", "", false, "Tee logging to file and also to stdout")
+	rootCmd.PersistentFlags().BoolVarP(&teeStdout, "to-stdout", "", false, "Tee logging output to file and stdout")
 }
