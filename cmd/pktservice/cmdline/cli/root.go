@@ -16,5 +16,5 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&pktParam.Name, "name", "", "", "Name of the server service")
 	rootCmd.PersistentFlags().StringVarP(&inputFile, "input-file", "i", "", "Use input file send multible data packages")
 	rootCmd.PersistentFlags().StringVarP(&configFile, "config-file", "f", "", "Use config file for service behavior")
-	rootCmd.PersistentFlags().BoolVarP(&teeStdout, "tee-stdout", "", false, "Tee logging to file and also to stdout")
+	rootCmd.PersistentFlags().BoolVarP(&teeStdout, "to-stdout", "", false, "Tee logging output to file and stdout")
 }
