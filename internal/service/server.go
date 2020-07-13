@@ -63,16 +63,16 @@ func (s *ServerService) SetArchivate(r chan *archive.Record) {
 
 // ApplyConnection accept a connection from client and handle incoming data stream
 func (s *ServerService) ApplyConnection() error {
-	logger.Log().Infof("apply server connection for service %s", s.Name)
-	logger.Log().Tracef("create TCP server listener for service %s", s.Name)
+	logger.Log().WithField("func", "srvserv.ApplyConnection").Infof("apply server connection for service %s", s.Name)
+	logger.Log().WithField("func", "srvserv.ApplyConnection").Tracef("create TCP server listener for service %s", s.Name)
 	lsn, err := CreateTCPServerListener(s)
 	if err != nil {
-		logger.Log().Errorf("failure create TCP server listener due '%s'", err.Error())
+		logger.Log().WithField("func", "srvserv.ApplyConnection").Errorf("failure create TCP server listener due '%s'", err.Error())
 		fmt.Fprintf(os.Stderr, "Fatal error create TCP listener: %s\n", err.Error())
 		return err
 	}
 
-	logger.Log().Tracef("establish listener for service %s@%s:%s", s.Name, s.Host, s.Port)
+	logger.Log().WithField("func", "srvserv.ApplyConnection").Tracef("establish listener for service %s@%s:%s", s.Name, s.Host, s.Port)
 
 	manager := ClientManager{
 		clients:    make(map[*Client]bool),
@@ -88,15 +88,15 @@ func (s *ServerService) ApplyConnection() error {
 	go manager.start()
 	go func() {
 		for {
-			logger.Log().Trace("wait for incoming connection")
+			logger.Log().WithField("func", "srvserv.ApplyConnection").Trace("wait for incoming connection")
 			conn, err := lsn.Accept()
-			logger.Log().Trace("accept connection")
+			logger.Log().WithField("func", "srvserv.ApplyConnection").Trace("accept connection")
 			if err != nil {
 				logger.Log().Errorf("failure accept connection due '%s'", err.Error())
 				continue
 			}
 
-			logger.Log().Trace("register new client connection")
+			logger.Log().WithField("func", "srvserv.ApplyConnection").Trace("register new client connection")
 			client := &Client{socket: conn, txData: make(chan []byte), rxData: make(chan []byte)}
 			manager.register <- client
 
@@ -107,23 +107,23 @@ func (s *ServerService) ApplyConnection() error {
 
 		}
 	}()
-	logger.Log().Info("finish apply server listener")
+	logger.Log().WithField("func", "srvserv.ApplyConnection").Info("finish apply server listener")
 	return nil
 }
 
 // PushPackets push packet data via transfer connection
 func (s *ServerService) PushPackets(done chan bool) {
-	logger.Log().Info("start push packet to transfer connection")
+	logger.Log().WithField("func", "srvserv.PushPackets").Info("start push packet to transfer connection")
 	for {
 		data, more := <-s.push
 
 		if !more || string(data) == "EOF" {
-			logger.Log().Trace("get EOF notification from process channel")
+			logger.Log().WithField("func", "srvserv.PushPackets").Trace("get EOF notification from process channel")
 			done <- true
 			break
 		}
 
-		logger.Log().Tracef("transfer packet: [0x %s]", hex.EncodeToString([]byte(data)))
+		logger.Log().WithField("func", "srvserv.PushPackets").Tracef("transfer packet: [0x %s]", hex.EncodeToString([]byte(data)))
 		s.notify <- []byte(data)
 
 		if s.archivate != nil {
@@ -133,12 +133,12 @@ func (s *ServerService) PushPackets(done chan bool) {
 		}
 	}
 
-	logger.Log().Info("finish push packet to transfer connection")
+	logger.Log().WithField("func", "srvserv.PushPackets").Info("finish push packet to transfer connection")
 }
 
 // ProcessPackets processes received packets and transfer them
 func (s *ServerService) ProcessPackets() {
-	logger.Log().Info("start process packets service")
+	logger.Log().WithField("func", "srvserv.ProcessPackets").Info("start process packets service")
 	for {
 		select {
 		case data := <-s.process:
@@ -159,25 +159,25 @@ func (s *ServerService) ProcessPackets() {
 
 // CreateTCPServerListener create new TCP listener with parameter in ServerService
 func CreateTCPServerListener(s *ServerService) (net.Listener, error) {
-	logger.Log().Infof("create server listener service %s@%s:%s", s.Name, s.Host, s.Port)
-	logger.Log().Tracef("resolve tcpTCPAddr %s:%s", s.Host, s.Port)
+	logger.Log().WithField("func", "CreateTCPServerListener").Infof("create server listener service %s@%s:%s", s.Name, s.Host, s.Port)
+	logger.Log().WithField("func", "CreateTCPServerListener").Tracef("resolve tcpTCPAddr %s:%s", s.Host, s.Port)
 
 	serv := s.Host + ":" + s.Port
 	addr, err := net.ResolveTCPAddr("tcp4", serv)
 	if err != nil {
-		logger.Log().Errorf("failure resolve TCP address due '%s'", err.Error())
+		logger.Log().WithField("func", "CreateTCPServerListener").Errorf("failure resolve TCP address due '%s'", err.Error())
 		fmt.Fprintf(os.Stderr, "Fatal error resolve TCP address %s: %s\n", s.Name, err.Error())
 		return nil, err
 	}
 
-	logger.Log().Tracef("start listen TCP %s@%s:%s", s.Name, s.Host, s.Port)
+	logger.Log().WithField("func", "CreateTCPServerListener").Tracef("start listen TCP %s@%s:%s", s.Name, s.Host, s.Port)
 	lsn, err := net.ListenTCP("tcp", addr)
 	if err != nil {
-		logger.Log().Errorf("failure listen TCP due '%s'", err.Error())
+		logger.Log().WithField("func", "CreateTCPServerListener").Errorf("failure listen TCP due '%s'", err.Error())
 		fmt.Fprintf(os.Stderr, "Fatal error listen TCP %s: %s\n", s.Name, err.Error())
 		return nil, err
 	}
 
-	logger.Log().Info("finish create server listener")
+	logger.Log().WithField("func", "CreateTCPServerListener").Info("finish create server listener")
 	return lsn, nil
 }

@@ -69,13 +69,13 @@ func (s *ClientService) SetArchivate(c chan *archive.Record) {
 
 // ApplyConnection create a connection to server and handle outgoing data stream
 func (s *ClientService) ApplyConnection() error {
-	logger.Log().Infof("apply client connection for service %s", s.Name)
+	logger.Log().WithField("func", "clisrv.ApplyConnection").Infof("apply client connection for service %s", s.Name)
 	for i := uint(0); i < s.retry || s.retry == uint(0); i++ {
 		logger.Log().Tracef("create TCP client dialer for service %s", s.Name)
 		conn, err := CreateTCPClientConnection(s)
 
 		if err != nil {
-			logger.Log().Errorf("failure create client TCP connection due '%s'", err.Error())
+			logger.Log().WithField("func", "clisrv.ApplyConnection").Errorf("failure create client TCP connection due '%s'", err.Error())
 			fmt.Fprintf(os.Stderr, "failure create client TCP connection: %s\n", err.Error())
 			time.Sleep(10 * time.Second)
 		} else {
@@ -90,19 +90,19 @@ func (s *ClientService) ApplyConnection() error {
 
 // Finalize cleanup data used by ClientService
 func (s *ClientService) Finalize() {
-	logger.Log().Infof("finalize service %s", s.Name)
+	logger.Log().WithField("func", "clisrv.Finalize").Infof("finalize service %s", s.Name)
 	s.conn.socket.Close()
-	logger.Log().Info("finish finalize service")
+	logger.Log().WithField("func", "clisrv.Finalize").Info("finish finalize service")
 }
 
 // ReceivePackets receive from connected server packet data
 func (s *ClientService) ReceivePackets() {
-	logger.Log().Infof("start service receiving packets from  %s:%s", s.Host, s.Port)
+	logger.Log().WithField("func", "clisrv.ReceivePackets").Infof("start service receiving packets from  %s:%s", s.Host, s.Port)
 
 	for {
 		select {
 		case data := <-s.receive:
-			logger.Log().Tracef("receive packet: [0x %s]", hex.EncodeToString([]byte(data)))
+			logger.Log().WithField("func", "clisrv.ReceivePackets").Tracef("receive packet: [0x %s]", hex.EncodeToString([]byte(data)))
 
 			if s.archivate != nil {
 				hexData := hex.EncodeToString([]byte(data))
@@ -115,19 +115,19 @@ func (s *ClientService) ReceivePackets() {
 
 // NotifyPackets notify incoming data from client service receive channel
 func (s *ClientService) NotifyPackets() {
-	logger.Log().Info("start notify server service")
+	logger.Log().WithField("func", "clisrv.NotifyPackets").Info("start notify server service")
 
 	for {
 		select {
 		case data := <-s.receive:
-			logger.Log().Tracef("receive packet: [0x %s]", hex.EncodeToString([]byte(data)))
+			logger.Log().WithField("func", "clisrv.NotifyPackets").Tracef("receive packet: [0x %s]", hex.EncodeToString([]byte(data)))
 
 			if s.archivate != nil {
 				hexData := hex.EncodeToString([]byte(data))
 				r := archive.NewRecord(hexData, "RX", "TCP")
 				s.archivate <- r
 			}
-			logger.Log().Trace("put data to client service process channel")
+			logger.Log().WithField("func", "clisrv.NotifyPackets").Trace("put data to client service process channel")
 			s.process <- data
 		}
 	}
@@ -135,17 +135,17 @@ func (s *ClientService) NotifyPackets() {
 
 // PushPackets push packet data via transfer connection
 func (s *ClientService) PushPackets(done chan bool) {
-	logger.Log().Info("push packet via client service transfer connection")
+	logger.Log().WithField("func", "clisrv.PushPackets").Info("push packet via client service transfer connection")
 	for {
 		data, more := <-s.process
 
 		if !more || string(data) == "EOF" {
-			logger.Log().Trace("get EOF notification from process channel")
+			logger.Log().WithField("func", "clisrv.PushPackets").Trace("get EOF notification from process channel")
 			done <- true
 			break
 		}
 
-		logger.Log().Tracef("transfer packet: [0x %s]", hex.EncodeToString([]byte(data)))
+		logger.Log().WithField("func", "clisrv.PushPackets").Tracef("transfer packet: [0x %s]", hex.EncodeToString([]byte(data)))
 		s.transfer <- []byte(data)
 		hexData := hex.EncodeToString([]byte(data))
 
@@ -155,49 +155,49 @@ func (s *ClientService) PushPackets(done chan bool) {
 		}
 	}
 
-	logger.Log().Info("finish apply client connection")
+	logger.Log().WithField("func", "clisrv.PushPackets").Info("finish apply client connection")
 }
 
 // ProcessPackets process a packet into another state before transfer it
 func (s *ClientService) ProcessPackets() {
-	logger.Log().Info("start process packets service")
+	logger.Log().WithField("func", "clisrv.ProcessPackets").Info("start process packets service")
 	for {
 		select {
 		case data := <-s.process:
 			hexData := hex.EncodeToString([]byte(data))
-			logger.Log().Tracef("Process data: [0x %s]", hexData)
-			logger.Log().Tracef("This is a sink. Process have to implement")
+			logger.Log().WithField("func", "clisrv.ProcessPackets").Tracef("Process data: [0x %s]", hexData)
+			logger.Log().WithField("func", "clisrv.ProcessPackets").Tracef("This is a sink. Process have to implement")
 			if s.archivate != nil {
 				r := archive.NewRecord(hexData, "PROC", "intern")
 				s.archivate <- r
 			}
 		}
 
-		logger.Log().Info("finish apply client connection")
+		logger.Log().WithField("func", "clisrv.ProcessPackets").Info("finish apply client connection")
 	}
 }
 
 // CreateTCPClientConnection create new TCP connection with parameter in ClientService
 func CreateTCPClientConnection(s *ClientService) (net.Conn, error) {
-	logger.Log().Infof("create client dialer service %s with connecting to %s:%s", s.Name, s.Host, s.Port)
-	logger.Log().Tracef("resolve tcpTCPAddr %s:%s", s.Host, s.Port)
+	logger.Log().WithField("func", "CreateTCPClientConn").Infof("create client dialer service %s with connecting to %s:%s", s.Name, s.Host, s.Port)
+	logger.Log().WithField("func", "CreateTCPClientConn").Tracef("resolve tcpTCPAddr %s:%s", s.Host, s.Port)
 
 	serv := s.Host + ":" + s.Port
 	addr, err := net.ResolveTCPAddr("tcp4", serv)
 	if err != nil {
-		logger.Log().Errorf("failure resolve TCPAddr due '%s'", err.Error())
+		logger.Log().WithField("func", "CreateTCPClientConn").Errorf("failure resolve TCPAddr due '%s'", err.Error())
 		fmt.Fprintf(os.Stderr, "Fatal error resolve dailer TCP address %s: %s\n", serv, err.Error())
 		return nil, err
 	}
 
-	logger.Log().Tracef("start dial tcp %s@%s:%s", s.Name, s.Host, s.Port)
+	logger.Log().WithField("func", "CreateTCPClientConn").Tracef("start dial tcp %s@%s:%s", s.Name, s.Host, s.Port)
 	conn, err := net.DialTCP("tcp", nil, addr)
 	if err != nil {
-		logger.Log().Errorf("failure connect TCPAddr due '%s'", err.Error())
+		logger.Log().WithField("func", "CreateTCPClientConn").Errorf("failure connect TCPAddr due '%s'", err.Error())
 		fmt.Fprintf(os.Stderr, "Fatal error connect TCP address %s: %s\n", serv, err.Error())
 		return nil, err
 	}
 
-	logger.Log().Info("finish create client connection")
+	logger.Log().WithField("func", "CreateTCPClientConn").Info("finish create client connection")
 	return conn, nil
 }
