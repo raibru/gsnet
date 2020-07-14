@@ -57,7 +57,6 @@ func (s *PacketService) ApplyConnection() error {
 			logger.Log().WithField("func", "11310").Errorf("Error apply dialer connection %s: %s", s.dialer.Name, err.Error())
 		}
 		go s.dialer.ReceivePackets()
-		//go s.dialer.NotifyPackets()
 	}()
 
 	logger.Log().WithField("func", "11310").Info("finish apply connections for packet service")

@@ -3,7 +3,7 @@ service:
   network:
     - channel:
         name: Service1
-        type: TC
+        type: TX
         recon_interval: 1000
         listener: 
           name: ServerSrv1
@@ -16,7 +16,7 @@ service:
           retry: 10
     - channel:
         name: Service2
-        type: TM
+        type: RX
         recon_interval: 1000
         listener: 
           name: ServerSrv2

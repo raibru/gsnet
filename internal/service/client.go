@@ -80,13 +80,13 @@ func (s *ClientService) ApplyConnection() error {
 			time.Sleep(10 * time.Second)
 		} else {
 			logger.Log().WithField("func", "11110").Infof("create client connection %s", s.Name)
-			ctx := make(chan []byte)
-			crx := make(chan []byte)
-			s.SetTransfer(ctx)
-			s.SetReceive(crx)
-			s.conn = &Client{socket: conn, txData: ctx, rxData: crx}
-			go s.conn.transfer()
-			go s.conn.receive()
+			s.conn = &Client{socket: conn, txData: s.transfer, rxData: s.receive}
+			if s.transfer != nil {
+				go s.conn.transfer()
+			}
+			if s.receive != nil {
+				go s.conn.receive()
+			}
 			logger.Log().WithField("func", "11110").Tracef("run successful client connection %s", s.Name)
 			return nil
 		}
