@@ -96,8 +96,9 @@ func handleParam(cmd *cobra.Command, args []string) error {
 	}
 
 	transfer := make(chan []byte)
-	receive := make(chan []byte)
 	clientService.SetTransfer(transfer)
+
+	receive := make(chan []byte)
 	clientService.SetReceive(receive)
 
 	err := clientService.ApplyConnection()
