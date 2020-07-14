@@ -48,6 +48,7 @@ func (s *PacketService) ApplyConnection() error {
 		if err := s.listener.ApplyConnection(); err != nil {
 			logger.Log().WithField("func", "11310").Errorf("Error apply server connection %s: %s", s.listener.Name, err.Error())
 		}
+		go s.listener.ProcessPackets()
 	}()
 
 	logger.Log().WithField("func", "11310").Info("call apply dialer connection")
@@ -55,11 +56,11 @@ func (s *PacketService) ApplyConnection() error {
 		if err := s.dialer.ApplyConnection(); err != nil {
 			logger.Log().WithField("func", "11310").Errorf("Error apply dialer connection %s: %s", s.dialer.Name, err.Error())
 		}
+		go s.dialer.ReceivePackets()
+		//go s.dialer.NotifyPackets()
 	}()
-	go s.dialer.ReceivePackets()
-	go s.listener.ProcessPackets()
 
-	logger.Log().WithField("func", "11310").Info("finish setup channel connections")
+	logger.Log().WithField("func", "11310").Info("finish apply connections for packet service")
 
 	return nil
 }

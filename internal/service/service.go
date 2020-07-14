@@ -109,10 +109,11 @@ type Client struct {
 func (client *Client) receive() {
 	logger.Log().WithField("func", "10210").Info("start client receive service")
 	for {
-		logger.Log().WithField("func", "10210").Trace("wait for client incoming read data")
+		logger.Log().WithField("func", "10210").Trace("receive wait for client socket incoming data")
 		data := make([]byte, 4096)
 		length, err := client.socket.Read(data)
 		if err != nil {
+			logger.Log().WithField("func", "10210").Errorf("receive read socket error: %s", err)
 			client.socket.Close()
 			break
 		}
@@ -120,7 +121,7 @@ func (client *Client) receive() {
 			logger.Log().WithField("func", "10210").Infof("read data [0x %s]", hex.EncodeToString(data[:length]))
 		}
 
-		logger.Log().WithField("func", "10210").Trace("handle received data")
+		logger.Log().WithField("func", "10210").Trace("receive put data into rxData channel")
 		client.rxData <- data[:length]
 	}
 	logger.Log().WithField("func", "10210").Info("finish client receive service")
@@ -129,7 +130,7 @@ func (client *Client) receive() {
 func (client *Client) transfer() {
 	logger.Log().WithField("func", "10220").Info("start client transfer service")
 	for {
-		logger.Log().WithField("func", "10220").Trace("wait for client transfer data from txData")
+		logger.Log().WithField("func", "10220").Trace("transfer wait incoming data from client txData channel")
 		data := <-client.txData
 
 		if string(data) == "EOF" {
@@ -138,6 +139,8 @@ func (client *Client) transfer() {
 		}
 
 		logger.Log().WithField("func", "10220").Infof("write data [0x %s]", hex.EncodeToString(data))
+		logger.Log().WithField("func", "10220").Info("transfer write data into client socket")
+
 		_, err := client.socket.Write(data)
 		if err != nil {
 			logger.Log().WithField("func", "10220").Errorf("failure write data due '%s'", err.Error())

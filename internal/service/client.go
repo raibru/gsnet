@@ -79,10 +79,15 @@ func (s *ClientService) ApplyConnection() error {
 			fmt.Fprintf(os.Stderr, "failure create client TCP connection: %s\n", err.Error())
 			time.Sleep(10 * time.Second)
 		} else {
-			logger.Log().WithField("func", "11110").Info("create client connection", s.Name)
-			s.conn = &Client{socket: conn, txData: s.transfer, rxData: s.receive}
+			logger.Log().WithField("func", "11110").Infof("create client connection %s", s.Name)
+			ctx := make(chan []byte)
+			crx := make(chan []byte)
+			s.SetTransfer(ctx)
+			s.SetReceive(crx)
+			s.conn = &Client{socket: conn, txData: ctx, rxData: crx}
 			go s.conn.transfer()
 			go s.conn.receive()
+			logger.Log().WithField("func", "11110").Tracef("run successful client connection %s", s.Name)
 			return nil
 		}
 	}
@@ -101,15 +106,22 @@ func (s *ClientService) ReceivePackets() {
 	logger.Log().WithField("func", "11130").Infof("start service receiving packets from  %s:%s", s.Host, s.Port)
 
 	for {
+		logger.Log().WithField("func", "11130").Trace("receive packets wait incoming data from receive channel")
 		select {
 		case data := <-s.receive:
 			logger.Log().WithField("func", "11130").Tracef("receive packet: [0x %s]", hex.EncodeToString([]byte(data)))
+
+			if string(data) == "EOF" {
+				logger.Log().WithField("func", "11130").Trace("get EOF notification from receive channel")
+				continue
+			}
 
 			if s.archivate != nil {
 				hexData := hex.EncodeToString([]byte(data))
 				r := archive.NewRecord(hexData, "RX", "TCP")
 				s.archivate <- r
 			}
+			//s.process <- data
 		}
 	}
 }
@@ -119,9 +131,15 @@ func (s *ClientService) NotifyPackets() {
 	logger.Log().WithField("func", "11140").Info("start notify server service")
 
 	for {
+		logger.Log().WithField("func", "11140").Trace("notify packets wait incoming data from receive channel")
 		select {
 		case data := <-s.receive:
-			logger.Log().WithField("func", "11140").Tracef("receive packet: [0x %s]", hex.EncodeToString([]byte(data)))
+			logger.Log().WithField("func", "11140").Tracef("notify packet: [0x %s]", hex.EncodeToString([]byte(data)))
+
+			if string(data) == "EOF" {
+				logger.Log().WithField("func", "11140").Trace("get EOF notification from receive channel")
+				continue
+			}
 
 			if s.archivate != nil {
 				hexData := hex.EncodeToString([]byte(data))
@@ -138,6 +156,7 @@ func (s *ClientService) NotifyPackets() {
 func (s *ClientService) PushPackets(done chan bool) {
 	logger.Log().WithField("func", "11150").Info("push packet via client service transfer connection")
 	for {
+		logger.Log().WithField("func", "11150").Trace("push packets wait incoming data from process channel")
 		data, more := <-s.process
 
 		if !more || string(data) == "EOF" {
@@ -146,7 +165,7 @@ func (s *ClientService) PushPackets(done chan bool) {
 			break
 		}
 
-		logger.Log().WithField("func", "11150").Tracef("transfer packet: [0x %s]", hex.EncodeToString([]byte(data)))
+		logger.Log().WithField("func", "11150").Tracef("push packet: [0x %s]", hex.EncodeToString([]byte(data)))
 		s.transfer <- []byte(data)
 		hexData := hex.EncodeToString([]byte(data))
 
@@ -155,26 +174,28 @@ func (s *ClientService) PushPackets(done chan bool) {
 			s.archivate <- r
 		}
 	}
-
-	logger.Log().WithField("func", "11150").Info("finish apply client connection")
 }
 
 // ProcessPackets process a packet into another state before transfer it
 func (s *ClientService) ProcessPackets() {
 	logger.Log().WithField("func", "11160").Info("start process packets service")
 	for {
+		logger.Log().WithField("func", "11160").Trace("process packets wait incoming data from process channel")
 		select {
 		case data := <-s.process:
 			hexData := hex.EncodeToString([]byte(data))
-			logger.Log().WithField("func", "11160").Tracef("Process data: [0x %s]", hexData)
-			logger.Log().WithField("func", "11160").Tracef("This is a sink. Process have to implement")
+			logger.Log().WithField("func", "11160").Tracef("process packet: [0x %s]", hexData)
+
+			if string(data) == "EOF" {
+				logger.Log().WithField("func", "11160").Trace("get EOF notification from receive channel")
+				continue
+			}
+
 			if s.archivate != nil {
 				r := archive.NewRecord(hexData, "PROC", "intern")
 				s.archivate <- r
 			}
 		}
-
-		logger.Log().WithField("func", "11160").Info("finish apply client connection")
 	}
 }
 

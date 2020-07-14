@@ -88,7 +88,7 @@ func (s *ServerService) ApplyConnection() error {
 	go manager.start()
 	go func() {
 		for {
-			logger.Log().WithField("func", "11210").Trace("wait for incoming connection")
+			logger.Log().WithField("func", "11210").Trace("apply connection wait for incoming connection")
 			conn, err := lsn.Accept()
 			logger.Log().WithField("func", "11210").Trace("accept connection")
 			if err != nil {
@@ -115,6 +115,7 @@ func (s *ServerService) ApplyConnection() error {
 func (s *ServerService) PushPackets(done chan bool) {
 	logger.Log().WithField("func", "11220").Info("start push packet to transfer connection")
 	for {
+		logger.Log().WithField("func", "11220").Trace("push packets wait incoming data from push channel")
 		data, more := <-s.push
 
 		if !more || string(data) == "EOF" {
@@ -140,6 +141,7 @@ func (s *ServerService) PushPackets(done chan bool) {
 func (s *ServerService) ProcessPackets() {
 	logger.Log().WithField("func", "11230").Info("start process packets service")
 	for {
+		logger.Log().WithField("func", "11220").Trace("process packets wait incoming data from process channel")
 		select {
 		case data := <-s.process:
 			if s.archivate != nil {
