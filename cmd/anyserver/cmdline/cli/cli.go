@@ -77,7 +77,7 @@ func handleParam(cmd *cobra.Command, args []string) error {
 			}
 		}
 
-		srvService = service.NewServerService(cf.Service.Name, cf.Service.Host, cf.Service.Port)
+		srvService = service.NewServerService(cf.Service.Name, cf.Service.Host, cf.Service.Port, cf.Service.Type)
 
 		var archivate chan *archive.Record
 
@@ -94,7 +94,7 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		}
 
 	} else {
-		srvService = service.NewServerService("anyserver", "127.0.0.1", "30100")
+		srvService = service.NewServerService("anyserver", "127.0.0.1", "30100", "")
 	}
 
 	wait := make(chan bool, 1)

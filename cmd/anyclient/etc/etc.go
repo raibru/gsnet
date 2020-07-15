@@ -21,6 +21,7 @@ type AnyClientConfig struct {
 		Name  string `yaml: "name"`
 		Host  string `yaml: "host"`
 		Port  string `yaml: "port"`
+		Type  string `yaml: "type"`
 		Retry uint   `yaml: "retry"`
 	} `yaml: "Service"`
 	Packet struct {

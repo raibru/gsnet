@@ -2,6 +2,7 @@ service:
   name: anyserver-dev-tx
   host: 127.0.0.1
   port: 33200
+  type: TX
 packet:
   use: true
   filename: ./sendlist.txt

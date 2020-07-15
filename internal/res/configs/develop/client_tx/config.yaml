@@ -2,11 +2,12 @@ service:
   name: anyclient-dev-tx
   host: 127.0.0.1
   port: 32100
+  type: TX
   retry: 10
 packet:
   use: true
   filename: ./sendlist.txt
-  wait: 5000
+  wait: 2000
 archive:
   use: true
   filename: ./archive.csv

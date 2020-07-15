@@ -90,12 +90,14 @@ func handleParam(cmd *cobra.Command, args []string) error {
 				elem.Channel.Dialer.Name,
 				elem.Channel.Dialer.Host,
 				elem.Channel.Dialer.Port,
+				elem.Channel.Type,
 				elem.Channel.Dialer.Retry)
 
 			srvService := service.NewServerService(
 				elem.Channel.Listener.Name,
 				elem.Channel.Listener.Host,
-				elem.Channel.Listener.Port)
+				elem.Channel.Listener.Port,
+				elem.Channel.Type)
 
 			if elem.Channel.Type == "TX" {
 				transfer := make(chan []byte)

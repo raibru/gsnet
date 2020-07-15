@@ -76,7 +76,7 @@ func handleParam(cmd *cobra.Command, args []string) error {
 			}
 		}
 
-		clientService = service.NewClientService(cf.Service.Name, cf.Service.Host, cf.Service.Port, cf.Service.Retry)
+		clientService = service.NewClientService(cf.Service.Name, cf.Service.Host, cf.Service.Port, cf.Service.Type, cf.Service.Retry)
 
 		var archivate chan *archive.Record
 
@@ -92,14 +92,8 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		}
 
 	} else {
-		clientService = service.NewClientService("anyclient", "129.0.0.1", "30100", 10)
+		clientService = service.NewClientService("anyclient", "129.0.0.1", "30100", "", 10)
 	}
-
-	transfer := make(chan []byte)
-	clientService.SetTransfer(transfer)
-
-	receive := make(chan []byte)
-	clientService.SetReceive(receive)
 
 	err := clientService.ApplyConnection()
 	if err != nil {
@@ -117,17 +111,25 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		archiveService.Start(wait)
 	}
 	if readerService.Use {
+		transfer := make(chan []byte)
+		clientService.SetTransfer(transfer)
+		clientService.SetReceive(nil)
+
 		for i := uint(0); i < repeatTransfer; i++ {
 			push := make(chan []byte)
 			readerService.SetSupply(push)
-			clientService.SetPush(push)
+			clientService.SetProcess(push)
+			go clientService.ProcessPackets()
 			go readerService.Start(readed)
-			go clientService.PushPackets(done)
 			<-readed
-			<-done
 		}
 	} else {
+		receive := make(chan []byte)
+		clientService.SetReceive(receive)
+		clientService.SetTransfer(nil)
+
 		go clientService.ReceivePackets()
+		go clientService.ProcessPackets()
 		<-done
 	}
 

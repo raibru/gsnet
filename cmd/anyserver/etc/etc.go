@@ -21,6 +21,7 @@ type AnyServerConfig struct {
 		Name string `yaml: "name"`
 		Host string `yaml: "host"`
 		Port string `yaml: "port"`
+		Type string `yaml: "Type"`
 	} `yaml: "Service"`
 	Packet struct {
 		Use      bool   `yaml: "use"`

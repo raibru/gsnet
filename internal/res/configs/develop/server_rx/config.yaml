@@ -1,7 +1,8 @@
 service:
-  name: anyserver-dev-tx
+  name: anyserver-dev-rx
   host: 127.0.0.1
   port: 33100
+  type: RX
 packet:
   use: false
   filename: ./sendlist.txt
