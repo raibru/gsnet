@@ -14,6 +14,7 @@ type ServerService struct {
 	Name      string
 	Host      string
 	Port      string
+	connType  string
 	archivate chan *archive.Record
 	push      chan []byte // use this chan to push data to connection
 	process   chan []byte // use this chan to accept data which have to be processed
@@ -23,11 +24,12 @@ type ServerService struct {
 
 // NewServerService build new object for listener service context.
 // If transfer channel is nil this object is a data sink
-func NewServerService(name string, host string, port string) *ServerService {
+func NewServerService(name string, host string, port string, connType string) *ServerService {
 	return &ServerService{
 		Name:      name,
 		Host:      host,
 		Port:      port,
+		connType:  connType,
 		archivate: nil,
 		push:      nil,
 		process:   nil,
@@ -59,6 +61,16 @@ func (s *ServerService) SetNotify(c chan []byte) {
 // SetArchivate set archive record channel
 func (s *ServerService) SetArchivate(r chan *archive.Record) {
 	s.archivate = r
+}
+
+// IsServiceTransfer is current service type a transfer connection
+func (s *ServerService) IsServiceTransfer() bool {
+	return s.connType == "TX"
+}
+
+// IsServiceReceive is current service type a receive connection
+func (s *ServerService) IsServiceReceive() bool {
+	return s.connType == "RX"
 }
 
 // ApplyConnection accept a connection from client and handle incoming data stream
