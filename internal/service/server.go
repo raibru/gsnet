@@ -40,26 +40,31 @@ func NewServerService(name string, host string, port string, connType string) *S
 
 // SetPush set push data channel
 func (s *ServerService) SetPush(c chan []byte) {
+	logger.Log().WithField("func", "11201").Trace("... set push channel")
 	s.push = c
 }
 
 // SetProcess set process data channel
 func (s *ServerService) SetProcess(c chan []byte) {
+	logger.Log().WithField("func", "11202").Trace("... set process channel")
 	s.process = c
 }
 
 // SetForward set forward data channel
 func (s *ServerService) SetForward(c chan []byte) {
+	logger.Log().WithField("func", "11203").Trace("... set forward channel")
 	s.forward = c
 }
 
 // SetNotify set notify data channel
 func (s *ServerService) SetNotify(c chan []byte) {
+	logger.Log().WithField("func", "11204").Trace("... set notify channel")
 	s.notify = c
 }
 
 // SetArchivate set archive record channel
 func (s *ServerService) SetArchivate(r chan *archive.Record) {
+	logger.Log().WithField("func", "11205").Trace("... set archivate channel")
 	s.archivate = r
 }
 
@@ -109,13 +114,20 @@ func (s *ServerService) ApplyConnection() error {
 			}
 
 			logger.Log().WithField("func", "11210").Trace("register new client connection")
-			client := &Client{socket: conn, txData: make(chan []byte), rxData: make(chan []byte)}
+			client := &Client{socket: conn, txData: make(chan []byte), rxData: manager.process}
 			manager.register <- client
 
-			go manager.receive(client)
-			go manager.transfer(client)
-			go client.receive()
-			go client.transfer()
+			if s.IsServiceTransfer() {
+				logger.Log().WithField("func", "11210").Trace("run client transfer connection")
+				//go manager.transfer(client)
+				go client.transfer()
+			} else if s.IsServiceReceive() {
+				logger.Log().WithField("func", "11210").Trace("run client receive connection")
+				//go manager.receive(client)
+				go client.receive()
+			} else {
+				logger.Log().Warnf("connection type is not supported in server service:  '%s'", s.connType)
+			}
 
 		}
 	}()
@@ -153,19 +165,30 @@ func (s *ServerService) PushPackets(done chan bool) {
 func (s *ServerService) ProcessPackets() {
 	logger.Log().WithField("func", "11230").Info("start process packets service")
 	for {
-		logger.Log().WithField("func", "11220").Trace("process packets wait incoming data from process channel")
+		logger.Log().WithField("func", "11230").Trace("process packets wait incoming data from process channel")
 		select {
 		case data := <-s.process:
-			if s.archivate != nil {
-				hexData := hex.EncodeToString(data)
-				r := archive.NewRecord(hexData, "PROC", "INTERN")
-				s.archivate <- r
-			}
-			if s.forward != nil {
+			hexData := hex.EncodeToString(data)
+			if s.IsServiceReceive() && s.forward != nil {
+				logger.Log().WithField("func", "11230").Trace("put data into forward channel")
 				s.forward <- data
-			}
-			if s.notify != nil {
+				if s.archivate != nil {
+					r := archive.NewRecord(hexData, "PROC", "INTERN")
+					s.archivate <- r
+				}
+			} else if s.IsServiceTransfer() && s.notify != nil {
+				logger.Log().WithField("func", "11230").Trace("put data into notify channel")
 				s.notify <- data
+				if s.archivate != nil {
+					r := archive.NewRecord(hexData, "TX", "TCP")
+					s.archivate <- r
+				}
+			} else {
+				logger.Log().WithField("func", "11230").Trace("sink incomming data")
+				if s.archivate != nil {
+					r := archive.NewRecord(hexData, "RX", "TCP")
+					s.archivate <- r
+				}
 			}
 		}
 	}

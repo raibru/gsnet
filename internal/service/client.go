@@ -164,7 +164,7 @@ func (s *ClientService) ProcessPackets() {
 
 			hexData := hex.EncodeToString([]byte(data))
 
-			if s.transfer != nil {
+			if s.IsTransferType() {
 				logger.Log().WithField("func", "11150").Trace("send data into transfer channel")
 				logger.Log().WithField("func", "11150").Tracef("transfer packet: [0x %s]", hexData)
 				s.transfer <- []byte(data)
