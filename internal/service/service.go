@@ -112,9 +112,16 @@ func (client *Client) receive() {
 		logger.Log().WithField("func", "10210").Trace("receive wait for client socket incoming data")
 		data := make([]byte, 4096)
 		length, err := client.socket.Read(data)
+		if err != nil && err.Error() == "EOF" {
+			logger.Log().WithField("func", "10210").Info("receive read socket EOF")
+			client.socket.Close()
+			//close(client.rxData)
+			break
+		}
 		if err != nil {
 			logger.Log().WithField("func", "10210").Errorf("receive read socket error: %s", err)
 			client.socket.Close()
+			//close(client.rxData)
 			break
 		}
 		if length > 0 {

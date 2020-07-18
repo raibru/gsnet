@@ -165,33 +165,38 @@ func (s *ServerService) PushPackets(done chan bool) {
 func (s *ServerService) ProcessPackets() {
 	logger.Log().WithField("func", "11230").Info("start process packets service")
 	for {
-		logger.Log().WithField("func", "11230").Trace("process packets wait incoming data from process channel")
-		select {
-		case data := <-s.process:
-			hexData := hex.EncodeToString(data)
-			if s.IsServiceReceive() && s.forward != nil {
-				logger.Log().WithField("func", "11230").Trace("put data into forward channel")
-				s.forward <- data
-				if s.archivate != nil {
-					r := archive.NewRecord(hexData, "PROC", "INTERN")
-					s.archivate <- r
-				}
-			} else if s.IsServiceTransfer() && s.notify != nil {
-				logger.Log().WithField("func", "11230").Trace("put data into notify channel")
-				s.notify <- data
-				if s.archivate != nil {
-					r := archive.NewRecord(hexData, "TX", "TCP")
-					s.archivate <- r
-				}
-			} else {
-				logger.Log().WithField("func", "11230").Trace("sink incomming data")
-				if s.archivate != nil {
-					r := archive.NewRecord(hexData, "RX", "TCP")
-					s.archivate <- r
-				}
+		logger.Log().WithField("func", "11230").Trace("process packets wait incoming data read from process channel")
+		data, ok := <-s.process
+
+		if !ok {
+			logger.Log().WithField("func", "11230").Trace("read from process channel is ending")
+			break
+		}
+
+		hexData := hex.EncodeToString(data)
+		if s.IsServiceReceive() && s.forward != nil {
+			logger.Log().WithField("func", "11230").Trace("pass data into forward channel")
+			s.forward <- data
+			if s.archivate != nil {
+				r := archive.NewRecord(hexData, "PROC", "INTERN")
+				s.archivate <- r
+			}
+		} else if s.IsServiceTransfer() && s.notify != nil {
+			logger.Log().WithField("func", "11230").Trace("pass data into notify channel")
+			s.notify <- data
+			if s.archivate != nil {
+				r := archive.NewRecord(hexData, "TX", "TCP")
+				s.archivate <- r
+			}
+		} else {
+			logger.Log().WithField("func", "11230").Trace("sink incomming data")
+			if s.archivate != nil {
+				r := archive.NewRecord(hexData, "RX", "TCP")
+				s.archivate <- r
 			}
 		}
 	}
+	logger.Log().WithField("func", "11230").Info("finish process packets service")
 }
 
 // CreateTCPServerListener create new TCP listener with parameter in ServerService
