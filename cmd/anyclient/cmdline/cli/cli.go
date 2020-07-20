@@ -101,10 +101,7 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		sys.Exit(2)
 	}
 
-	defer clientService.Finalize()
-
 	wait := make(chan bool, 1)
-	readed := make(chan bool, 1)
 	done := make(chan bool, 1)
 
 	if archiveService.Use {
@@ -116,20 +113,17 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		clientService.SetReceive(nil)
 
 		for i := uint(0); i < repeatTransfer; i++ {
-			push := make(chan []byte)
-			readerService.SetSupply(push)
-			clientService.SetProcess(push)
-			go clientService.ProcessPackets()
-			go readerService.Start(readed)
-			<-readed
+			supply, done := readerService.Start()
+			clientService.Process(supply)
+			<-done
 		}
 	} else {
 		receive := make(chan []byte)
 		clientService.SetReceive(receive)
 		clientService.SetTransfer(nil)
 
-		go clientService.ReceivePackets()
-		go clientService.ProcessPackets()
+		//go clientService.ReceivePackets()
+		//go clientService.ProcessPackets()
 		<-done
 	}
 

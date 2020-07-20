@@ -77,65 +77,65 @@ func NonPacketReader() *PacketReader {
 }
 
 // Start read packet data
-func (pktRead *PacketReader) Start(done chan bool) {
-	time.Sleep(pktRead.waitStartSec)
+func (pktRead *PacketReader) Start() (<-chan []byte, <-chan bool) {
+	supply := make(chan []byte)
+	done := make(chan bool)
 
-	fn := pktRead.filename
+	go func() {
+		defer func() {
+			close(supply)
+			close(done)
+		}()
 
-	if pktRead.Supply == nil {
-		logger.Log().Errorf("fatal misbehavior data channel is not initialized. Can not provide data from '%s'", fn)
-		done <- true
-		return
-	}
+		time.Sleep(pktRead.waitStartSec)
 
-	s, err := os.Stat(fn)
-	if err != nil {
-		logger.Log().Errorf("failure get os status from. '%s'", fn)
-		done <- true
-		return
-	}
+		fn := pktRead.filename
 
-	if s.IsDir() {
-		logger.Log().Errorf("failure access input packet file. '%s' is a directory, not a file", fn)
-		done <- true
-		return
-	}
-
-	f, err := os.Open(fn)
-	if err != nil {
-		logger.Log().Errorf("failure open input packet file '%s'", fn)
-		done <- true
-		return
-	}
-	defer f.Close()
-	defer close(pktRead.Supply)
-
-	r := bufio.NewReader(f)
-	for {
-		line, err := r.ReadString('\n')
-		if err == io.EOF {
-			logger.Log().Trace("read EOF from data file")
-			break
-		} else if err != nil {
-			logger.Log().Errorf("failure read line from input packet file. '%s'", fn)
-			break
+		s, err := os.Stat(fn)
+		if err != nil {
+			logger.Log().Errorf("failure get os status from. '%s'", fn)
+			return
 		}
 
-		if match, _ := regexp.MatchString(`^#`, line); match {
-			continue
-		} else if match, _ := regexp.MatchString(`^\w*$`, line); match {
-			continue
-		} else if match, _ := regexp.MatchString(`^EOF`, line); match {
-			break
+		if s.IsDir() {
+			logger.Log().Errorf("failure access input packet file. '%s' is a directory, not a file", fn)
+			return
 		}
 
-		line = strings.Replace(line, "\n", "", -1)
-		line = strings.Replace(line, "\r", "", -1)
-		if len(line) > 0 {
-			pktRead.Supply <- []byte(line)
-			time.Sleep(pktRead.waitMsec)
+		f, err := os.Open(fn)
+		if err != nil {
+			logger.Log().Errorf("failure open input packet file '%s'", fn)
+			return
 		}
-	}
-	//pktRead.Supply <- "EOF"
-	done <- true
+
+		defer f.Close()
+
+		r := bufio.NewReader(f)
+		for {
+			line, err := r.ReadString('\n')
+			if err == io.EOF {
+				logger.Log().Trace("read EOF from data file")
+				break
+			} else if err != nil {
+				logger.Log().Errorf("failure read line from input packet file. '%s'", fn)
+				break
+			}
+
+			if match, _ := regexp.MatchString(`^#`, line); match {
+				continue
+			} else if match, _ := regexp.MatchString(`^\w*$`, line); match {
+				continue
+			} else if match, _ := regexp.MatchString(`^EOF`, line); match {
+				break
+			}
+
+			line = strings.Replace(line, "\n", "", -1)
+			line = strings.Replace(line, "\r", "", -1)
+			if len(line) > 0 {
+				supply <- []byte(line)
+				time.Sleep(pktRead.waitMsec)
+			}
+		}
+	}()
+	return supply, done
 }

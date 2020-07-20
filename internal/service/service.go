@@ -49,30 +49,32 @@ type ClientManager struct {
 }
 
 func (manager *ClientManager) start() {
-	logger.Log().WithField("func", "10110").Info("start managed client connections")
-	for {
-		select {
-		case connection := <-manager.register:
-			manager.clients[connection] = true
-			logger.Log().WithField("func", "10110").Info("register client connection")
-		case connection := <-manager.unregister:
-			if _, ok := manager.clients[connection]; ok {
-				delete(manager.clients, connection)
-				logger.Log().WithField("func", "10110").Info("unregister terminated client connection")
-			}
-		case data := <-manager.notify:
-			logger.Log().WithField("func", "10110").Info("notify managed client connections")
-			for connection := range manager.clients {
-				select {
-				case connection.txData <- data:
-				default:
-					logger.Log().WithField("func", "10110").Info("delete terminated client connections")
+	logger.Log().WithField("func", "10110").Info("start client managed connections")
+	go func() {
+		for {
+			select {
+			case connection := <-manager.register:
+				manager.clients[connection] = true
+				logger.Log().WithField("func", "10110").Info("register client connection")
+			case connection := <-manager.unregister:
+				if _, ok := manager.clients[connection]; ok {
 					delete(manager.clients, connection)
+					logger.Log().WithField("func", "10110").Info("unregister terminated client connection")
+				}
+			case data := <-manager.notify:
+				logger.Log().WithField("func", "10110").Info("notify managed client connections")
+				for connection := range manager.clients {
+					select {
+					case connection.txData <- data:
+					default:
+						logger.Log().WithField("func", "10110").Info("delete terminated client connections")
+						delete(manager.clients, connection)
+					}
 				}
 			}
 		}
-	}
-	//logger.Log().Info("finish managed client connections")
+	}()
+	logger.Log().Info("finish initiation of client managed connections")
 }
 
 func (manager *ClientManager) receive(client *Client) {
@@ -82,7 +84,7 @@ func (manager *ClientManager) receive(client *Client) {
 		select {
 		case data := <-client.rxData:
 			logger.Log().WithField("func", "10120").Trace("receive data from managed client rxData")
-			manager.process <- data
+			manager.notify <- data
 		}
 	}
 }
@@ -106,54 +108,60 @@ type Client struct {
 	rxData chan []byte
 }
 
-func (client *Client) receive() {
+func (client *Client) receive(c chan<- []byte) {
 	logger.Log().WithField("func", "10210").Info("start client receive service")
-	for {
-		logger.Log().WithField("func", "10210").Trace("receive wait for client socket incoming data")
-		data := make([]byte, 4096)
-		length, err := client.socket.Read(data)
-		if err != nil && err.Error() == "EOF" {
-			logger.Log().WithField("func", "10210").Info("receive read socket EOF")
-			client.socket.Close()
-			//close(client.rxData)
-			break
-		}
-		if err != nil {
-			logger.Log().WithField("func", "10210").Errorf("receive read socket error: %s", err)
-			client.socket.Close()
-			//close(client.rxData)
-			break
-		}
-		if length > 0 {
-			logger.Log().WithField("func", "10210").Infof("read data [0x %s]", hex.EncodeToString(data[:length]))
-		}
 
-		logger.Log().WithField("func", "10210").Trace("receive put data into rxData channel")
-		client.rxData <- data[:length]
-	}
+	go func() {
+
+		for {
+			logger.Log().WithField("func", "10210").Trace("receive wait for client socket incoming data")
+			data := make([]byte, 4096)
+			length, err := client.socket.Read(data)
+			if err != nil && err.Error() == "EOF" {
+				logger.Log().WithField("func", "10210").Info("receive read socket EOF")
+				client.socket.Close()
+				break
+			}
+			if err != nil {
+				logger.Log().WithField("func", "10210").Errorf("receive read socket error: %s", err)
+				client.socket.Close()
+				break
+			}
+			if length > 0 {
+				logger.Log().WithField("func", "10210").Infof("read data [0x %s]", hex.EncodeToString(data[:length]))
+			}
+
+			logger.Log().WithField("func", "10210").Trace("receive put data into receive channel")
+			c <- data[:length]
+		}
+	}()
 	logger.Log().WithField("func", "10210").Info("finish client receive service")
 }
 
-func (client *Client) transfer() {
+func (client *Client) transfer(c <-chan []byte) {
 	logger.Log().WithField("func", "10220").Info("start client transfer service")
-	for {
-		logger.Log().WithField("func", "10220").Trace("transfer wait incoming data from client txData channel")
-		data := <-client.txData
 
-		if string(data) == "EOF" {
-			logger.Log().WithField("func", "10220").Trace("notify EOF flag")
-			break
+	go func(<-chan []byte) {
+
+		for {
+			logger.Log().WithField("func", "10220").Trace("transfer wait incoming data from client txData channel")
+			data := <-c
+
+			if string(data) == "EOF" {
+				logger.Log().WithField("func", "10220").Trace("notify EOF flag")
+				break
+			}
+
+			logger.Log().WithField("func", "10220").Infof("write data [0x %s]", hex.EncodeToString(data))
+			logger.Log().WithField("func", "10220").Info("transfer write data into client socket")
+
+			_, err := client.socket.Write(data)
+			if err != nil {
+				logger.Log().WithField("func", "10220").Errorf("failure write data due '%s'", err.Error())
+				break
+			}
 		}
-
-		logger.Log().WithField("func", "10220").Infof("write data [0x %s]", hex.EncodeToString(data))
-		logger.Log().WithField("func", "10220").Info("transfer write data into client socket")
-
-		_, err := client.socket.Write(data)
-		if err != nil {
-			logger.Log().WithField("func", "10220").Errorf("failure write data due '%s'", err.Error())
-			break
-		}
-	}
+	}(c)
 	logger.Log().WithField("func", "10220").Info("finish client transfer service")
 }
 

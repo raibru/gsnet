@@ -98,8 +98,6 @@ func handleParam(cmd *cobra.Command, args []string) error {
 	}
 
 	wait := make(chan bool, 1)
-	readed := make(chan bool, 1)
-	sent := make(chan bool, 1)
 	done := make(chan bool)
 
 	err := srvService.ApplyConnection()
@@ -114,16 +112,12 @@ func handleParam(cmd *cobra.Command, args []string) error {
 
 	if readerService.Use {
 		for i := uint(0); i < repeatTransfer; i++ {
-			push := make(chan []byte)
-			readerService.SetSupply(push)
-			srvService.SetPush(push)
-			go readerService.Start(readed)
-			go srvService.PushPackets(sent)
-			<-readed
-			<-sent
+			notify, done := readerService.Start()
+			srvService.Notify(notify)
+			<-done
 		}
 	} else {
-		go srvService.ProcessPackets()
+		srvService.Process()
 		<-done
 	}
 

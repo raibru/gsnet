@@ -15,6 +15,7 @@ type ServerService struct {
 	Host      string
 	Port      string
 	connType  string
+	manager   *ClientManager
 	archivate chan *archive.Record
 	push      chan []byte // use this chan to push data to connection
 	process   chan []byte // use this chan to accept data which have to be processed
@@ -30,6 +31,7 @@ func NewServerService(name string, host string, port string, connType string) *S
 		Host:      host,
 		Port:      port,
 		connType:  connType,
+		manager:   nil,
 		archivate: nil,
 		push:      nil,
 		process:   nil,
@@ -91,7 +93,7 @@ func (s *ServerService) ApplyConnection() error {
 
 	logger.Log().WithField("func", "11210").Tracef("establish listener for service %s@%s:%s", s.Name, s.Host, s.Port)
 
-	manager := ClientManager{
+	s.manager = &ClientManager{
 		clients:    make(map[*Client]bool),
 		process:    make(chan []byte),
 		notify:     make(chan []byte),
@@ -99,10 +101,10 @@ func (s *ServerService) ApplyConnection() error {
 		unregister: make(chan *Client),
 	}
 
-	s.process = manager.process
-	s.notify = manager.notify
+	s.process = s.manager.process
+	//s.notify = s.manager.notify
 
-	go manager.start()
+	s.manager.start()
 	go func() {
 		for {
 			logger.Log().WithField("func", "11210").Trace("apply connection wait for incoming connection")
@@ -114,17 +116,17 @@ func (s *ServerService) ApplyConnection() error {
 			}
 
 			logger.Log().WithField("func", "11210").Trace("register new client connection")
-			client := &Client{socket: conn, txData: make(chan []byte), rxData: manager.process}
-			manager.register <- client
+			client := &Client{socket: conn, txData: make(chan []byte), rxData: s.manager.process}
+			s.manager.register <- client
 
 			if s.IsServiceTransfer() {
 				logger.Log().WithField("func", "11210").Trace("run client transfer connection")
 				//go manager.transfer(client)
-				go client.transfer()
+				client.transfer(s.process)
 			} else if s.IsServiceReceive() {
 				logger.Log().WithField("func", "11210").Trace("run client receive connection")
 				//go manager.receive(client)
-				go client.receive()
+				client.receive(s.process)
 			} else {
 				logger.Log().Warnf("connection type is not supported in server service:  '%s'", s.connType)
 			}
@@ -135,67 +137,87 @@ func (s *ServerService) ApplyConnection() error {
 	return nil
 }
 
-// PushPackets push packet data via transfer connection
-func (s *ServerService) PushPackets(done chan bool) {
-	logger.Log().WithField("func", "11220").Info("start push packet to transfer connection")
-	for {
-		logger.Log().WithField("func", "11220").Trace("push packets wait incoming data from push channel")
-		data, more := <-s.push
+// Notify notify all registered clients from data read by channel
+func (s *ServerService) Notify(c <-chan []byte) {
+	go func() {
 
-		if !more || string(data) == "EOF" {
-			logger.Log().WithField("func", "11220").Trace("get EOF notification from process channel")
-			done <- true
-			break
+		logger.Log().WithField("func", "11220").Info("start notify server service")
+		for {
+			logger.Log().WithField("func", "11220").Trace("notify wait incoming data from notify channel")
+			select {
+			case data, ok := <-c:
+
+				if !ok {
+					logger.Log().WithField("func", "11220").Trace("returns from notify due closed channel")
+					return
+				}
+				if string(data) == "EOF" {
+					logger.Log().WithField("func", "11220").Trace("get EOF notification from notify channel")
+					break
+				}
+
+				//
+				// shall do some process stuff with data
+				//
+
+				hexData := hex.EncodeToString([]byte(data))
+				logger.Log().WithField("func", "12220").Infof("notify data [0x %s]", hexData)
+
+				logger.Log().WithField("func", "11220").Trace("write data to client manager notify channel")
+				s.manager.notify <- data
+
+				if s.archivate != nil {
+					r := archive.NewRecord(hexData, "TX", "TCP")
+					s.archivate <- r
+				}
+			}
 		}
+	}()
 
-		logger.Log().WithField("func", "11220").Tracef("transfer packet: [0x %s]", hex.EncodeToString([]byte(data)))
-		s.notify <- []byte(data)
-
-		if s.archivate != nil {
-			hexData := hex.EncodeToString(data)
-			r := archive.NewRecord(hexData, "TX", "TCP")
-			s.archivate <- r
-		}
-	}
-
-	logger.Log().WithField("func", "11220").Info("finish push packet to transfer connection")
+	logger.Log().WithField("func", "11220").Info("finish initiation of notify all connected clients service")
 }
 
-// ProcessPackets processes received packets and transfer them
-func (s *ServerService) ProcessPackets() {
+// Process processes data read from process channel
+func (s *ServerService) Process() {
 	logger.Log().WithField("func", "11230").Info("start process packets service")
-	for {
-		logger.Log().WithField("func", "11230").Trace("process packets wait incoming data read from process channel")
-		data, ok := <-s.process
 
-		if !ok {
-			logger.Log().WithField("func", "11230").Trace("read from process channel is ending")
-			break
-		}
+	go func() {
 
-		hexData := hex.EncodeToString(data)
-		if s.IsServiceReceive() && s.forward != nil {
-			logger.Log().WithField("func", "11230").Trace("pass data into forward channel")
-			s.forward <- data
-			if s.archivate != nil {
-				r := archive.NewRecord(hexData, "PROC", "INTERN")
-				s.archivate <- r
-			}
-		} else if s.IsServiceTransfer() && s.notify != nil {
-			logger.Log().WithField("func", "11230").Trace("pass data into notify channel")
-			s.notify <- data
-			if s.archivate != nil {
-				r := archive.NewRecord(hexData, "TX", "TCP")
-				s.archivate <- r
-			}
-		} else {
-			logger.Log().WithField("func", "11230").Trace("sink incomming data")
-			if s.archivate != nil {
-				r := archive.NewRecord(hexData, "RX", "TCP")
-				s.archivate <- r
+		for {
+			logger.Log().WithField("func", "11230").Trace("process packets wait incoming data read from process channel")
+			select {
+			case data, ok := <-s.process:
+
+				if !ok {
+					logger.Log().WithField("func", "11230").Trace("read from process channel is ending")
+					return
+				}
+
+				hexData := hex.EncodeToString(data)
+				if s.IsServiceReceive() && s.forward != nil {
+					logger.Log().WithField("func", "11230").Trace("pass data into forward channel")
+					s.forward <- data
+					if s.archivate != nil {
+						r := archive.NewRecord(hexData, "PROC", "INTERN")
+						s.archivate <- r
+					}
+				} else if s.IsServiceTransfer() && s.notify != nil {
+					logger.Log().WithField("func", "11230").Trace("pass data into notify channel")
+					s.notify <- data
+					if s.archivate != nil {
+						r := archive.NewRecord(hexData, "TX", "TCP")
+						s.archivate <- r
+					}
+				} else {
+					logger.Log().WithField("func", "11230").Trace("sink incomming data")
+					if s.archivate != nil {
+						r := archive.NewRecord(hexData, "RX", "TCP")
+						s.archivate <- r
+					}
+				}
 			}
 		}
-	}
+	}()
 	logger.Log().WithField("func", "11230").Info("finish process packets service")
 }
 
