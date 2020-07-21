@@ -108,7 +108,6 @@ func handleParam(cmd *cobra.Command, args []string) error {
 			if elem.Channel.Type == "RX" {
 				process := make(chan []byte)
 				cliService.SetReceive(process)
-				srvService.SetProcess(process)
 			}
 
 			pktService := service.NewPacketService(

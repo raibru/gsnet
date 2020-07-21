@@ -34,7 +34,7 @@ func NewServerService(name string, host string, port string, connType string) *S
 		manager:   nil,
 		archivate: nil,
 		push:      nil,
-		process:   nil,
+		process:   make(chan []byte),
 		forward:   nil,
 		notify:    nil,
 	}
@@ -44,12 +44,6 @@ func NewServerService(name string, host string, port string, connType string) *S
 func (s *ServerService) SetPush(c chan []byte) {
 	logger.Log().WithField("func", "11201").Trace("... set push channel")
 	s.push = c
-}
-
-// SetProcess set process data channel
-func (s *ServerService) SetProcess(c chan []byte) {
-	logger.Log().WithField("func", "11202").Trace("... set process channel")
-	s.process = c
 }
 
 // SetForward set forward data channel
@@ -95,13 +89,12 @@ func (s *ServerService) ApplyConnection() error {
 
 	s.manager = &ClientManager{
 		clients:    make(map[*Client]bool),
-		process:    make(chan []byte),
 		notify:     make(chan []byte),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
 	}
 
-	s.process = s.manager.process
+	//s.process = s.manager.process
 	//s.notify = s.manager.notify
 
 	s.manager.start()
@@ -116,13 +109,13 @@ func (s *ServerService) ApplyConnection() error {
 			}
 
 			logger.Log().WithField("func", "11210").Trace("register new client connection")
-			client := &Client{socket: conn, txData: make(chan []byte), rxData: s.manager.process}
+			client := &Client{socket: conn, txData: make(chan []byte), rxData: make(chan []byte)}
 			s.manager.register <- client
 
 			if s.IsServiceTransfer() {
 				logger.Log().WithField("func", "11210").Trace("run client transfer connection")
 				//go manager.transfer(client)
-				client.transfer(s.process)
+				client.transfer(client.txData)
 			} else if s.IsServiceReceive() {
 				logger.Log().WithField("func", "11210").Trace("run client receive connection")
 				//go manager.receive(client)

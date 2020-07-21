@@ -102,7 +102,6 @@ func handleParam(cmd *cobra.Command, args []string) error {
 	}
 
 	wait := make(chan bool, 1)
-	done := make(chan bool, 1)
 
 	if archiveService.Use {
 		archiveService.Start(wait)
@@ -118,13 +117,13 @@ func handleParam(cmd *cobra.Command, args []string) error {
 			<-done
 		}
 	} else {
-		receive := make(chan []byte)
-		clientService.SetReceive(receive)
-		clientService.SetTransfer(nil)
+		//receive := make(chan []byte)
+		//clientService.SetReceive(receive)
+		//clientService.SetTransfer(nil)
 
-		//go clientService.ReceivePackets()
+		clientService.Receive()
 		//go clientService.ProcessPackets()
-		<-done
+		select {}
 	}
 
 	return nil

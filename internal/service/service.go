@@ -43,7 +43,6 @@ func (serviceLogger) Identify() string {
 type ClientManager struct {
 	clients    map[*Client]bool
 	notify     chan []byte
-	process    chan []byte
 	register   chan *Client
 	unregister chan *Client
 }
@@ -62,7 +61,7 @@ func (manager *ClientManager) start() {
 					logger.Log().WithField("func", "10110").Info("unregister terminated client connection")
 				}
 			case data := <-manager.notify:
-				logger.Log().WithField("func", "10110").Info("notify managed client connections")
+				logger.Log().WithField("func", "10110").Info("notify managed client connections by data")
 				for connection := range manager.clients {
 					select {
 					case connection.txData <- data:
@@ -75,30 +74,6 @@ func (manager *ClientManager) start() {
 		}
 	}()
 	logger.Log().Info("finish initiation of client managed connections")
-}
-
-func (manager *ClientManager) receive(client *Client) {
-	logger.Log().WithField("func", "10120").Info("start client manager receive service")
-	for {
-		logger.Log().WithField("func", "10120").Trace("wait for rxData in managed client receive")
-		select {
-		case data := <-client.rxData:
-			logger.Log().WithField("func", "10120").Trace("receive data from managed client rxData")
-			manager.notify <- data
-		}
-	}
-}
-
-func (manager *ClientManager) transfer(client *Client) {
-	logger.Log().WithField("func", "10130").Info("start client manager transfer service")
-	for {
-		logger.Log().WithField("func", "10130").Trace("wait for notify data in managed client")
-		select {
-		case data := <-manager.notify:
-			logger.Log().WithField("func", "10130").Trace("transfer data to client txData")
-			client.txData <- data
-		}
-	}
 }
 
 // Client hold client communication behavior
@@ -127,10 +102,8 @@ func (client *Client) receive(c chan<- []byte) {
 				client.socket.Close()
 				break
 			}
-			if length > 0 {
-				logger.Log().WithField("func", "10210").Infof("read data [0x %s]", hex.EncodeToString(data[:length]))
-			}
 
+			logger.Log().WithField("func", "10210").Tracef("read data [0x %s]", hex.EncodeToString(data[:length]))
 			logger.Log().WithField("func", "10210").Trace("receive put data into receive channel")
 			c <- data[:length]
 		}
@@ -144,7 +117,7 @@ func (client *Client) transfer(c <-chan []byte) {
 	go func(<-chan []byte) {
 
 		for {
-			logger.Log().WithField("func", "10220").Trace("transfer wait incoming data from client txData channel")
+			logger.Log().WithField("func", "10220").Trace("transfer wait for data from transfer channel")
 			data := <-c
 
 			if string(data) == "EOF" {
@@ -152,8 +125,8 @@ func (client *Client) transfer(c <-chan []byte) {
 				break
 			}
 
-			logger.Log().WithField("func", "10220").Infof("write data [0x %s]", hex.EncodeToString(data))
-			logger.Log().WithField("func", "10220").Info("transfer write data into client socket")
+			logger.Log().WithField("func", "10220").Tracef("write data [0x %s]", hex.EncodeToString(data))
+			logger.Log().WithField("func", "10220").Trace("transfer write data into client socket")
 
 			_, err := client.socket.Write(data)
 			if err != nil {
