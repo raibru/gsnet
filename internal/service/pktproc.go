@@ -43,16 +43,16 @@ func (s *PacketService) SetArchivate(r chan *archive.Record) {
 func (s *PacketService) ApplyConnection() error {
 	logger.Log().WithField("func", "11310").Infof("apply all connections for packet service %s", s.Name)
 
-	logger.Log().WithField("func", "11310").Info("call apply listener connection")
 	go func() {
+		logger.Log().WithField("func", "11310").Info("call apply listener connection")
 		if err := s.listener.ApplyConnection(); err != nil {
 			logger.Log().WithField("func", "11310").Errorf("Error apply server connection %s: %s", s.listener.Name, err.Error())
 		}
 		s.listener.Process()
 	}()
 
-	logger.Log().WithField("func", "11310").Info("call apply dialer connection")
 	go func() {
+		logger.Log().WithField("func", "11310").Info("call apply dialer connection")
 		if err := s.dialer.ApplyConnection(); err != nil {
 			logger.Log().WithField("func", "11310").Errorf("Error apply dialer connection %s: %s", s.dialer.Name, err.Error())
 		}

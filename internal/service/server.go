@@ -17,10 +17,9 @@ type ServerService struct {
 	connType  string
 	manager   *ClientManager
 	archivate chan *archive.Record
-	push      chan []byte // use this chan to push data to connection
-	process   chan []byte // use this chan to accept data which have to be processed
-	forward   chan []byte // use this chan to forward data to somewhere
-	notify    chan []byte // use this chan to notify registered clients
+	process   <-chan []byte // use this chan to accept data which have to be processed
+	forward   chan []byte   // use this chan to forward data to somewhere
+	notify    chan []byte   // use this chan to notify registered clients
 }
 
 // NewServerService build new object for listener service context.
@@ -33,29 +32,16 @@ func NewServerService(name string, host string, port string, connType string) *S
 		connType:  connType,
 		manager:   nil,
 		archivate: nil,
-		push:      nil,
-		process:   make(chan []byte),
+		process:   nil,
 		forward:   nil,
 		notify:    nil,
 	}
-}
-
-// SetPush set push data channel
-func (s *ServerService) SetPush(c chan []byte) {
-	logger.Log().WithField("func", "11201").Trace("... set push channel")
-	s.push = c
 }
 
 // SetForward set forward data channel
 func (s *ServerService) SetForward(c chan []byte) {
 	logger.Log().WithField("func", "11203").Trace("... set forward channel")
 	s.forward = c
-}
-
-// SetNotify set notify data channel
-func (s *ServerService) SetNotify(c chan []byte) {
-	logger.Log().WithField("func", "11204").Trace("... set notify channel")
-	s.notify = c
 }
 
 // SetArchivate set archive record channel
@@ -94,11 +80,15 @@ func (s *ServerService) ApplyConnection() error {
 		unregister: make(chan *Client),
 	}
 
-	//s.process = s.manager.process
-	//s.notify = s.manager.notify
-
 	s.manager.start()
+
+	pc := make(chan []byte)
+
 	go func() {
+
+		defer close(pc)
+		s.process = pc
+
 		for {
 			logger.Log().WithField("func", "11210").Trace("apply connection wait for incoming connection")
 			conn, err := lsn.Accept()
@@ -114,12 +104,10 @@ func (s *ServerService) ApplyConnection() error {
 
 			if s.IsServiceTransfer() {
 				logger.Log().WithField("func", "11210").Trace("run client transfer connection")
-				//go manager.transfer(client)
 				client.transfer(client.txData)
 			} else if s.IsServiceReceive() {
 				logger.Log().WithField("func", "11210").Trace("run client receive connection")
-				//go manager.receive(client)
-				client.receive(s.process)
+				client.receive(pc)
 			} else {
 				logger.Log().Warnf("connection type is not supported in server service:  '%s'", s.connType)
 			}

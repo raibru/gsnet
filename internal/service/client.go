@@ -37,15 +37,7 @@ func NewClientService(name string, host string, port string, connType string, re
 		process:   nil,
 		transfer:  nil,
 		receive:   nil,
-		//		transfer:  make(chan []byte),
-		//		receive:   make(chan []byte),
 	}
-}
-
-// SetProcess set process data channel
-func (s *ClientService) SetProcess(c chan []byte) {
-	logger.Log().WithField("func", "11101").Trace("... set process channel")
-	s.process = c
 }
 
 // SetTransfer set transfer data channel
@@ -102,6 +94,7 @@ func (s *ClientService) ApplyConnection() error {
 // Receive receive from connected server packet data
 func (s *ClientService) Receive() {
 	logger.Log().WithField("func", "11130").Infof("start receive client service  %s", s.Name)
+
 	go func() {
 		s.receive = make(chan []byte)
 		s.conn.receive(s.receive)
@@ -125,7 +118,6 @@ func (s *ClientService) Receive() {
 					r := archive.NewRecord(hexData, "RX", "TCP")
 					s.archivate <- r
 				}
-				//s.process <- data
 			}
 		}
 	}()
@@ -138,7 +130,6 @@ func (s *ClientService) Process(c <-chan []byte) {
 	s.conn.transfer(tc)
 
 	go func() {
-
 		for {
 			logger.Log().WithField("func", "11150").Trace("process packets wait incoming data from process channel")
 			select {

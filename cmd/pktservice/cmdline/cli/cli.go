@@ -136,7 +136,7 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	<-wait
+	select {}
 
-	return nil
+	//return nil
 }

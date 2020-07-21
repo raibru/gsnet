@@ -98,7 +98,6 @@ func handleParam(cmd *cobra.Command, args []string) error {
 	}
 
 	wait := make(chan bool, 1)
-	done := make(chan bool)
 
 	err := srvService.ApplyConnection()
 	if err != nil {
@@ -114,11 +113,13 @@ func handleParam(cmd *cobra.Command, args []string) error {
 		for i := uint(0); i < repeatTransfer; i++ {
 			notify, done := readerService.Start()
 			srvService.Notify(notify)
-			<-done
+			select {
+			case <-done:
+			}
 		}
 	} else {
 		srvService.Process()
-		<-done
+		select {}
 	}
 
 	return nil
