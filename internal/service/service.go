@@ -43,6 +43,7 @@ func (serviceLogger) Identify() string {
 type ClientManager struct {
 	clients    map[*Client]bool
 	notify     chan []byte
+	process    chan []byte
 	register   chan *Client
 	unregister chan *Client
 }

@@ -118,7 +118,7 @@ func handleParam(cmd *cobra.Command, args []string) error {
 			}
 		}
 	} else {
-		srvService.Process()
+		srvService.ApplyProcess()
 		select {}
 	}
 

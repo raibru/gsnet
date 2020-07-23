@@ -159,7 +159,7 @@ func (s *ServerService) Notify(c <-chan []byte) {
 }
 
 // Process processes data read from process channel
-func (s *ServerService) Process() {
+func (s *ServerService) Process(c <-chan []byte) {
 	logger.Log().WithField("func", "11230").Info("start process packets service")
 
 	go func() {
@@ -200,6 +200,12 @@ func (s *ServerService) Process() {
 		}
 	}()
 	logger.Log().WithField("func", "11230").Info("finish process packets service")
+}
+
+// ApplyProcess processes data read from process channel
+func (s *ServerService) ApplyProcess() {
+	logger.Log().WithField("func", "11250").Info("start process packets service with internal process channel")
+	s.Process(s.process)
 }
 
 // CreateTCPServerListener create new TCP listener with parameter in ServerService

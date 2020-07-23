@@ -48,7 +48,7 @@ func (s *PacketService) ApplyConnection() error {
 		if err := s.listener.ApplyConnection(); err != nil {
 			logger.Log().WithField("func", "11310").Errorf("Error apply server connection %s: %s", s.listener.Name, err.Error())
 		}
-		s.listener.Process()
+		s.listener.Process(s.listener.process)
 	}()
 
 	go func() {
