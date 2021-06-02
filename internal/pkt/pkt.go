@@ -132,7 +132,12 @@ func (pktRead *PacketReader) Start() (<-chan []byte, <-chan bool) {
 			line = strings.Replace(line, "\n", "", -1)
 			line = strings.Replace(line, "\r", "", -1)
 			if len(line) > 0 {
-				supply <- []byte(line)
+				data, err := hex.DecodeString(line)
+				if err != nil {
+					logger.Log().Errorf("Failure decode hex-string to byte slice: '%s'", line)
+					continue
+				}
+				supply <- []byte(data)
 				time.Sleep(pktRead.waitMsec)
 			}
 		}
