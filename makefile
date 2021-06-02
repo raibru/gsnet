@@ -21,6 +21,12 @@ build:
 		$(MAKE) build -C $$dir;     \
 	done
 
+.PHONY: build-win
+build-win:
+	for dir in $(SUBDIRS); do \
+		$(MAKE) build-win -C $$dir;     \
+	done
+
 .PHONY: test
 test:
 	for dir in $(SUBDIRS); do \

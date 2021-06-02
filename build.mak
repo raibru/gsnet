@@ -34,6 +34,15 @@ build: $(_BUILD)
 $(_BUILD):
 	@$(GOBUILD) $($(_MODULE_NAME)_LDFLAGS) -o $($(_MODULE_NAME)_BINARY) -v $(_MODULE_PATH)/$(GOMAIN)
 
+# Build services
+_BUILD_WIN := build-win-$(_MODULE_NAME)
+
+.PHONY: build-win-$(_BUILD)
+build-win: $(_BUILD_WIN)
+
+$(_BUILD_WIN):
+	GOOS=windows GOARCH=amd64 $(GOBUILD) $($(_MODULE_NAME)_LDFLAGS) -o $($(_MODULE_NAME)_BINARY).exe -v $(_MODULE_PATH)/$(GOMAIN)
+
 # Test services
 _TEST := test-$(_MODULE_NAME)
 
